@@ -15,22 +15,39 @@ export function useAuth() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Create user profile if signing up
+        if (session?.user && _event === 'SIGNED_UP') {
+          const { error } = await supabase
+            .from('users')
+            .insert({
+              id: session.user.id,
+              email: session.user.email!,
+              username: session.user.user_metadata?.username || session.user.email!.split('@')[0],
+              full_name: session.user.user_metadata?.full_name || null,
+            });
+          
+          if (error) {
+            console.error('Error creating user profile:', error);
+          }
+        }
       }
     );
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, username: string) => {
+  const signUp = async (email: string, password: string, username: string, fullName?: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           username,
+          full_name: fullName,
         },
       },
     });
