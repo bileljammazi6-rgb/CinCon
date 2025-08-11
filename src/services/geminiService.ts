@@ -38,13 +38,11 @@ Formatting:
       try {
         const res = await fetch(url, init);
         if (res.ok) return res;
-        // Retry on transient statuses
         if ([408, 429, 500, 502, 503, 504].includes(res.status) && attempt < retries) {
           await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
           attempt++;
           continue;
         }
-        // Non-retriable error
         return res;
       } catch (e) {
         lastError = e;
@@ -59,7 +57,7 @@ Formatting:
     throw lastError || new Error('Network error');
   }
 
-  async sendMessage(text: string, imageData?: string, options?: { model?: 'flash' | 'pro' }): Promise<string> {
+  async sendMessage(text: string, imageData?: string): Promise<string> {
     try {
       if (!this.apiKey || this.apiKey.trim().length < 10) {
         throw new Error('AI API key missing or invalid. Please configure the Gemini API key.');
@@ -101,13 +99,8 @@ Formatting:
         ]
       };
 
-      let model: 'gemini-1.5-flash' | 'gemini-1.5-pro';
-      if (options?.model) {
-        model = options.model === 'pro' ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
-      } else {
-        model = imageData ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
-      }
-
+      // Force the requested preview model for all requests
+      const model = 'gemini-2.5-flash-preview-05-20';
       const url = `${this.baseUrl}/${model}:generateContent?key=${this.apiKey}`;
       const response = await this.fetchWithRetry(url, {
         method: 'POST',
