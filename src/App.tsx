@@ -137,9 +137,9 @@ function App() {
   const exportChat = () => { const text = messages.map(m => `${m.sender.toUpperCase()} [${m.timestamp.toLocaleString()}]: ${m.content}`).join('\n'); const blob = new Blob([text], { type: 'text/plain' }); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='chat.txt'; a.click(); URL.revokeObjectURL(url); };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl h-[90vh] rounded-2xl shadow-2xl flex overflow-hidden">
-        {/* Left sidebar: chats list (stub) */}
+    <div className="min-h-screen md:min-h-0 flex items-stretch md:items-center justify-stretch md:justify-center">
+      <div className="w-full md:max-w-6xl h-[100svh] md:h-[90vh] rounded-none md:rounded-2xl shadow-2xl flex overflow-hidden">
+        {/* Left sidebar: hidden on mobile */}
         <aside className="hidden md:flex md:w-72 flex-col bg-[#111b21] border-r border-white/10">
           <div className="p-3 border-b border-white/10 flex items-center gap-2">
             <div className="w-9 h-9 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center"><Bot className="w-4 h-4 text-white"/></div>
@@ -161,25 +161,23 @@ function App() {
         {/* Right chat pane */}
         <div className="flex-1 flex flex-col wa-bg" ref={dropRef}>
           {/* Header */}
-          <div className="glass-effect p-3 border-b border-white/10 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center"><Bot className="w-4 h-4 text-white"/></div>
+          <div className="glass-effect p-2 md:p-3 border-b border-white/10 flex items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-emerald-600 flex items-center justify-center"><Bot className="w-4 h-4 text-white"/></div>
             <div className="flex-1">
-              <div className="text-sm text-white font-semibold">{settings.displayName}</div>
-              <div className="text-[11px] text-emerald-400">online</div>
+              <div className="text-sm text-white font-semibold truncate">{settings.displayName}</div>
+              <div className="text-[10px] md:text-[11px] text-emerald-400">online</div>
             </div>
-            <button onClick={()=>setChessOpen(true)} className="text-gray-300 hover:text-white text-xs flex items-center gap-1"><Sword className="w-4 h-4"/> Chess</button>
-            <button onClick={()=>setTttOpen(true)} className="text-gray-300 hover:text-white text-xs">Tic-Tac-Toe</button>
-            <button onClick={()=>setG2048Open(true)} className="text-gray-300 hover:text-white text-xs">2048</button>
-            <button onClick={()=>setDocsOpen(true)} className="text-gray-300 hover:text-white text-xs">Docs</button>
-            <button onClick={clearChat} className="text-gray-300 hover:text-white text-xs flex items-center gap-1"><Eraser className="w-4 h-4"/> Clear</button>
-            <button onClick={exportChat} className="text-gray-300 hover:text-white text-xs flex items-center gap-1"><DownloadIcon className="w-4 h-4"/> Export</button>
+            <button onClick={()=>setChessOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5 md:bg-transparent"><Sword className="w-4 h-4"/></button>
+            <button onClick={()=>setDocsOpen(true)} className="hidden sm:inline-flex text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5 md:bg-transparent">Docs</button>
+            <button onClick={clearChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><Eraser className="w-4 h-4"/> Clear</button>
+            <button onClick={exportChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><DownloadIcon className="w-4 h-4"/> Export</button>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-2 md:p-4 space-y-2 md:space-y-3">
             {messages.length === 0 && (
-              <div className="text-center text-gray-400 mt-12">
-                <Bot className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <div className="text-center text-gray-400 mt-10 md:mt-12">
+                <Bot className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 md:mb-3 opacity-50" />
                 <h3 className="text-sm font-medium mb-1">Welcome, {settings.displayName}</h3>
                 <p className="text-xs">Send a message or drop an image to analyze.</p>
               </div>
@@ -187,8 +185,8 @@ function App() {
 
             {messages.map((message) => (
               <div key={message.id}>
-                {message.type === 'movie' && message.movieData ? (
-                  <MovieCard movieData={message.movieData} />
+                {message.type === 'movie' && (message as any).movieData ? (
+                  <MovieCard movieData={(message as any).movieData} />
                 ) : (
                   <ChatMessage message={message} />
                 )}
@@ -206,7 +204,7 @@ function App() {
           </div>
 
           {/* Composer */}
-          <div className="input-area p-3 border-t border-white/10">
+          <div className="input-area p-2 md:p-3 border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
             {uploadedImage && (
               <div className="mb-2 flex items-center gap-2">
                 <img src={uploadedImage} alt="Uploaded" className="image-preview"/>
@@ -219,7 +217,7 @@ function App() {
                 <VoiceRecorder onRecording={()=>{}} isRecording={isRecording} setIsRecording={setIsRecording} onError={()=>{}} />
                 <SpeechToText onTranscript={setInputText} />
               </div>
-              <textarea ref={inputRef} value={inputText} onChange={(e)=>setInputText(e.target.value)} onKeyPress={(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSendMessage(); } }} placeholder="Type a message" className="flex-1 bg-[#2a3942] text-white placeholder-gray-400 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-white/5" rows={1} style={{ minHeight:'42px', maxHeight:'120px' }}/>
+              <textarea ref={inputRef} value={inputText} onChange={(e)=>setInputText(e.target.value)} onKeyPress={(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSendMessage(); } }} placeholder="Type a message" className="flex-1 bg-[#2a3942] text-white placeholder-gray-400 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-white/5" rows={1} style={{ minHeight:'44px', maxHeight:'120px' }}/>
               <button onClick={handleSendMessage} disabled={isLoading || (!inputText.trim() && !uploadedImage)} className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50"><Send className="w-5 h-5 text-white"/></button>
             </div>
           </div>
