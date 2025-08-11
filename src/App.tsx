@@ -7,6 +7,9 @@ import { VoiceRecorder } from './components/VoiceRecorder';
 import { SpeechToText } from './components/SpeechToText';
 import { SettingsModal, AppSettings } from './components/SettingsModal';
 import { ChessModal } from './components/ChessModal';
+import { DocsModal } from './components/DocsModal';
+import { TicTacToeModal } from './components/TicTacToeModal';
+import { Game2048Modal } from './components/Game2048Modal';
 import { geminiService } from './services/geminiService';
 import { tmdbService } from './services/tmdbService';
 import { movieLinks } from './data/movieLinks';
@@ -24,6 +27,9 @@ function App() {
     try { return JSON.parse(localStorage.getItem('bilel_settings') || '') || { displayName: 'Rim', language: 'auto' }; } catch { return { displayName: 'Rim', language: 'auto' }; }
   });
   const [chessOpen, setChessOpen] = useState(false);
+  const [tttOpen, setTttOpen] = useState(false);
+  const [g2048Open, setG2048Open] = useState(false);
+  const [docsOpen, setDocsOpen] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
@@ -61,9 +67,9 @@ function App() {
       // Pixeldrain recommendation command
       if (/^recommend(\s|$)/i.test(userMessage.content) || /^suggest(\s|$)/i.test(userMessage.content)) {
         const terms = userMessage.content.replace(/^(recommend|suggest)\s*/i, '').trim().toLowerCase();
-        const candidates = Object.keys(movieLinks)
-          .filter(title => terms ? title.includes(terms) : true)
-          .slice(0, 5);
+        const titles = Object.keys(movieLinks);
+        const filtered = settings.pixeldrainOnly ? titles : titles; // currently all are pixeldrain by definition
+        const candidates = filtered.filter(title => terms ? title.includes(terms) : true).slice(0, 5);
         if (candidates.length > 0) {
           for (const title of candidates) {
             const data = await tmdbService.searchMovie(title);
@@ -88,7 +94,19 @@ function App() {
       const movieKeywords = ['movie','film','recommend','show','watch','فيلم','سلسلة','أوصي','شاهد'];
       const isMovieQuery = !isImageOnly && movieKeywords.some(k => userMessage.content.toLowerCase().includes(k));
       if (isMovieQuery) {
-        await handleMovieQuery(userMessage.content);
+        if (settings.pixeldrainOnly) {
+          // Only answer if locally available
+          const normalizedQuery = userMessage.content.toLowerCase();
+          const matchedTitle = Object.keys(movieLinks).find(t => normalizedQuery.includes(t.toLowerCase()) || t.toLowerCase().includes(normalizedQuery));
+          if (matchedTitle) {
+            const data = await tmdbService.searchMovie(matchedTitle);
+            setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'movie', content: `This title exists in our Pixeldrain library: "${matchedTitle}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(data || { title: matchedTitle, overview: '' }), downloadLinks: movieLinks[matchedTitle] } }]);
+          } else {
+            setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: 'Not available in Pixeldrain library.', sender: 'ai', timestamp: new Date() }]);
+          }
+        } else {
+          await handleMovieQuery(userMessage.content);
+        }
       } else {
         const response = await geminiService.sendMessage(prompt, isImageOnly ? imageForAnalysis : undefined, { model: settings.model || 'flash' });
         setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: response, sender: 'ai', timestamp: new Date() }]);
@@ -150,6 +168,9 @@ function App() {
               <div className="text-[11px] text-emerald-400">online</div>
             </div>
             <button onClick={()=>setChessOpen(true)} className="text-gray-300 hover:text-white text-xs flex items-center gap-1"><Sword className="w-4 h-4"/> Chess</button>
+            <button onClick={()=>setTttOpen(true)} className="text-gray-300 hover:text-white text-xs">Tic-Tac-Toe</button>
+            <button onClick={()=>setG2048Open(true)} className="text-gray-300 hover:text-white text-xs">2048</button>
+            <button onClick={()=>setDocsOpen(true)} className="text-gray-300 hover:text-white text-xs">Docs</button>
             <button onClick={clearChat} className="text-gray-300 hover:text-white text-xs flex items-center gap-1"><Eraser className="w-4 h-4"/> Clear</button>
             <button onClick={exportChat} className="text-gray-300 hover:text-white text-xs flex items-center gap-1"><DownloadIcon className="w-4 h-4"/> Export</button>
           </div>
@@ -207,6 +228,9 @@ function App() {
 
       <SettingsModal open={settingsOpen} initial={settings} onClose={()=>setSettingsOpen(false)} onSave={(s)=>{ setSettings(s); setSettingsOpen(false); }} />
       <ChessModal open={chessOpen} onClose={()=>setChessOpen(false)} />
+      <TicTacToeModal open={tttOpen} onClose={()=>setTttOpen(false)} />
+      <Game2048Modal open={g2048Open} onClose={()=>setG2048Open(false)} />
+      <DocsModal open={docsOpen} onClose={()=>setDocsOpen(false)} />
     </div>
   );
 }
