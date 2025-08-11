@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Image, Mic, Bot, User, Volume2, Download, Star, Calendar, Clock, PlusCircle, Heart, Flame } from 'lucide-react';
+import { Send, Image, Mic, Bot, User, Volume2, Star, Calendar, Clock, PlusCircle, Heart, Flame, Trash2, Eraser, Download as DownloadIcon } from 'lucide-react';
 import { ChatMessage } from './components/ChatMessage';
 import { MovieCard } from './components/MovieCard';
 import { ImageUpload } from './components/ImageUpload';
 import { VoiceRecorder } from './components/VoiceRecorder';
+import { SpeechToText } from './components/SpeechToText';
 import { geminiService } from './services/geminiService';
 import { tmdbService } from './services/tmdbService';
 import { movieLinks } from './data/movieLinks';
@@ -24,6 +25,14 @@ function App() {
       return [];
     }
   });
+  const [ratings, setRatings] = useState<Record<string, number>>(() => {
+    try {
+      const saved = localStorage.getItem('bilel_ratings');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
   const quickPrompts = [
     'Recommend a sci-fi movie like Interstellar',
     'Top 5 thrillers of the last decade',
@@ -32,6 +41,7 @@ function App() {
   ];
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -69,14 +79,21 @@ function App() {
     localStorage.setItem('bilel_favorites', JSON.stringify(favorites));
   }, [favorites]);
 
+  useEffect(() => {
+    localStorage.setItem('bilel_ratings', JSON.stringify(ratings));
+  }, [ratings]);
+
   const toggleFavorite = (title: string) => {
     setFavorites((prev) => prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]);
+  };
+
+  const setMovieRating = (title: string, value: number) => {
+    setRatings(prev => ({ ...prev, [title]: value }));
   };
 
   const handleSendMessage = async () => {
     if (!inputText.trim() && !uploadedImage) return;
 
-    // If image only, send an image analysis prompt
     const isImageOnly = uploadedImage && !inputText.trim();
     const prompt = isImageOnly
       ? 'Analyze this image in detail: describe objects, layout, colors, text (OCR), context, and any movie/actor references.'
@@ -97,7 +114,6 @@ function App() {
     setIsLoading(true);
 
     try {
-      // Quick path: Pixeldrain titles detection
       if (!isImageOnly && inputText.trim()) {
         const normalizedQuery = inputText.toLowerCase().trim();
         const matchedTitle = Object.keys(movieLinks).find(title =>
@@ -122,7 +138,6 @@ function App() {
         }
       }
 
-      // Movie intent
       const movieKeywords = ['movie', 'film', 'recommend', 'show', 'watch', 'فيلم', 'سلسلة', 'أوصي', 'شاهد'];
       const isMovieQuery = !isImageOnly && movieKeywords.some(keyword => 
         (inputText || '').toLowerCase().includes(keyword)
@@ -131,7 +146,6 @@ function App() {
       if (isMovieQuery) {
         await handleMovieQuery(inputText);
       } else {
-        // AI chat + image analysis when present
         const response = await geminiService.sendMessage(prompt, isImageOnly ? uploadedImage! : undefined);
         
         const aiMessage: Message = {
@@ -212,6 +226,28 @@ function App() {
     setUploadedImage(imageData);
   };
 
+  // Drag and drop image upload
+  useEffect(() => {
+    const node = dropRef.current;
+    if (!node) return;
+    const prevent = (e: DragEvent) => { e.preventDefault(); e.stopPropagation(); };
+    const onDrop = (e: DragEvent) => {
+      prevent(e);
+      const file = e.dataTransfer?.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = ev => setUploadedImage(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    };
+    ['dragenter','dragover','dragleave','drop'].forEach(evt => node.addEventListener(evt, prevent));
+    node.addEventListener('drop', onDrop);
+    return () => {
+      ['dragenter','dragover','dragleave','drop'].forEach(evt => node.removeEventListener(evt, prevent));
+      node.removeEventListener('drop', onDrop);
+    };
+  }, []);
+
   const handleVoiceRecording = async (_audioBlob: Blob) => {
     try {
       const userMessage: Message = {
@@ -232,6 +268,26 @@ function App() {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const deleteMessage = (id: string) => {
+    setMessages(prev => prev.filter(m => m.id !== id));
+  };
+
+  const clearChat = () => {
+    setMessages([]);
+    localStorage.removeItem('bilel_chat_history');
+  };
+
+  const exportChat = () => {
+    const text = messages.map(m => `${m.sender.toUpperCase()} [${m.timestamp.toLocaleString()}]: ${m.content}`).join('\n');
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'chat.txt';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -266,7 +322,7 @@ function App() {
           </div>
         </aside>
 
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden" ref={dropRef}>
           {/* Header */}
           <div className="glass-effect p-4 border-b border-white/10">
             <div className="flex items-center gap-4">
@@ -278,6 +334,8 @@ function App() {
                 <p className="text-xs text-gray-300">Movies, images, and more</p>
               </div>
               <div className="ml-auto flex items-center gap-2">
+                <button onClick={clearChat} className="text-gray-300 hover:text-white text-xs flex items-center gap-1"><Eraser className="w-4 h-4"/> Clear</button>
+                <button onClick={exportChat} className="text-gray-300 hover:text-white text-xs flex items-center gap-1"><DownloadIcon className="w-4 h-4"/> Export</button>
                 <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse"></div>
                 <span className="text-xs text-gray-300">Online</span>
               </div>
@@ -290,21 +348,34 @@ function App() {
               <div className="text-center text-gray-400 mt-16">
                 <Bot className="w-14 h-14 mx-auto mb-3 opacity-50" />
                 <h3 className="text-base font-medium mb-1">Welcome, Rim</h3>
-                <p className="text-xs">Ask me anything — try a quick prompt on the left.</p>
+                <p className="text-xs">Ask me anything — drop an image to analyze or try a quick prompt.</p>
               </div>
             )}
             
             {messages.map((message) => (
-              <div key={message.id}>
+              <div key={message.id} className="group relative">
+                <button onClick={() => deleteMessage(message.id)} className="opacity-0 group-hover:opacity-100 absolute -left-2 -top-2 bg-red-600 text-white rounded-full p-1"><Trash2 className="w-3 h-3"/></button>
                 {message.type === 'movie' && message.movieData ? (
                   <div className="relative">
-                    <MovieCard movieData={message.movieData} />
-                    <button
-                      onClick={() => toggleFavorite(message.movieData!.title)}
-                      className="absolute top-2 right-2 text-xs px-2 py-1 rounded bg-pink-600/80 text-white hover:bg-pink-500"
-                    >
-                      {favorites.includes(message.movieData!.title) ? 'Unfavorite' : 'Favorite'}
-                    </button>
+                    <MovieCard movieData={{...message.movieData, vote_average: ratings[message.movieData.title] ?? message.movieData.vote_average}} />
+                    <div className="absolute top-2 right-2 flex gap-2">
+                      <select
+                        className="text-xs bg-black/40 text-white rounded px-2 py-1 border border-white/10"
+                        value={ratings[message.movieData.title] ?? ''}
+                        onChange={(e) => setMovieRating(message.movieData!.title, Number(e.target.value))}
+                      >
+                        <option value="">Rate</option>
+                        {[...Array(10)].map((_, i) => (
+                          <option key={i+1} value={i+1}>{i+1}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => toggleFavorite(message.movieData!.title)}
+                        className="text-xs px-2 py-1 rounded bg-pink-600/80 text-white hover:bg-pink-500"
+                      >
+                        {favorites.includes(message.movieData!.title) ? 'Unfavorite' : 'Favorite'}
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <ChatMessage message={message} />
@@ -365,6 +436,7 @@ function App() {
                     setMessages(prev => [...prev, errorMessage]);
                   }}
                 />
+                <SpeechToText onTranscript={(t) => setInputText(t)} />
               </div>
               
               <div className="flex-1 relative">
@@ -372,7 +444,7 @@ function App() {
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Type a message, ask for movies, or analyze an image..."
+                  placeholder="Type a message, ask for movies, or analyze an image (you can also drag-and-drop it here)..."
                   className="w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-xl px-4 py-3 pr-12 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 border border-white/10"
                   rows={1}
                   style={{ minHeight: '48px', maxHeight: '120px' }}
