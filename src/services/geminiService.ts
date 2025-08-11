@@ -1,5 +1,5 @@
 class GeminiService {
-  private apiKey = 'AIzaSyDgwpq2i6hUBCkP3JDtKRlmGJUM6jXFPAM';
+  private apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY as string | undefined;
   private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models';
   private conversationHistory: any[] = [];
 
