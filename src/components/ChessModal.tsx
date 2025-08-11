@@ -5,6 +5,7 @@ import { Chess, Square, Move } from 'chess.js';
 interface ChessModalProps {
   open: boolean;
   onClose: () => void;
+  onComment?: (text: string) => void;
 }
 
 const pieceToEmoji: Record<string, string> = {
@@ -12,7 +13,7 @@ const pieceToEmoji: Record<string, string> = {
   P: '♙', R: '♖', N: '♘', B: '♗', Q: '♕', K: '♔',
 };
 
-export function ChessModal({ open, onClose }: ChessModalProps) {
+export function ChessModal({ open, onClose, onComment }: ChessModalProps) {
   const [game] = useState(() => new Chess());
   const [fen, setFen] = useState(game.fen());
   const [from, setFrom] = useState<Square | null>(null);
@@ -55,10 +56,13 @@ export function ChessModal({ open, onClose }: ChessModalProps) {
     const moves = game.moves({ verbose: true }) as Move[];
     if (moves.length === 0) return;
     const move = moves[Math.floor(Math.random() * moves.length)];
-    game.move({ from: move.from, to: move.to, promotion: 'q' });
-    setLastMove({ from: move.from as Square, to: move.to as Square });
-    setFen(game.fen());
-    updateStatus();
+    const played = game.move({ from: move.from, to: move.to, promotion: 'q' }) as Move | null;
+    if (played) {
+      setLastMove({ from: played.from as Square, to: played.to as Square });
+      setFen(game.fen());
+      updateStatus();
+      onComment?.(`Chess AI played ${played.san}. FEN: ${game.fen()}`);
+    }
   };
 
   const onSquareClick = (sq: Square) => {
@@ -70,13 +74,14 @@ export function ChessModal({ open, onClose }: ChessModalProps) {
       return;
     }
     try {
-      const move = game.move({ from, to: sq, promotion: 'q' });
+      const move = game.move({ from, to: sq, promotion: 'q' }) as Move | null;
       if (move) {
         setFrom(null);
         setLegalTargets([]);
         setLastMove({ from: move.from as Square, to: move.to as Square });
         setFen(game.fen());
         updateStatus();
+        onComment?.(`Player played ${move.san}. FEN: ${game.fen()}`);
         setTimeout(aiMove, 300);
       } else {
         setFrom(null);

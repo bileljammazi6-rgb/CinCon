@@ -15,6 +15,7 @@ import { tmdbService } from './services/tmdbService';
 import { movieLinks } from './data/movieLinks';
 import { Message, MovieData } from './types';
 import { compressImageDataUrl } from './lib/image';
+import { RockPaperScissorsModal } from './components/RockPaperScissorsModal';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -30,6 +31,8 @@ function App() {
   const [tttOpen, setTttOpen] = useState(false);
   const [g2048Open, setG2048Open] = useState(false);
   const [docsOpen, setDocsOpen] = useState(false);
+  const [rpsOpen, setRpsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'chat'|'movies'|'games'>('chat');
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
@@ -167,60 +170,90 @@ function App() {
               <div className="text-sm text-white font-semibold truncate">{settings.displayName}</div>
               <div className="text-[10px] md:text-[11px] text-emerald-400">online</div>
             </div>
+            <div className="flex items-center gap-1">
+              <button onClick={()=>setActiveTab('chat')} className={`text-xs px-2 py-1 rounded ${activeTab==='chat'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Chat</button>
+              <button onClick={()=>setActiveTab('movies')} className={`text-xs px-2 py-1 rounded ${activeTab==='movies'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Movies</button>
+              <button onClick={()=>setActiveTab('games')} className={`text-xs px-2 py-1 rounded ${activeTab==='games'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Games</button>
+            </div>
             <button onClick={()=>setChessOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5 md:bg-transparent"><Sword className="w-4 h-4"/></button>
-            <button onClick={()=>setDocsOpen(true)} className="hidden sm:inline-flex text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5 md:bg-transparent">Docs</button>
             <button onClick={clearChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><Eraser className="w-4 h-4"/> Clear</button>
             <button onClick={exportChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><DownloadIcon className="w-4 h-4"/> Export</button>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-2 md:p-4 space-y-2 md:space-y-3">
-            {messages.length === 0 && (
-              <div className="text-center text-gray-400 mt-10 md:mt-12">
-                <Bot className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 md:mb-3 opacity-50" />
-                <h3 className="text-sm font-medium mb-1">Welcome, {settings.displayName}</h3>
-                <p className="text-xs">Send a message or drop an image to analyze.</p>
-              </div>
-            )}
-
-            {messages.map((message) => (
-              <div key={message.id}>
-                {message.type === 'movie' && (message as any).movieData ? (
-                  <MovieCard movieData={(message as any).movieData} />
-                ) : (
-                  <ChatMessage message={message} />
+          {/* Body */}
+          {activeTab==='chat' && (
+            <>
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-2 md:p-4 space-y-2 md:space-y-3">
+                {messages.length === 0 && (
+                  <div className="text-center text-gray-400 mt-10 md:mt-12">
+                    <Bot className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 md:mb-3 opacity-50" />
+                    <h3 className="text-sm font-medium mb-1">Welcome, {settings.displayName}</h3>
+                    <p className="text-xs">Send a message or drop an image to analyze.</p>
+                  </div>
                 )}
+                {messages.map((message) => (
+                  <div key={message.id}>
+                    {(message as any).type === 'movie' && (message as any).movieData ? (
+                      <MovieCard movieData={(message as any).movieData} />
+                    ) : (
+                      <ChatMessage message={message} />
+                    )}
+                  </div>
+                ))}
+                {isLoading && (
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <div className="typing-indicator"><div className="typing-dot"></div><div className="typing-dot"></div><div className="typing-dot"></div></div>
+                    <span className="text-xs">Typing...</span>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
               </div>
-            ))}
+              {/* Composer */}
+              <div className="input-area p-2 md:p-3 border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
+                {uploadedImage && (
+                  <div className="mb-2 flex items-center gap-2">
+                    <img src={uploadedImage} alt="Uploaded" className="image-preview"/>
+                    <button onClick={() => setUploadedImage(null)} className="text-red-400 hover:text-red-300">Remove</button>
+                  </div>
+                )}
+                <div className="flex items-end gap-2">
+                  <div className="flex gap-1">
+                    <ImageUpload onImageUpload={(img)=>setUploadedImage(img)} />
+                    <VoiceRecorder onRecording={()=>{}} isRecording={isRecording} setIsRecording={setIsRecording} onError={()=>{}} />
+                    <SpeechToText onTranscript={setInputText} />
+                  </div>
+                  <textarea ref={inputRef} value={inputText} onChange={(e)=>setInputText(e.target.value)} onKeyPress={(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSendMessage(); } }} placeholder="Type a message" className="flex-1 bg-[#2a3942] text-white placeholder-gray-400 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-white/5" rows={1} style={{ minHeight:'44px', maxHeight:'120px' }}/>
+                  <button onClick={handleSendMessage} disabled={isLoading || (!inputText.trim() && !uploadedImage)} className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50"><Send className="w-5 h-5 text-white"/></button>
+                </div>
+              </div>
+            </>
+          )}
 
-            {isLoading && (
-              <div className="flex items-center gap-2 text-gray-400">
-                <div className="typing-indicator"><div className="typing-dot"></div><div className="typing-dot"></div><div className="typing-dot"></div></div>
-                <span className="text-xs">Typing...</span>
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Composer */}
-          <div className="input-area p-2 md:p-3 border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
-            {uploadedImage && (
-              <div className="mb-2 flex items-center gap-2">
-                <img src={uploadedImage} alt="Uploaded" className="image-preview"/>
-                <button onClick={() => setUploadedImage(null)} className="text-red-400 hover:text-red-300">Remove</button>
-              </div>
-            )}
-            <div className="flex items-end gap-2">
-              <div className="flex gap-1">
-                <ImageUpload onImageUpload={(img)=>setUploadedImage(img)} />
-                <VoiceRecorder onRecording={()=>{}} isRecording={isRecording} setIsRecording={setIsRecording} onError={()=>{}} />
-                <SpeechToText onTranscript={setInputText} />
-              </div>
-              <textarea ref={inputRef} value={inputText} onChange={(e)=>setInputText(e.target.value)} onKeyPress={(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSendMessage(); } }} placeholder="Type a message" className="flex-1 bg-[#2a3942] text-white placeholder-gray-400 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-white/5" rows={1} style={{ minHeight:'44px', maxHeight:'120px' }}/>
-              <button onClick={handleSendMessage} disabled={isLoading || (!inputText.trim() && !uploadedImage)} className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50"><Send className="w-5 h-5 text-white"/></button>
+          {activeTab==='movies' && (
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+              <div className="text-xs text-gray-400">Ask for recommendations or type “recommend ... / suggest ...”. Pixeldrain-only filter is in Settings.</div>
+              {/* Reuse chat messages area to show movie cards if present */}
+              {messages.filter((m:any)=>m.type==='movie').length===0 && (
+                <div className="text-gray-400 text-xs">No movies yet. Try asking for a title.</div>
+              )}
+              {messages.filter((m:any)=>m.type==='movie').map((m:any)=>(
+                <MovieCard key={m.id} movieData={m.movieData} />
+              ))}
             </div>
-          </div>
+          )}
+
+          {activeTab==='games' && (
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <button onClick={()=>setChessOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">♟ Chess</button>
+                <button onClick={()=>setTttOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">◻ Tic‑Tac‑Toe</button>
+                <button onClick={()=>setG2048Open(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">2048</button>
+                <button onClick={()=>setRpsOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">✂ Rock/Paper/Scissors</button>
+              </div>
+              <div className="text-xs text-gray-400">While playing, the assistant can comment on moves (chess) directly in chat.</div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -229,6 +262,7 @@ function App() {
       <TicTacToeModal open={tttOpen} onClose={()=>setTttOpen(false)} />
       <Game2048Modal open={g2048Open} onClose={()=>setG2048Open(false)} />
       <DocsModal open={docsOpen} onClose={()=>setDocsOpen(false)} />
+      <RockPaperScissorsModal open={rpsOpen} onClose={()=>setRpsOpen(false)} />
     </div>
   );
 }
