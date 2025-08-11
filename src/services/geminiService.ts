@@ -31,8 +31,40 @@ Formatting:
     });
   }
 
+  private async fetchWithRetry(url: string, init: RequestInit, retries = 2): Promise<Response> {
+    let attempt = 0;
+    let lastError: any = null;
+    while (attempt <= retries) {
+      try {
+        const res = await fetch(url, init);
+        if (res.ok) return res;
+        // Retry on transient statuses
+        if ([408, 429, 500, 502, 503, 504].includes(res.status) && attempt < retries) {
+          await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
+          attempt++;
+          continue;
+        }
+        // Non-retriable error
+        return res;
+      } catch (e) {
+        lastError = e;
+        if (attempt < retries) {
+          await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
+          attempt++;
+          continue;
+        }
+        throw lastError;
+      }
+    }
+    throw lastError || new Error('Network error');
+  }
+
   async sendMessage(text: string, imageData?: string, options?: { model?: 'flash' | 'pro' }): Promise<string> {
     try {
+      if (!this.apiKey || this.apiKey.trim().length < 10) {
+        throw new Error('AI API key missing or invalid. Please configure the Gemini API key.');
+      }
+
       const parts: any[] = [{ text }];
       
       if (imageData) {
@@ -76,18 +108,22 @@ Formatting:
         model = imageData ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
       }
 
-      const response = await fetch(`${this.baseUrl}/${model}:generateContent?key=${this.apiKey}`, {
+      const url = `${this.baseUrl}/${model}:generateContent?key=${this.apiKey}`;
+      const response = await this.fetchWithRetry(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
+        let detail = '';
+        try { const j = await response.json(); detail = j?.error?.message || JSON.stringify(j); } catch {}
+        const msg = `AI service error ${response.status}${detail ? `: ${detail}` : ''}`;
+        throw new Error(msg);
       }
 
       const data = await response.json();
-      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
+      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response.';
 
       this.conversationHistory.push(
         { role: 'user', parts },
@@ -102,9 +138,10 @@ Formatting:
       }
 
       return aiResponse;
-    } catch (error) {
-      console.error('Gemini API Error:', error);
-      throw new Error('Failed to get response from AI. Please try again.');
+    } catch (error: any) {
+      const hint = error?.message?.includes('AI service error') ? '' : ' (check network/CORS)';
+      const msg = error?.message ? `AI error: ${error.message}${hint}` : 'AI error: unexpected failure.';
+      throw new Error(msg);
     }
   }
 
