@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Image, Mic, Bot, Heart, Flame, Trash2, Eraser, Download as DownloadIcon, Settings, Search } from 'lucide-react';
+import { Send, Image, Mic, Bot, Heart, Flame, Trash2, Eraser, Download as DownloadIcon, Settings, Search, Sword } from 'lucide-react';
 import { ChatMessage } from './components/ChatMessage';
 import { MovieCard } from './components/MovieCard';
 import { ImageUpload } from './components/ImageUpload';
 import { VoiceRecorder } from './components/VoiceRecorder';
 import { SpeechToText } from './components/SpeechToText';
 import { SettingsModal, AppSettings } from './components/SettingsModal';
+import { ChessModal } from './components/ChessModal';
 import { geminiService } from './services/geminiService';
 import { tmdbService } from './services/tmdbService';
 import { movieLinks } from './data/movieLinks';
@@ -22,6 +23,7 @@ function App() {
   const [settings, setSettings] = useState<AppSettings>(() => {
     try { return JSON.parse(localStorage.getItem('bilel_settings') || '') || { displayName: 'Rim', language: 'auto' }; } catch { return { displayName: 'Rim', language: 'auto' }; }
   });
+  const [chessOpen, setChessOpen] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
@@ -147,6 +149,7 @@ function App() {
               <div className="text-sm text-white font-semibold">{settings.displayName}</div>
               <div className="text-[11px] text-emerald-400">online</div>
             </div>
+            <button onClick={()=>setChessOpen(true)} className="text-gray-300 hover:text-white text-xs flex items-center gap-1"><Sword className="w-4 h-4"/> Chess</button>
             <button onClick={clearChat} className="text-gray-300 hover:text-white text-xs flex items-center gap-1"><Eraser className="w-4 h-4"/> Clear</button>
             <button onClick={exportChat} className="text-gray-300 hover:text-white text-xs flex items-center gap-1"><DownloadIcon className="w-4 h-4"/> Export</button>
           </div>
@@ -203,6 +206,7 @@ function App() {
       </div>
 
       <SettingsModal open={settingsOpen} initial={settings} onClose={()=>setSettingsOpen(false)} onSave={(s)=>{ setSettings(s); setSettingsOpen(false); }} />
+      <ChessModal open={chessOpen} onClose={()=>setChessOpen(false)} />
     </div>
   );
 }
