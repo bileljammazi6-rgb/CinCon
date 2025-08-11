@@ -1,0 +1,77 @@
+import React, { useEffect, useState } from 'react';
+import { X, Save, Globe } from 'lucide-react';
+
+export interface AppSettings {
+  displayName: string;
+  language: string; // e.g., 'auto', 'en', 'ar', 'fr'
+}
+
+interface SettingsModalProps {
+  open: boolean;
+  initial: AppSettings;
+  onClose: () => void;
+  onSave: (settings: AppSettings) => void;
+}
+
+const languages = [
+  { code: 'auto', name: 'Auto' },
+  { code: 'en', name: 'English' },
+  { code: 'ar', name: 'Arabic' },
+  { code: 'fr', name: 'French' },
+  { code: 'es', name: 'Spanish' },
+];
+
+export function SettingsModal({ open, initial, onClose, onSave }: SettingsModalProps) {
+  const [displayName, setDisplayName] = useState(initial.displayName);
+  const [language, setLanguage] = useState(initial.language);
+
+  useEffect(() => {
+    setDisplayName(initial.displayName);
+    setLanguage(initial.language);
+  }, [initial]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-gray-900 text-white rounded-xl w-full max-w-md border border-white/10 shadow-xl">
+        <div className="flex items-center justify-between p-4 border-b border-white/10">
+          <h3 className="text-sm font-semibold">Settings</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-white"><X className="w-5 h-5"/></button>
+        </div>
+        <div className="p-4 space-y-4">
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Display name</label>
+            <input
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Your name"
+              className="w-full bg-gray-800 border border-white/10 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1"><Globe className="w-4 h-4"/> Preferred language</label>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="w-full bg-gray-800 border border-white/10 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {languages.map(l => (
+                <option key={l.code} value={l.code}>{l.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="p-4 border-t border-white/10 flex justify-end gap-2">
+          <button onClick={onClose} className="px-3 py-1.5 text-sm bg-white/5 hover:bg-white/10 rounded">Cancel</button>
+          <button
+            onClick={() => onSave({ displayName: displayName.trim() || 'Rim', language })}
+            className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded flex items-center gap-1"
+          >
+            <Save className="w-4 h-4"/> Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

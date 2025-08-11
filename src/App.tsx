@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Image, Mic, Bot, User, Volume2, Star, Calendar, Clock, PlusCircle, Heart, Flame, Trash2, Eraser, Download as DownloadIcon } from 'lucide-react';
+import { Send, Image, Mic, Bot, User, Volume2, Star, Calendar, Clock, PlusCircle, Heart, Flame, Trash2, Eraser, Download as DownloadIcon, Settings } from 'lucide-react';
 import { ChatMessage } from './components/ChatMessage';
 import { MovieCard } from './components/MovieCard';
 import { ImageUpload } from './components/ImageUpload';
 import { VoiceRecorder } from './components/VoiceRecorder';
 import { SpeechToText } from './components/SpeechToText';
+import { SettingsModal, AppSettings } from './components/SettingsModal';
 import { geminiService } from './services/geminiService';
 import { tmdbService } from './services/tmdbService';
 import { movieLinks } from './data/movieLinks';
@@ -42,6 +43,16 @@ function App() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    try {
+      const saved = localStorage.getItem('bilel_settings');
+      return saved ? JSON.parse(saved) : { displayName: 'Rim', language: 'auto' };
+    } catch {
+      return { displayName: 'Rim', language: 'auto' };
+    }
+  });
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -83,6 +94,27 @@ function App() {
     localStorage.setItem('bilel_ratings', JSON.stringify(ratings));
   }, [ratings]);
 
+  useEffect(() => {
+    localStorage.setItem('bilel_settings', JSON.stringify(settings));
+  }, [settings]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().includes('MAC');
+      if ((isMac ? e.metaKey : e.ctrlKey) && e.key.toLowerCase() === 'enter') {
+        e.preventDefault();
+        handleSendMessage();
+      }
+      if ((isMac ? e.metaKey : e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [inputText, uploadedImage]);
+
   const toggleFavorite = (title: string) => {
     setFavorites((prev) => prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]);
   };
@@ -91,13 +123,20 @@ function App() {
     setRatings(prev => ({ ...prev, [title]: value }));
   };
 
+  const buildPrompt = (raw: string, isImageOnly: boolean) => {
+    const lang = settings.language === 'auto' ? 'auto-detect' : settings.language;
+    const prefix = `User: ${settings.displayName}\nPreferred language: ${lang}`;
+    if (isImageOnly) {
+      return `${prefix}\nTask: Analyze the provided image in detail (objects, layout, colors, text/OCR, context, movie/actor references if any).`;
+    }
+    return `${prefix}\nTask: ${raw}`;
+  };
+
   const handleSendMessage = async () => {
     if (!inputText.trim() && !uploadedImage) return;
 
     const isImageOnly = uploadedImage && !inputText.trim();
-    const prompt = isImageOnly
-      ? 'Analyze this image in detail: describe objects, layout, colors, text (OCR), context, and any movie/actor references.'
-      : inputText;
+    const prompt = buildPrompt(isImageOnly ? '' : inputText, !!isImageOnly);
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -322,6 +361,7 @@ function App() {
           </div>
         </aside>
 
+        {/* Center content */}
         <div className="flex-1 flex flex-col overflow-hidden" ref={dropRef}>
           {/* Header */}
           <div className="glass-effect p-4 border-b border-white/10">
@@ -331,9 +371,10 @@ function App() {
               </div>
               <div>
                 <h1 className="text-base font-bold text-white">Bilel Jammazi AI</h1>
-                <p className="text-xs text-gray-300">Movies, images, and more</p>
+                <p className="text-xs text-gray-300">Hello, {settings.displayName}</p>
               </div>
               <div className="ml-auto flex items-center gap-2">
+                <button onClick={() => setSettingsOpen(true)} className="text-gray-300 hover:text-white text-xs flex items-center gap-1"><Settings className="w-4 h-4"/> Settings</button>
                 <button onClick={clearChat} className="text-gray-300 hover:text-white text-xs flex items-center gap-1"><Eraser className="w-4 h-4"/> Clear</button>
                 <button onClick={exportChat} className="text-gray-300 hover:text-white text-xs flex items-center gap-1"><DownloadIcon className="w-4 h-4"/> Export</button>
                 <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse"></div>
@@ -440,15 +481,13 @@ function App() {
               </div>
               
               <div className="flex-1 relative">
-                <textarea
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Type a message, ask for movies, or analyze an image (you can also drag-and-drop it here)..."
-                  className="w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-xl px-4 py-3 pr-12 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 border border-white/10"
-                  rows={1}
-                  style={{ minHeight: '48px', maxHeight: '120px' }}
-                />
+                <textarea ref={inputRef} value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyPress={handleKeyPress} placeholder="Type a message, ask for movies, or analyze an image (drag-and-drop supported)..." className="w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-xl px-4 py-3 pr-12 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 border border-white/10" rows={1} style={{ minHeight: '48px', maxHeight: '120px' }} />
+                {/* Quick suggestions below input */}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {['What should I watch tonight?', 'Summarize this image', 'Trending sci-fi', 'Best comedy in 2023'].map(s => (
+                    <button key={s} onClick={() => setInputText(s)} className="text-xs bg-white/5 hover:bg-white/10 text-gray-300 rounded px-2 py-1">{s}</button>
+                  ))}
+                </div>
               </div>
               
               <button
@@ -483,6 +522,8 @@ function App() {
           </div>
         </aside>
       </div>
+
+      <SettingsModal open={settingsOpen} initial={settings} onClose={() => setSettingsOpen(false)} onSave={(s) => { setSettings(s); setSettingsOpen(false); }} />
     </div>
   );
 }

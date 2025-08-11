@@ -1,6 +1,8 @@
 import React from 'react';
-import { User, Bot, Volume2 } from 'lucide-react';
+import { User, Bot, Volume2, Copy } from 'lucide-react';
 import { Message } from '../types';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface ChatMessageProps {
   message: Message;
@@ -32,6 +34,10 @@ export function ChatMessage({ message }: ChatMessageProps) {
     }
   };
 
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(message.content); } catch {}
+  };
+
   return (
     <div className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
       {message.sender === 'ai' && (
@@ -54,19 +60,30 @@ export function ChatMessage({ message }: ChatMessageProps) {
         )}
         
         <div className="flex items-start justify-between gap-3">
-          <p className="text-sm leading-relaxed whitespace-pre-wrap flex-1">
-            {linkify(message.content)}
-          </p>
+          <div className="text-sm leading-relaxed whitespace-pre-wrap flex-1 prose prose-invert prose-sm max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {message.content}
+            </ReactMarkdown>
+          </div>
           
-          {message.sender === 'ai' && (
+          <div className="flex items-center gap-1 flex-shrink-0">
             <button
-              onClick={() => handleTextToSpeech(message.content)}
-              className="text-gray-400 hover:text-white transition-colors flex-shrink-0 p-1 rounded-full hover:bg-white/10"
-              title="Listen to message"
+              onClick={copy}
+              className="text-gray-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+              title="Copy message"
             >
-              <Volume2 className="w-4 h-4" />
+              <Copy className="w-4 h-4" />
             </button>
-          )}
+            {message.sender === 'ai' && (
+              <button
+                onClick={() => handleTextToSpeech(message.content)}
+                className="text-gray-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+                title="Listen to message"
+              >
+                <Volume2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
         
         <div className="text-xs text-gray-400 mt-2">
