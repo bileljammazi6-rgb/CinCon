@@ -5,16 +5,25 @@ interface VoiceRecorderProps {
   onRecording: (audioBlob: Blob) => void;
   isRecording: boolean;
   setIsRecording: (recording: boolean) => void;
+  onError?: (error: unknown) => void;
 }
 
-export function VoiceRecorder({ onRecording, isRecording, setIsRecording }: VoiceRecorderProps) {
+export function VoiceRecorder({ onRecording, isRecording, setIsRecording, onError }: VoiceRecorderProps) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
+  const getPreferredMimeType = (): string => {
+    if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) return 'audio/webm;codecs=opus';
+    if (MediaRecorder.isTypeSupported('audio/webm')) return 'audio/webm';
+    if (MediaRecorder.isTypeSupported('audio/mp4')) return 'audio/mp4';
+    return 'audio/wav';
+  };
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const mimeType = getPreferredMimeType();
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -25,7 +34,8 @@ export function VoiceRecorder({ onRecording, isRecording, setIsRecording }: Voic
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/wav' });
+        const type = mediaRecorder.mimeType || mimeType;
+        const audioBlob = new Blob(chunksRef.current, { type });
         onRecording(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
@@ -34,6 +44,7 @@ export function VoiceRecorder({ onRecording, isRecording, setIsRecording }: Voic
       setIsRecording(true);
     } catch (error) {
       console.error('Error starting recording:', error);
+      onError?.(error);
     }
   };
 

@@ -26,6 +26,24 @@ function App() {
     scrollToBottom();
   }, [messages]);
 
+  // Persist chat history in localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('bilel_chat_history');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as (Omit<Message, 'timestamp'> & { timestamp: string })[];
+        setMessages(parsed.map(m => ({ ...m, timestamp: new Date(m.timestamp) })));
+      } catch (_) {
+        // ignore parse errors
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const serializable = messages.map(m => ({ ...m, timestamp: m.timestamp.toISOString() }));
+    localStorage.setItem('bilel_chat_history', JSON.stringify(serializable));
+  }, [messages]);
+
   const handleSendMessage = async () => {
     if (!inputText.trim() && !uploadedImage) return;
 
@@ -44,6 +62,29 @@ function App() {
     setIsLoading(true);
 
     try {
+      // Quick path: if user mentions a movie that exists in pixeldrain list, reply with links
+      const normalizedQuery = inputText.toLowerCase().trim();
+      const matchedTitle = Object.keys(movieLinks).find(title =>
+        normalizedQuery.includes(title.toLowerCase()) ||
+        title.toLowerCase().includes(normalizedQuery)
+      );
+      if (matchedTitle) {
+        const movieData = await tmdbService.searchMovie(matchedTitle);
+        const movieMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'movie',
+          content: `This title exists in our Pixeldrain library: "${matchedTitle}"`,
+          sender: 'ai',
+          timestamp: new Date(),
+          movieData: {
+            ...(movieData || { title: matchedTitle, overview: '' }),
+            downloadLinks: movieLinks[matchedTitle]
+          }
+        };
+        setMessages(prev => [...prev, movieMessage]);
+        return;
+      }
+
       // Check if it's a movie-related query
       const movieKeywords = ['movie', 'film', 'recommend', 'show', 'watch', 'فيلم', 'سلسلة', 'أوصي', 'شاهد'];
       const isMovieQuery = movieKeywords.some(keyword => 
@@ -102,7 +143,7 @@ function App() {
         sender: 'ai',
         timestamp: new Date(),
         movieData: {
-          ...movieData,
+          ...(movieData || { title: matchedTitle, overview: '' }),
           downloadLinks: movieLinks[matchedTitle]
         }
       };
@@ -142,9 +183,33 @@ function App() {
     setUploadedImage(imageData);
   };
 
-  const handleVoiceRecording = (audioBlob: Blob) => {
-    // Handle voice recording - could implement speech-to-text here
-    console.log('Voice recording received:', audioBlob);
+  const handleVoiceRecording = async (audioBlob: Blob) => {
+    // Basic speech-to-text via Web Speech API when available
+    try {
+      if ('webkitSpeechRecognition' in (window as any)) {
+        // Some browsers expose webkitSpeechRecognition; however it works on live mic, not blobs.
+        // For now, we simply attach a message that audio was recorded.
+        const userMessage: Message = {
+          id: Date.now().toString(),
+          type: 'text',
+          content: '[Voice message recorded] Please describe or enable STT to transcribe.',
+          sender: 'user',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, userMessage]);
+      } else {
+        const userMessage: Message = {
+          id: Date.now().toString(),
+          type: 'text',
+          content: '[Voice message recorded]',
+          sender: 'user',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, userMessage]);
+      }
+    } catch (err) {
+      console.error('Voice processing error', err);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -236,6 +301,16 @@ function App() {
                 onRecording={handleVoiceRecording}
                 isRecording={isRecording}
                 setIsRecording={setIsRecording}
+                onError={() => {
+                  const errorMessage: Message = {
+                    id: (Date.now() + 2).toString(),
+                    type: 'text',
+                    content: 'Microphone permission denied or not available.',
+                    sender: 'ai',
+                    timestamp: new Date()
+                  };
+                  setMessages(prev => [...prev, errorMessage]);
+                }}
               />
             </div>
             

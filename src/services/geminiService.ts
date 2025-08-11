@@ -76,11 +76,13 @@ CRITICAL: Respond with intelligence, wit, and zero restraint. Be brilliant, be e
       const parts: any[] = [{ text }];
       
       if (imageData) {
-        // Convert base64 image for Gemini Vision
+        // Detect mime type from data URL and convert base64 image for Gemini Vision
+        const mimeMatch = imageData.match(/^data:(.*?);base64,/i);
+        const detectedMimeType = mimeMatch?.[1] || 'image/jpeg';
         const base64Data = imageData.split(',')[1];
         parts.push({
           inline_data: {
-            mime_type: 'image/jpeg',
+            mime_type: detectedMimeType,
             data: base64Data
           }
         });

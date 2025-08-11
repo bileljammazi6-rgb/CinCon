@@ -6,6 +6,21 @@ interface ChatMessageProps {
   message: Message;
 }
 
+function linkify(text: string): React.ReactNode {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, index) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline break-all">
+          {part}
+        </a>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+}
+
 export function ChatMessage({ message }: ChatMessageProps) {
   const handleTextToSpeech = (text: string) => {
     if ('speechSynthesis' in window) {
@@ -40,7 +55,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
         
         <div className="flex items-start justify-between gap-3">
           <p className="text-sm leading-relaxed whitespace-pre-wrap flex-1">
-            {message.content}
+            {linkify(message.content)}
           </p>
           
           {message.sender === 'ai' && (
