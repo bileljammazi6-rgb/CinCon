@@ -1,53 +1,267 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './hooks/useAuth';
-import { AuthForm } from './components/Auth/AuthForm';
-import { Layout } from './components/Layout/Navigation';
-import { SocialFeed } from './components/Social/SocialFeed';
-import { MoviesSection } from './components/Movies/MoviesSection';
-import { ChatList } from './components/Chat/ChatList';
-import { UserProfile } from './components/Profile/UserProfile';
-import { LocationMap } from './components/Location/LocationMap';
-import { GlobalSearch } from './components/Search/GlobalSearch';
-import { QuotesSection } from './components/Quotes/QuotesSection';
-import { AdminDashboard } from './components/Admin/AdminDashboard';
-import { NotificationCenter } from './components/Notifications/NotificationCenter';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Image, Mic, Bot, User, Volume2, Download, Star, Calendar, Clock } from 'lucide-react';
+import { ChatMessage } from './components/ChatMessage';
+import { MovieCard } from './components/MovieCard';
+import { ImageUpload } from './components/ImageUpload';
+import { VoiceRecorder } from './components/VoiceRecorder';
+import { geminiService } from './services/geminiService';
+import { tmdbService } from './services/tmdbService';
+import { movieLinks } from './data/movieLinks';
+import { Message, MovieData } from './types';
 
 function App() {
-  const { user, loading } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading CineConnect...</p>
-        </div>
-      </div>
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSendMessage = async () => {
+    if (!inputText.trim() && !uploadedImage) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      type: 'text',
+      content: inputText,
+      sender: 'user',
+      timestamp: new Date(),
+      image: uploadedImage || undefined
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputText('');
+    setUploadedImage(null);
+    setIsLoading(true);
+
+    try {
+      // Check if it's a movie-related query
+      const movieKeywords = ['movie', 'film', 'recommend', 'show', 'watch', 'فيلم', 'سلسلة', 'أوصي', 'شاهد'];
+      const isMovieQuery = movieKeywords.some(keyword => 
+        inputText.toLowerCase().includes(keyword)
+      );
+
+      if (isMovieQuery) {
+        await handleMovieQuery(inputText);
+      } else {
+        // Regular AI chat
+        const response = await geminiService.sendMessage(inputText, uploadedImage);
+        
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'text',
+          content: response,
+          sender: 'ai',
+          timestamp: new Date()
+        };
+
+        setMessages(prev => [...prev, aiMessage]);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'text',
+        content: 'Sorry, I encountered an error. Please try again.',
+        sender: 'ai',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMovieQuery = async (query: string) => {
+    const movieTitleQuery = query.replace(/movie|film|recommend|show|watch|فيلم|سلسلة|أوصي|شاهد/gi, '').trim();
+    const normalizedQuery = movieTitleQuery.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+
+    // Check local movie links first
+    const matchedTitle = Object.keys(movieLinks).find(title => 
+      normalizedQuery.includes(title.toLowerCase()) || 
+      title.toLowerCase().includes(normalizedQuery)
     );
-  }
 
-  if (!user) {
-    return <AuthForm />;
-  }
+    if (matchedTitle) {
+      // Found in local database
+      const movieData = await tmdbService.searchMovie(matchedTitle);
+      
+      const movieMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'movie',
+        content: `Here's what I found for "${matchedTitle}":`,
+        sender: 'ai',
+        timestamp: new Date(),
+        movieData: {
+          ...movieData,
+          downloadLinks: movieLinks[matchedTitle]
+        }
+      };
+
+      setMessages(prev => [...prev, movieMessage]);
+    } else {
+      // Search TMDB for movie info
+      const movieData = await tmdbService.searchMovie(movieTitleQuery);
+      
+      if (movieData) {
+        const movieMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'movie',
+          content: `I found this movie for you:`,
+          sender: 'ai',
+          timestamp: new Date(),
+          movieData
+        };
+
+        setMessages(prev => [...prev, movieMessage]);
+      } else {
+        const response = await geminiService.sendMessage(query);
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'text',
+          content: response,
+          sender: 'ai',
+          timestamp: new Date()
+        };
+
+        setMessages(prev => [...prev, aiMessage]);
+      }
+    }
+  };
+
+  const handleImageUpload = (imageData: string) => {
+    setUploadedImage(imageData);
+  };
+
+  const handleVoiceRecording = (audioBlob: Blob) => {
+    // Handle voice recording - could implement speech-to-text here
+    console.log('Voice recording received:', audioBlob);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   return (
-    <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<SocialFeed />} />
-          <Route path="/discover" element={<GlobalSearch />} />
-          <Route path="/movies" element={<MoviesSection />} />
-          <Route path="/messages" element={<ChatList />} />
-          <Route path="/events" element={<LocationMap />} />
-          <Route path="/profile" element={<UserProfile />} />
-          <Route path="/quotes" element={<QuotesSection />} />
-          <Route path="/notifications" element={<NotificationCenter />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Layout>
-    </Router>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="chat-container w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="glass-effect p-6 border-b border-white/10">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+              <Bot className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-white">Bilel Jammazi AI</h1>
+              <p className="text-sm text-gray-300">Advanced AI Assistant</p>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-sm text-gray-300">Online</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
+          {messages.length === 0 && (
+            <div className="text-center text-gray-400 mt-20">
+              <Bot className="w-16 h-16 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">Welcome to Bilel Jammazi AI</h3>
+              <p className="text-sm">Ask me anything - movies, books, philosophy, or just chat!</p>
+            </div>
+          )}
+          
+          {messages.map((message) => (
+            <div key={message.id}>
+              {message.type === 'movie' && message.movieData ? (
+                <MovieCard movieData={message.movieData} />
+              ) : (
+                <ChatMessage message={message} />
+              )}
+            </div>
+          ))}
+          
+          {isLoading && (
+            <div className="flex items-center gap-3 text-gray-400">
+              <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+                <Bot className="w-4 h-4" />
+              </div>
+              <div className="typing-indicator">
+                <div className="typing-dot"></div>
+                <div className="typing-dot"></div>
+                <div className="typing-dot"></div>
+              </div>
+              <span className="text-sm">Bilel is thinking...</span>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Area */}
+        <div className="input-area p-6 border-t border-white/10">
+          {uploadedImage && (
+            <div className="mb-4 flex items-center gap-3">
+              <img 
+                src={uploadedImage} 
+                alt="Uploaded" 
+                className="image-preview"
+              />
+              <button
+                onClick={() => setUploadedImage(null)}
+                className="text-red-400 hover:text-red-300 transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          )}
+          
+          <div className="flex items-end gap-3">
+            <div className="flex gap-2">
+              <ImageUpload onImageUpload={handleImageUpload} />
+              <VoiceRecorder 
+                onRecording={handleVoiceRecording}
+                isRecording={isRecording}
+                setIsRecording={setIsRecording}
+              />
+            </div>
+            
+            <div className="flex-1 relative">
+              <textarea
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ask Bilel anything..."
+                className="w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-xl px-4 py-3 pr-12 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 border border-white/10"
+                rows={1}
+                style={{ minHeight: '48px', maxHeight: '120px' }}
+              />
+            </div>
+            
+            <button
+              onClick={handleSendMessage}
+              disabled={isLoading || (!inputText.trim() && !uploadedImage)}
+              className="btn-primary p-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
