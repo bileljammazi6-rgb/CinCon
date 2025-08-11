@@ -31,7 +31,12 @@ export function MovieCard({ movieData }: MovieCardProps) {
           />
           
           <div className="flex-1 p-4">
-            <h3 className="text-lg font-bold text-white mb-2">{movieData.title}</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-white mb-2">{movieData.title}</h3>
+              {movieData.downloadLinks && movieData.downloadLinks.length > 0 && (
+                <span className="ml-2 text-xs px-2 py-1 rounded bg-green-600/80 text-white">Pixeldrain</span>
+              )}
+            </div>
             
             <div className="flex items-center gap-4 mb-3 text-sm text-gray-300">
               {movieData.release_date && (
