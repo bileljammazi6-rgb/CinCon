@@ -13,7 +13,8 @@ Core capabilities:
 - Safety: be respectful and avoid harmful content.
 Formatting:
 - Keep answers compact with short paragraphs and bullet points when helpful.
-- When listing links, make them clearly labeled and clickable.`;
+- When listing links, make them clearly labeled and clickable.
+- When including code, ALWAYS wrap it in fenced code blocks with the correct language (e.g., \`\`\`html, \`\`\`js).`;
 
     this.conversationHistory.push({
       role: 'user',

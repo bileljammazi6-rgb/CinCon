@@ -3,24 +3,11 @@ import { User, Bot, Volume2, Copy } from 'lucide-react';
 import { Message } from '../types';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface ChatMessageProps {
   message: Message;
-}
-
-function linkify(text: string): React.ReactNode {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const parts = text.split(urlRegex);
-  return parts.map((part, index) => {
-    if (part.match(urlRegex)) {
-      return (
-        <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline break-all">
-          {part}
-        </a>
-      );
-    }
-    return <span key={index}>{part}</span>;
-  });
 }
 
 export function ChatMessage({ message }: ChatMessageProps) {
@@ -34,8 +21,8 @@ export function ChatMessage({ message }: ChatMessageProps) {
     }
   };
 
-  const copy = async () => {
-    try { await navigator.clipboard.writeText(message.content); } catch {}
+  const copyText = async (text: string) => {
+    try { await navigator.clipboard.writeText(text); } catch {}
   };
 
   return (
@@ -61,14 +48,38 @@ export function ChatMessage({ message }: ChatMessageProps) {
         
         <div className="flex items-start justify-between gap-3">
           <div className="text-sm leading-relaxed whitespace-pre-wrap flex-1 prose prose-invert prose-sm max-w-none">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                code({node, inline, className, children, ...props}) {
+                  const match = /language-(\w+)/.exec(className || '');
+                  const codeText = String(children).replace(/\n$/, '');
+                  if (!inline) {
+                    return (
+                      <div className="relative group">
+                        <button
+                          onClick={() => copyText(codeText)}
+                          className="opacity-0 group-hover:opacity-100 absolute right-2 top-2 text-xs bg-white/10 hover:bg-white/20 text-white px-2 py-1 rounded"
+                        >
+                          Copy
+                        </button>
+                        <SyntaxHighlighter style={oneDark} language={match ? match[1] : undefined} PreTag="div" {...props}>
+                          {codeText}
+                        </SyntaxHighlighter>
+                      </div>
+                    );
+                  }
+                  return <code className={className} {...props}>{children}</code>
+                }
+              }}
+            >
               {message.content}
             </ReactMarkdown>
           </div>
           
           <div className="flex items-center gap-1 flex-shrink-0">
             <button
-              onClick={copy}
+              onClick={() => copyText(message.content)}
               className="text-gray-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
               title="Copy message"
             >

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Calendar, Download, ExternalLink } from 'lucide-react';
+import { Star, Calendar, Download, ExternalLink, Copy } from 'lucide-react';
 import { MovieData } from '../types';
 
 interface MovieCardProps {
@@ -12,6 +12,10 @@ export function MovieCard({ movieData }: MovieCardProps) {
     : 'https://via.placeholder.com/500x750/1e293b/64748b?text=No+Image';
 
   const rating = movieData.vote_average ? Math.round(movieData.vote_average * 10) / 10 : 0;
+
+  const copy = async (text: string) => {
+    try { await navigator.clipboard.writeText(text); } catch {}
+  };
 
   return (
     <div className="flex justify-start">
@@ -64,22 +68,32 @@ export function MovieCard({ movieData }: MovieCardProps) {
           <div className="border-t border-white/10 p-4 bg-gray-800/50">
             <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
               <Download className="w-4 h-4" />
-              Download Links
+              Pixeldrain Links
             </h4>
             
-            <div className="space-y-2">
-              {movieData.downloadLinks.map((link, index) => (
-                <a
-                  key={index}
-                  href={link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors p-2 rounded-lg hover:bg-white/5"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  {movieData.downloadLinks!.length > 1 ? `Episode ${index + 1}` : 'Download'}
-                </a>
-              ))}
+            <div className="grid grid-cols-1 gap-2">
+              {movieData.downloadLinks.map((link, index) => {
+                const host = (() => {
+                  try { return new URL(link).host; } catch { return 'link'; }
+                })();
+                return (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors p-2 rounded-lg hover:bg-white/5 flex-1"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      {movieData.downloadLinks!.length > 1 ? `File ${index + 1}` : 'Download'}
+                      <span className="text-xs text-gray-400">({host})</span>
+                    </a>
+                    <button onClick={() => copy(link)} className="text-gray-300 hover:text-white p-2 rounded hover:bg-white/10" title="Copy link">
+                      <Copy className="w-4 h-4"/>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

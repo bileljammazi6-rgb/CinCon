@@ -10,6 +10,7 @@ import { geminiService } from './services/geminiService';
 import { tmdbService } from './services/tmdbService';
 import { movieLinks } from './data/movieLinks';
 import { Message, MovieData } from './types';
+import { compressImageDataUrl } from './lib/image';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -134,9 +135,18 @@ function App() {
 
   const handleSendMessage = async () => {
     if (!inputText.trim() && !uploadedImage) return;
-
     const isImageOnly = uploadedImage && !inputText.trim();
     const prompt = buildPrompt(isImageOnly ? '' : inputText, !!isImageOnly);
+
+    // If there is an image, compress before sending to reduce payload and improve analysis
+    let imageForAnalysis: string | undefined;
+    if (uploadedImage) {
+      try {
+        imageForAnalysis = await compressImageDataUrl(uploadedImage, 1280, 0.8);
+      } catch {
+        imageForAnalysis = uploadedImage;
+      }
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -185,8 +195,7 @@ function App() {
       if (isMovieQuery) {
         await handleMovieQuery(inputText);
       } else {
-        const response = await geminiService.sendMessage(prompt, isImageOnly ? uploadedImage! : undefined);
-        
+        const response = await geminiService.sendMessage(prompt, isImageOnly ? imageForAnalysis : undefined);
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
           type: 'text',
@@ -194,11 +203,9 @@ function App() {
           sender: 'ai',
           timestamp: new Date()
         };
-
         setMessages(prev => [...prev, aiMessage]);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'text',
