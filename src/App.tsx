@@ -20,6 +20,7 @@ import { RockPaperScissorsModal } from './components/RockPaperScissorsModal';
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
+  const [movieInputText, setMovieInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -149,6 +150,47 @@ function App() {
   const clearChat = () => { setMessages([]); localStorage.removeItem('bilel_chat_history'); };
   const exportChat = () => { const text = messages.map(m => `${m.sender.toUpperCase()} [${m.timestamp.toLocaleString()}]: ${m.content}`).join('\n'); const blob = new Blob([text], { type: 'text/plain' }); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='chat.txt'; a.click(); URL.revokeObjectURL(url); };
 
+  const handleSendMovieMessage = async () => {
+    const query = movieInputText.trim();
+    if (!query) return;
+
+    const userMessage: any = { id: Date.now().toString(), type: 'text', content: query, sender: 'user', timestamp: new Date() };
+    setMessages(prev => [...prev, userMessage]);
+    setMovieInputText('');
+    setIsLoading(true);
+
+    try {
+      if (settings.pixeldrainOnly) {
+        const normalized = query.toLowerCase();
+        const matchedTitle = Object.keys(movieLinks).find(t => normalized.includes(t.toLowerCase()) || t.toLowerCase().includes(normalized));
+        if (matchedTitle) {
+          const data = await tmdbService.searchMovie(matchedTitle);
+          setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'movie', content: `Available in Pixeldrain: "${matchedTitle}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(data || { title: matchedTitle, overview: '' }), downloadLinks: movieLinks[matchedTitle] } } as any]);
+        } else {
+          setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: 'Not available in Pixeldrain library.', sender: 'ai', timestamp: new Date() } as any]);
+        }
+      } else {
+        if (/^(recommend|suggest)(\s|$)/i.test(query)) {
+          const terms = query.replace(/^(recommend|suggest)\s*/i, '').trim().toLowerCase();
+          const candidates = Object.keys(movieLinks).filter(t => terms ? t.includes(terms) : true).slice(0,5);
+          if (candidates.length > 0) {
+            for (const title of candidates) {
+              const data = await tmdbService.searchMovie(title);
+              setMessages(prev => [...prev, { id: `${Date.now()}-${title}`, type: 'movie', content: `Available in Pixeldrain: "${title}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(data || { title, overview: '' }), downloadLinks: movieLinks[title] } } as any]);
+            }
+            setIsLoading(false);
+            return;
+          }
+        }
+        await handleMovieQuery(query);
+      }
+    } catch (e) {
+      setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: 'Sorry, I encountered an error. Please try again.', sender: 'ai', timestamp: new Date() } as any]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen md:min-h-0 flex items-stretch md:items-center justify-stretch md:justify-center">
       <div className="w-full md:max-w-6xl h-[100svh] md:h-[90vh] rounded-none md:rounded-2xl shadow-2xl flex overflow-hidden">
@@ -241,16 +283,23 @@ function App() {
           )}
 
           {activeTab==='movies' && (
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
-              <div className="text-xs text-gray-400">Ask for recommendations or type “recommend ... / suggest ...”. Pixeldrain-only filter is in Settings.</div>
-              {/* Reuse chat messages area to show movie cards if present */}
-              {messages.filter((m:any)=>m.type==='movie').length===0 && (
-                <div className="text-gray-400 text-xs">No movies yet. Try asking for a title.</div>
-              )}
-              {messages.filter((m:any)=>m.type==='movie').map((m:any)=>(
-                <MovieCard key={m.id} movieData={m.movieData} />
-              ))}
-            </div>
+            <>
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+                <div className="text-xs text-gray-400">Ask for recommendations or type “recommend ... / suggest ...”. Pixeldrain-only filter is in Settings.</div>
+                {messages.filter((m:any)=>m.type==='movie').length===0 && (
+                  <div className="text-gray-400 text-xs">No movies yet. Try asking for a title.</div>
+                )}
+                {messages.filter((m:any)=>m.type==='movie').map((m:any)=>(
+                  <MovieCard key={m.id} movieData={m.movieData} />
+                ))}
+              </div>
+              <div className="input-area p-2 md:p-3 border-t border-white/10">
+                <div className="flex items-end gap-2">
+                  <textarea value={movieInputText} onChange={(e)=>setMovieInputText(e.target.value)} onKeyPress={(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSendMovieMessage(); } }} placeholder="Search movies/series or ask for recommendations" className="flex-1 bg-[#2a3942] text-white placeholder-gray-400 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-white/5" rows={1} style={{ minHeight:'44px', maxHeight:'120px' }} />
+                  <button onClick={handleSendMovieMessage} disabled={isLoading || !movieInputText.trim()} className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50"><Send className="w-5 h-5 text-white"/></button>
+                </div>
+              </div>
+            </>
           )}
 
           {activeTab==='games' && (
