@@ -56,6 +56,15 @@ function App() {
     return isImageOnly ? `${prefix}\nTask: Analyze the provided image in detail (objects, layout, colors, text/OCR, context, movie/actor references if any).` : `${prefix}\nTask: ${raw}`;
   };
 
+  const maybeAppendCitations = async (context: string) => {
+    if (!settings.autoCitations) return;
+    try {
+      const prompt = `Provide 2-5 concise, credible references (URLs or precise citations) that support the previous answer. Format as bullet points.`;
+      const refs = await geminiService.sendMessage(prompt, undefined, { model: settings.model || 'flash' });
+      setMessages(prev => [...prev, { id: (Date.now()+2).toString(), type: 'text', content: `Sources / Evidence:\n\n${refs}`, sender: 'ai', timestamp: new Date() } as any]);
+    } catch {}
+  };
+
   const handleSendMessage = async () => {
     if (!inputText.trim() && !uploadedImage) return;
     const isImageOnly = uploadedImage && !inputText.trim();
@@ -113,6 +122,7 @@ function App() {
       } else {
         const response = await geminiService.sendMessage(prompt, isImageOnly ? imageForAnalysis : undefined, { model: settings.model || 'flash' });
         setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: response, sender: 'ai', timestamp: new Date() }]);
+        await maybeAppendCitations(response);
       }
     } catch {
       setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: 'Sorry, I encountered an error. Please try again.', sender: 'ai', timestamp: new Date() }]);
@@ -258,7 +268,7 @@ function App() {
       </div>
 
       <SettingsModal open={settingsOpen} initial={settings} onClose={()=>setSettingsOpen(false)} onSave={(s)=>{ setSettings(s); setSettingsOpen(false); }} />
-      <ChessModal open={chessOpen} onClose={()=>setChessOpen(false)} />
+      <ChessModal open={chessOpen} onClose={()=>setChessOpen(false)} onComment={(text)=>setMessages(prev=>[...prev,{ id: (Date.now()+3).toString(), type: 'text', content: text, sender: 'ai', timestamp: new Date() } as any])} />
       <TicTacToeModal open={tttOpen} onClose={()=>setTttOpen(false)} />
       <Game2048Modal open={g2048Open} onClose={()=>setG2048Open(false)} />
       <DocsModal open={docsOpen} onClose={()=>setDocsOpen(false)} />

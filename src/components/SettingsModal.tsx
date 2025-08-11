@@ -6,6 +6,7 @@ export interface AppSettings {
   language: string; // e.g., 'auto', 'en', 'ar', 'fr'
   model?: 'flash' | 'pro';
   pixeldrainOnly?: boolean;
+  autoCitations?: boolean;
 }
 
 interface SettingsModalProps {
@@ -28,12 +29,14 @@ export function SettingsModal({ open, initial, onClose, onSave }: SettingsModalP
   const [language, setLanguage] = useState(initial.language);
   const [model, setModel] = useState<'flash' | 'pro'>(initial.model || 'flash');
   const [pixeldrainOnly, setPixeldrainOnly] = useState<boolean>(!!initial.pixeldrainOnly);
+  const [autoCitations, setAutoCitations] = useState<boolean>(initial.autoCitations ?? true);
 
   useEffect(() => {
     setDisplayName(initial.displayName);
     setLanguage(initial.language);
     setModel(initial.model || 'flash');
     setPixeldrainOnly(!!initial.pixeldrainOnly);
+    setAutoCitations(initial.autoCitations ?? true);
   }, [initial]);
 
   if (!open) return null;
@@ -84,11 +87,15 @@ export function SettingsModal({ open, initial, onClose, onSave }: SettingsModalP
             <input id="pix-only" type="checkbox" checked={pixeldrainOnly} onChange={(e)=>setPixeldrainOnly(e.target.checked)} />
             <label htmlFor="pix-only" className="text-xs text-gray-300">Only show Pixeldrain-available titles in results</label>
           </div>
+          <div className="flex items-center gap-2">
+            <input id="auto-cite" type="checkbox" checked={autoCitations} onChange={(e)=>setAutoCitations(e.target.checked)} />
+            <label htmlFor="auto-cite" className="text-xs text-gray-300">Auto request sources/evidence for answers</label>
+          </div>
         </div>
         <div className="p-4 border-t border-white/10 flex justify-end gap-2">
           <button onClick={onClose} className="px-3 py-1.5 text-sm bg-white/5 hover:bg-white/10 rounded">Cancel</button>
           <button
-            onClick={() => onSave({ displayName: displayName.trim() || 'Rim', language, model, pixeldrainOnly })}
+            onClick={() => onSave({ displayName: displayName.trim() || 'Rim', language, model, pixeldrainOnly, autoCitations })}
             className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded"
           >
             Save
