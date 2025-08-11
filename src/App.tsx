@@ -56,22 +56,39 @@ function App() {
     setMessages(prev => [...prev, userMessage]); setInputText(''); setUploadedImage(null); setIsLoading(true);
 
     try {
-      if (!isImageOnly && inputText.trim()) {
-        const normalizedQuery = inputText.toLowerCase().trim();
+      // Pixeldrain recommendation command
+      if (/^recommend(\s|$)/i.test(userMessage.content) || /^suggest(\s|$)/i.test(userMessage.content)) {
+        const terms = userMessage.content.replace(/^(recommend|suggest)\s*/i, '').trim().toLowerCase();
+        const candidates = Object.keys(movieLinks)
+          .filter(title => terms ? title.includes(terms) : true)
+          .slice(0, 5);
+        if (candidates.length > 0) {
+          for (const title of candidates) {
+            const data = await tmdbService.searchMovie(title);
+            setMessages(prev => [...prev, { id: `${Date.now()}-${title}`, type: 'movie', content: `Available in Pixeldrain: "${title}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(data || { title, overview: '' }), downloadLinks: movieLinks[title] } }]);
+          }
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      if (!isImageOnly && userMessage.content.trim()) {
+        const normalizedQuery = userMessage.content.toLowerCase().trim();
         const matchedTitle = Object.keys(movieLinks).find(title => normalizedQuery.includes(title.toLowerCase()) || title.toLowerCase().includes(normalizedQuery));
         if (matchedTitle) {
           const movieData = await tmdbService.searchMovie(matchedTitle);
           setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'movie', content: `This title exists in our Pixeldrain library: "${matchedTitle}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(movieData || { title: matchedTitle, overview: '' }), downloadLinks: movieLinks[matchedTitle] } }]);
+          setIsLoading(false);
           return;
         }
       }
 
       const movieKeywords = ['movie','film','recommend','show','watch','فيلم','سلسلة','أوصي','شاهد'];
-      const isMovieQuery = !isImageOnly && movieKeywords.some(k => (inputText||'').toLowerCase().includes(k));
+      const isMovieQuery = !isImageOnly && movieKeywords.some(k => userMessage.content.toLowerCase().includes(k));
       if (isMovieQuery) {
-        await handleMovieQuery(inputText);
+        await handleMovieQuery(userMessage.content);
       } else {
-        const response = await geminiService.sendMessage(prompt, isImageOnly ? imageForAnalysis : undefined);
+        const response = await geminiService.sendMessage(prompt, isImageOnly ? imageForAnalysis : undefined, { model: settings.model || 'flash' });
         setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: response, sender: 'ai', timestamp: new Date() }]);
       }
     } catch {

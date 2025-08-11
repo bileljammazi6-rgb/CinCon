@@ -30,12 +30,11 @@ Formatting:
     });
   }
 
-  async sendMessage(text: string, imageData?: string): Promise<string> {
+  async sendMessage(text: string, imageData?: string, options?: { model?: 'flash' | 'pro' }): Promise<string> {
     try {
       const parts: any[] = [{ text }];
       
       if (imageData) {
-        // Detect mime type from data URL and convert base64 image for Gemini Vision
         const mimeMatch = imageData.match(/^data:(.*?);base64,/i);
         const detectedMimeType = mimeMatch?.[1] || 'image/jpeg';
         const base64Data = imageData.split(',')[1];
@@ -62,31 +61,23 @@ Formatting:
           maxOutputTokens: 2048,
         },
         safetySettings: [
-          {
-            category: 'HARM_CATEGORY_HARASSMENT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_HATE_SPEECH',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          }
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
         ]
       };
 
-      const model = imageData ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
+      let model: 'gemini-1.5-flash' | 'gemini-1.5-pro';
+      if (options?.model) {
+        model = options.model === 'pro' ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
+      } else {
+        model = imageData ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
+      }
+
       const response = await fetch(`${this.baseUrl}/${model}:generateContent?key=${this.apiKey}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
@@ -97,13 +88,11 @@ Formatting:
       const data = await response.json();
       const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
 
-      // Update conversation history
       this.conversationHistory.push(
         { role: 'user', parts },
         { role: 'model', parts: [{ text: aiResponse }] }
       );
 
-      // Keep conversation history manageable
       if (this.conversationHistory.length > 20) {
         this.conversationHistory = [
           this.conversationHistory[0],

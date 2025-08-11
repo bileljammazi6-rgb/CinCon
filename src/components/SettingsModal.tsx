@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { X, Save, Globe } from 'lucide-react';
+import { X, Save, Globe, Zap, Gauge } from 'lucide-react';
 
 export interface AppSettings {
   displayName: string;
   language: string; // e.g., 'auto', 'en', 'ar', 'fr'
+  model?: 'flash' | 'pro';
 }
 
 interface SettingsModalProps {
@@ -24,10 +25,12 @@ const languages = [
 export function SettingsModal({ open, initial, onClose, onSave }: SettingsModalProps) {
   const [displayName, setDisplayName] = useState(initial.displayName);
   const [language, setLanguage] = useState(initial.language);
+  const [model, setModel] = useState<'flash' | 'pro'>(initial.model || 'flash');
 
   useEffect(() => {
     setDisplayName(initial.displayName);
     setLanguage(initial.language);
+    setModel(initial.model || 'flash');
   }, [initial]);
 
   if (!open) return null;
@@ -61,14 +64,27 @@ export function SettingsModal({ open, initial, onClose, onSave }: SettingsModalP
               ))}
             </select>
           </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">AI mode</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => setModel('flash')} className={`px-3 py-2 rounded border ${model==='flash'?'border-emerald-500 bg-emerald-600/20':'border-white/10 bg-white/5'}`}>
+                <div className="text-xs font-semibold flex items-center gap-1"><Zap className="w-4 h-4"/> Speed</div>
+                <div className="text-[10px] text-gray-400">Gemini Flash</div>
+              </button>
+              <button onClick={() => setModel('pro')} className={`px-3 py-2 rounded border ${model==='pro'?'border-blue-500 bg-blue-600/20':'border-white/10 bg-white/5'}`}>
+                <div className="text-xs font-semibold flex items-center gap-1"><Gauge className="w-4 h-4"/> Quality</div>
+                <div className="text-[10px] text-gray-400">Gemini Pro</div>
+              </button>
+            </div>
+          </div>
         </div>
         <div className="p-4 border-t border-white/10 flex justify-end gap-2">
           <button onClick={onClose} className="px-3 py-1.5 text-sm bg-white/5 hover:bg-white/10 rounded">Cancel</button>
           <button
-            onClick={() => onSave({ displayName: displayName.trim() || 'Rim', language })}
-            className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded flex items-center gap-1"
+            onClick={() => onSave({ displayName: displayName.trim() || 'Rim', language, model })}
+            className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded"
           >
-            <Save className="w-4 h-4"/> Save
+            Save
           </button>
         </div>
       </div>
