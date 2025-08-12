@@ -16,7 +16,7 @@ export async function listMessages(roomId: string, sinceIso?: string, limit = 50
     .order('created_at', { ascending: true })
     .limit(limit);
   if (sinceIso) {
-    query = query.gte('created_at', sinceIso);
+    query = query.gt('created_at', sinceIso);
   }
   const { data, error } = await query;
   if (error) throw error;

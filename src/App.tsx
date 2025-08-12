@@ -46,6 +46,7 @@ function App() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
+  const [lastCommunityAiAt, setLastCommunityAiAt] = useState<number>(0);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   useEffect(() => { const saved = localStorage.getItem('bilel_chat_history'); if (saved) try { setMessages(JSON.parse(saved).map((m: any)=>({ ...m, timestamp: new Date(m.timestamp) })) ); } catch {} }, []);
@@ -59,7 +60,21 @@ function App() {
       try {
         const last = communityMessages[communityMessages.length - 1]?.created_at;
         const msgs = await listMessages(COMMUNITY_ROOM_ID, last);
-        if (!ignore && msgs.length) setCommunityMessages(prev => [...prev, ...msgs]);
+        if (!ignore && msgs.length) {
+          const combined = [...communityMessages, ...msgs];
+          setCommunityMessages(combined);
+          // 10% chance to interject if at least 30s since last AI message
+          const now = Date.now();
+          const canSpeak = now - lastCommunityAiAt > 30000;
+          if (Math.random() < 0.1 && canSpeak) {
+            const context = combined.slice(-5).map(m=>`${m.sender}: ${m.content}`).join('\n');
+            try {
+              const ai = await geminiService.sendMessage(`Provide a single short, witty comment that fits seamlessly into this chat. Avoid interrupting or derailing. Be playful but concise. Context (last messages):\n${context}`);
+              setCommunityMessages(prev => [...prev, { id: `${Date.now()}-ai`, room_id: COMMUNITY_ROOM_ID, sender: 'Bilel AI', content: ai.split('\n')[0].slice(0,200), created_at: new Date().toISOString() }]);
+              setLastCommunityAiAt(now);
+            } catch {}
+          }
+        }
       } catch {}
     };
     load();
