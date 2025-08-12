@@ -62,3 +62,13 @@ export async function fetchProfiles(usernames: string[]): Promise<Record<string,
   (data || []).forEach((u: any) => { map[u.username] = { avatar_url: u.avatar_url || undefined }; });
   return map;
 }
+
+export async function listUsers(limit = 50): Promise<{ username: string; avatar_url?: string }[]> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('username, avatar_url')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data || []) as any;
+}

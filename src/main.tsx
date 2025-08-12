@@ -28,23 +28,24 @@ function AuthScreen() {
   const [password, setPassword] = React.useState('');
   const [username, setUsername] = React.useState('');
   const [error, setError] = React.useState<string>('');
+  const [msg, setMsg] = React.useState<string>('');
   const [loading, setLoading] = React.useState(false);
 
   const signIn = async () => {
-    setLoading(true); setError('');
+    setLoading(true); setError(''); setMsg('');
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) setError(error.message);
     setLoading(false);
   };
   const signUp = async () => {
-    setLoading(true); setError('');
+    setLoading(true); setError(''); setMsg('');
     try {
       const derived = username.trim() || email.split('@')[0];
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
-      // Create profile
       const { error: upsertErr } = await supabase.from('users').insert({ email, username: derived, full_name: null, avatar_url: null });
       if (upsertErr) throw upsertErr;
+      setMsg('Check your email to confirm your account before signing in.');
     } catch (e: any) {
       setError(e?.message || 'Failed to sign up');
     }
@@ -56,6 +57,7 @@ function AuthScreen() {
       <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-xl p-4">
         <h1 className="text-lg font-bold mb-2">Create account</h1>
         {error && <div className="text-red-400 text-sm mb-2">{error}</div>}
+        {msg && <div className="text-emerald-400 text-sm mb-2">{msg}</div>}
         <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="Email" className="w-full mb-2 bg-[#2a3942] border border-white/10 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"/>
         <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Password" className="w-full mb-2 bg-[#2a3942] border border-white/10 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"/>
         <input type="text" value={username} onChange={(e)=>setUsername(e.target.value)} placeholder="Username (optional)" className="w-full mb-3 bg-[#2a3942] border border-white/10 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"/>
