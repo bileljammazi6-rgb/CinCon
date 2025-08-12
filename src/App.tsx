@@ -17,6 +17,8 @@ import { Message, MovieData } from './types';
 import { compressImageDataUrl } from './lib/image';
 import { RockPaperScissorsModal } from './components/RockPaperScissorsModal';
 import { MobileNav } from './components/MobileNav';
+import { MemoryMatchModal } from './components/MemoryMatchModal';
+import { SnakeModal } from './components/SnakeModal';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -34,6 +36,8 @@ function App() {
   const [g2048Open, setG2048Open] = useState(false);
   const [docsOpen, setDocsOpen] = useState(false);
   const [rpsOpen, setRpsOpen] = useState(false);
+  const [mmOpen, setMmOpen] = useState(false);
+  const [snakeOpen, setSnakeOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat'|'movies'|'games'>('chat');
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -328,6 +332,8 @@ function App() {
                 <button onClick={()=>setTttOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">◻ Tic‑Tac‑Toe</button>
                 <button onClick={()=>setG2048Open(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">2048</button>
                 <button onClick={()=>setRpsOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">✂ Rock/Paper/Scissors</button>
+                <button onClick={()=>setMmOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">🧠 Memory Match</button>
+                <button onClick={()=>setSnakeOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">🐍 Snake</button>
               </div>
               <div className="text-xs text-gray-400">While playing, the assistant can comment on moves (chess) directly in chat.</div>
             </div>
@@ -342,6 +348,8 @@ function App() {
       <DocsModal open={docsOpen} onClose={()=>setDocsOpen(false)} />
       <RockPaperScissorsModal open={rpsOpen} onClose={()=>setRpsOpen(false)} />
       <MobileNav active={activeTab} onChange={setActiveTab} onSettings={()=>setSettingsOpen(true)} />
+      <MemoryMatchModal open={mmOpen} onClose={()=>setMmOpen(false)} />
+      <SnakeModal open={snakeOpen} onClose={()=>setSnakeOpen(false)} />
     </div>
   );
 }
