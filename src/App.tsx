@@ -19,6 +19,7 @@ import { RockPaperScissorsModal } from './components/RockPaperScissorsModal';
 import { MobileNav } from './components/MobileNav';
 import { MemoryMatchModal } from './components/MemoryMatchModal';
 import { SnakeModal } from './components/SnakeModal';
+import { listMessages, sendMessage as sendCommunityMessage, CommunityMessage } from './services/communityService';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -39,6 +40,9 @@ function App() {
   const [mmOpen, setMmOpen] = useState(false);
   const [snakeOpen, setSnakeOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat'|'movies'|'games'|'community'>('chat');
+  const [communityMessages, setCommunityMessages] = useState<CommunityMessage[]>([]);
+  const [communityInput, setCommunityInput] = useState('');
+  const COMMUNITY_ROOM_ID = 'global';
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
@@ -47,6 +51,21 @@ function App() {
   useEffect(() => { const saved = localStorage.getItem('bilel_chat_history'); if (saved) try { setMessages(JSON.parse(saved).map((m: any)=>({ ...m, timestamp: new Date(m.timestamp) })) ); } catch {} }, []);
   useEffect(() => { localStorage.setItem('bilel_chat_history', JSON.stringify(messages.map(m=>({ ...m, timestamp: m.timestamp.toISOString() })))); }, [messages]);
   useEffect(() => { localStorage.setItem('bilel_settings', JSON.stringify(settings)); }, [settings]);
+
+  useEffect(() => {
+    if (activeTab !== 'community') return;
+    let ignore = false;
+    const load = async () => {
+      try {
+        const last = communityMessages[communityMessages.length - 1]?.created_at;
+        const msgs = await listMessages(COMMUNITY_ROOM_ID, last);
+        if (!ignore && msgs.length) setCommunityMessages(prev => [...prev, ...msgs]);
+      } catch {}
+    };
+    load();
+    const id = setInterval(load, 2000);
+    return () => { ignore = true; clearInterval(id); };
+  }, [activeTab, communityMessages]);
 
   useEffect(() => {
     const node = dropRef.current; if (!node) return;
@@ -193,6 +212,19 @@ function App() {
       setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: 'Sorry, I encountered an error. Please try again.', sender: 'ai', timestamp: new Date() } as any]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSendCommunity = async () => {
+    const text = communityInput.trim();
+    if (!text) return;
+    setCommunityInput('');
+    try {
+      await sendCommunityMessage(COMMUNITY_ROOM_ID, settings.displayName || 'Anonymous', text);
+      // optimistic add
+      setCommunityMessages(prev => [...prev, { id: Date.now().toString(), room_id: COMMUNITY_ROOM_ID, sender: settings.displayName || 'Anonymous', content: text, created_at: new Date().toISOString() }]);
+    } catch (e) {
+      // ignore for now
     }
   };
 
@@ -343,19 +375,22 @@ function App() {
           {activeTab==='community' && (
             <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
               <div className="bg-white/5 rounded p-3">
-                <div className="flex items-center gap-2 text-white text-sm font-semibold"><Users className="w-4 h-4"/> Community (Coming Soon)</div>
-                <div className="text-xs text-gray-400 mt-2">
-                  - Realtime chat every 2s refresh (to be moved to websockets).<br/>
-                  - Friend invites for games and movies.<br/>
-                  - Neon Postgres for users, rooms, messages, invites.<br/>
+                <div className="flex items-center gap-2 text-white text-sm font-semibold"><Users className="w-4 h-4"/> Community</div>
+                <div className="h-64 overflow-y-auto bg-[#0f1720] rounded p-2 text-xs text-gray-200 space-y-2">
+                  {communityMessages.map(m => (
+                    <div key={m.id} className="flex items-start gap-2">
+                      <div className="text-emerald-400 font-semibold">{m.sender}:</div>
+                      <div className="flex-1 whitespace-pre-wrap">{m.content}</div>
+                      <div className="text-[10px] text-gray-500">{new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                    </div>
+                  ))}
+                  {communityMessages.length===0 && (
+                    <div className="text-gray-500">No messages yet. Say hello!</div>
+                  )}
                 </div>
-              </div>
-              <div className="bg-white/5 rounded p-3">
-                <div className="text-xs text-gray-300 mb-2">Global Chat (prototype)</div>
-                <div className="h-48 overflow-y-auto bg-[#0f1720] rounded p-2 text-xs text-gray-200">This will display realtime messages.</div>
                 <div className="mt-2 flex gap-2">
-                  <input placeholder="Type to the community..." className="flex-1 bg-[#2a3942] text-white rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-white/5"/>
-                  <button className="btn-primary px-3 py-2 rounded">Send</button>
+                  <input value={communityInput} onChange={(e)=>setCommunityInput(e.target.value)} onKeyPress={(e)=>{ if(e.key==='Enter'){ e.preventDefault(); handleSendCommunity(); } }} placeholder="Type to the community..." className="flex-1 bg-[#2a3942] text-white rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-white/5"/>
+                  <button onClick={handleSendCommunity} className="btn-primary px-3 py-2 rounded">Send</button>
                 </div>
               </div>
             </div>
