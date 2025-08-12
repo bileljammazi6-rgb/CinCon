@@ -36,9 +36,12 @@ Formatting:
     try {
       const stored = localStorage.getItem('gemini_api_key') || '';
       const lsKey = stored.trim().length > 0 ? stored.trim() : undefined;
-      return envKey ?? lsKey;
+      // Hardcoded fallback per request (use only if no env or localStorage key)
+      const fallback = 'AIzaSyDgwpq2i6hUBCkP3JDtKRlmGJUM6jXFPAM';
+      return envKey ?? lsKey ?? fallback;
     } catch {
-      return envKey;
+      const fallback = 'AIzaSyDgwpq2i6hUBCkP3JDtKRlmGJUM6jXFPAM';
+      return envKey ?? fallback;
     }
   }
 
@@ -111,9 +114,12 @@ Formatting:
         ]
       };
 
+      // Use the exact model string and URL format requested
       const model = 'gemini-2.5-flash-preview-05-20';
-      const url = `${this.baseUrl}/${model}:generateContent?key=${effectiveKey}`;
-      const response = await this.fetchWithRetry(url, {
+      const apiKey = effectiveKey;
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+      const response = await this.fetchWithRetry(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
