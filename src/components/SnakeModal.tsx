@@ -21,6 +21,7 @@ export function SnakeModal({ open, onClose }: SnakeModalProps) {
   const [score, setScore] = useState(0);
   const [best, setBest] = useState<number>(() => { try { return parseInt(localStorage.getItem('snake_best')||'0'); } catch { return 0; } });
   const loopRef = useRef<number | null>(null);
+  const touchStart = useRef<{x:number;y:number}|null>(null);
 
   const reset = () => {
     setSnake([{x:8,y:8}]); setDir({x:1,y:0}); setFood(randPoint()); setScore(0);
@@ -56,6 +57,22 @@ export function SnakeModal({ open, onClose }: SnakeModalProps) {
     });
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0]; touchStart.current = { x: t.clientX, y: t.clientY };
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStart.current) return; const t = e.changedTouches[0];
+    const dx = t.clientX - touchStart.current.x; const dy = t.clientY - touchStart.current.y;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 20 && dir.x!==-1) setDir({x:1,y:0});
+      if (dx < -20 && dir.x!==1) setDir({x:-1,y:0});
+    } else {
+      if (dy > 20 && dir.y!==-1) setDir({x:0,y:1});
+      if (dy < -20 && dir.y!==1) setDir({x:0,y:-1});
+    }
+    touchStart.current = null;
+  };
+
   if (!open) return null;
 
   const cells = [] as JSX.Element[];
@@ -70,7 +87,7 @@ export function SnakeModal({ open, onClose }: SnakeModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       <div className="bg-gray-900 text-white rounded-xl w-full max-w-sm border border-white/10 shadow-xl">
         <div className="flex items-center justify-between p-3 border-b border-white/10">
           <h3 className="text-sm font-semibold">Snake</h3>
@@ -83,6 +100,12 @@ export function SnakeModal({ open, onClose }: SnakeModalProps) {
           <div className="flex items-center justify-between text-xs text-gray-300">
             <span>Score: <span className="text-white font-semibold">{score}</span></span>
             <span>Best: <span className="text-white font-semibold">{best}</span></span>
+          </div>
+          <div className="grid grid-cols-3 gap-2 md:hidden">
+            <button onClick={()=> dir.y!==1 && setDir({x:0,y:-1})} className="col-start-2 bg-white/5 hover:bg-white/10 rounded py-2">↑</button>
+            <button onClick={()=> dir.x!==1 && setDir({x:-1,y:0})} className="bg-white/5 hover:bg-white/10 rounded py-2">←</button>
+            <button onClick={()=> dir.x!==-1 && setDir({x:1,y:0})} className="col-start-3 bg-white/5 hover:bg-white/10 rounded py-2">→</button>
+            <button onClick={()=> dir.y!==-1 && setDir({x:0,y:1})} className="col-start-2 bg-white/5 hover:bg-white/10 rounded py-2">↓</button>
           </div>
           <div className="flex gap-2">
             <button onClick={reset} className="px-3 py-1.5 text-xs bg-white/5 hover:bg-white/10 rounded">Restart</button>

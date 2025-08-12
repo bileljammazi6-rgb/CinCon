@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { X as Close } from 'lucide-react';
 
 interface Game2048ModalProps {
@@ -56,6 +56,7 @@ function move(board: number[][], dir: 'left'|'right'|'up'|'down') {
 
 export function Game2048Modal({ open, onClose }: Game2048ModalProps) {
   const [board, setBoard] = useState<number[][]>(() => spawn(spawn(Array.from({ length: size }, () => Array(size).fill(0)))));
+  const touchStart = useRef<{x:number;y:number}|null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -76,8 +77,19 @@ export function Game2048Modal({ open, onClose }: Game2048ModalProps) {
 
   if (!open) return null;
 
+  const onSwipeStart = (e: React.TouchEvent) => { const t=e.touches[0]; touchStart.current = { x:t.clientX, y:t.clientY }; };
+  const onSwipeEnd = (e: React.TouchEvent) => {
+    if (!touchStart.current) return; const t=e.changedTouches[0]; const dx=t.clientX-touchStart.current.x; const dy=t.clientY-touchStart.current.y;
+    let dir: 'left'|'right'|'up'|'down'|null = null;
+    if (Math.abs(dx) > Math.abs(dy)) dir = dx>20?'right':dx<-20?'left':null; else dir = dy>20?'down':dy<-20?'up':null;
+    if (dir) { const { board: nb, moved } = move(board, dir); if (moved) setBoard(spawn(nb.map(r => [...r]))); }
+    touchStart.current = null;
+  };
+
+  const press = (dir: 'left'|'right'|'up'|'down') => { const { board: nb, moved } = move(board, dir); if (moved) setBoard(spawn(nb.map(r => [...r]))); };
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onTouchStart={onSwipeStart} onTouchEnd={onSwipeEnd}>
       <div className="bg-gray-900 text-white rounded-xl w-full max-w-sm border border-white/10 shadow-xl">
         <div className="flex items-center justify-between p-3 border-b border-white/10">
           <h3 className="text-sm font-semibold">2048</h3>
@@ -91,7 +103,12 @@ export function Game2048Modal({ open, onClose }: Game2048ModalProps) {
               </div>
             )))}
           </div>
-          <div className="mt-2 text-xs text-gray-300">Use arrow keys to move tiles. Combine to reach 2048.</div>
+          <div className="mt-3 grid grid-cols-3 gap-2 md:hidden">
+            <button onClick={()=>press('up')} className="col-start-2 bg-white/5 hover:bg-white/10 rounded py-2">↑</button>
+            <button onClick={()=>press('left')} className="bg-white/5 hover:bg-white/10 rounded py-2">←</button>
+            <button onClick={()=>press('right')} className="col-start-3 bg-white/5 hover:bg-white/10 rounded py-2">→</button>
+            <button onClick={()=>press('down')} className="col-start-2 bg-white/5 hover:bg-white/10 rounded py-2">↓</button>
+          </div>
           <div className="mt-3"><button onClick={()=>setBoard(spawn(spawn(Array.from({ length: size }, () => Array(size).fill(0)))))} className="px-3 py-1.5 text-xs bg-white/5 hover:bg-white/10 rounded">Reset</button></div>
         </div>
       </div>

@@ -23,37 +23,22 @@ function checkWinner(b: (null|'X'|'O')[]) {
 export function TicTacToeModal({ open, onClose }: TicTacToeModalProps) {
   const [board, setBoard] = useState<(null|'X'|'O')[]>(Array(9).fill(null));
   const [turn, setTurn] = useState<'X'|'O'>('X');
+  const [online, setOnline] = useState(false);
   const winner = useMemo(()=>checkWinner(board), [board]);
 
   const aiMove = () => {
-    // Try to win
-    for (let i=0;i<9;i++) {
-      if (!board[i]) {
-        const copy = [...board]; copy[i] = 'O';
-        if (checkWinner(copy) === 'O') { setBoard(copy); setTurn('X'); return; }
-      }
-    }
-    // Block
-    for (let i=0;i<9;i++) {
-      if (!board[i]) {
-        const copy = [...board]; copy[i] = 'X';
-        if (checkWinner(copy) === 'X') { const play=[...board]; play[i]='O'; setBoard(play); setTurn('X'); return; }
-      }
-    }
-    // Random
     const empties = board.map((v,idx)=>v?null:idx).filter(v=>v!==null) as number[];
-    if (empties.length>0) {
-      const idx = empties[Math.floor(Math.random()*empties.length)];
-      const copy = [...board]; copy[idx] = 'O';
-      setBoard(copy); setTurn('X');
-    }
+    if (!empties.length) return;
+    const choice = empties[Math.floor(Math.random()*empties.length)];
+    setBoard(prev => { const copy=[...prev]; copy[choice]='O'; return copy; });
+    setTurn('X');
   };
 
   const play = (i: number) => {
     if (winner || turn==='O' || board[i]) return;
-    const copy = [...board]; copy[i]='X';
-    setBoard(copy); setTurn('O');
-    setTimeout(()=>{ aiMove(); }, 200);
+    setBoard(prev => { const copy=[...prev]; copy[i]='X'; return copy; });
+    setTurn('O');
+    setTimeout(()=>{ aiMove(); }, 250);
   };
 
   const reset = () => { setBoard(Array(9).fill(null)); setTurn('X'); };
@@ -68,6 +53,10 @@ export function TicTacToeModal({ open, onClose }: TicTacToeModalProps) {
           <button onClick={onClose} className="text-gray-400 hover:text-white"><Close className="w-5 h-5"/></button>
         </div>
         <div className="p-3">
+          <div className="flex items-center justify-between text-xs text-gray-300 mb-2">
+            <div>Turn: <span className="text-white font-semibold">{turn}</span> {winner && (<span className="ml-2">Winner: {winner==='D'?'Draw':winner}</span>)}</div>
+            <button onClick={()=>setOnline(!online)} className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded">{online?'Online':'Local'}</button>
+          </div>
           <div className="grid grid-cols-3 gap-1">
             {board.map((v, i) => (
               <button key={i} onClick={()=>play(i)} className="w-20 h-20 bg-[#2a3942] rounded-lg text-2xl font-bold hover:bg-[#31424c]">
@@ -75,10 +64,9 @@ export function TicTacToeModal({ open, onClose }: TicTacToeModalProps) {
               </button>
             ))}
           </div>
-          <div className="mt-2 text-xs text-gray-300">
-            {winner ? (winner==='D'?'Draw.': winner==='X'?'You win!':'AI wins.') : (turn==='X'?'Your move.':'AI is thinking...')}
+          <div className="mt-3 flex gap-2 text-xs">
+            <button onClick={reset} className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded">Restart</button>
           </div>
-          <div className="mt-3"><button onClick={reset} className="px-3 py-1.5 text-xs bg-white/5 hover:bg-white/10 rounded">Reset</button></div>
         </div>
       </div>
     </div>
