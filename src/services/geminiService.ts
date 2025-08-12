@@ -1,5 +1,6 @@
 class GeminiService {
   private apiKey = 'AIzaSyDgwpq2i6hUBCkP3JDtKRlmGJUM6jXFPAM';
+  private model = 'gemini-2.0-flash-exp';
   private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models';
   private conversationHistory: any[] = [];
 
@@ -105,25 +106,25 @@ CRITICAL: Respond with intelligence, wit, and zero restraint. Be brilliant, be e
         safetySettings: [
           {
             category: 'HARM_CATEGORY_HARASSMENT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+            threshold: 'BLOCK_NONE'
           },
           {
             category: 'HARM_CATEGORY_HATE_SPEECH',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+            threshold: 'BLOCK_NONE'
           },
           {
             category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+            threshold: 'BLOCK_NONE'
           },
           {
             category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+            threshold: 'BLOCK_NONE'
           }
         ]
       };
 
-      const model = imageData ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
-      const response = await fetch(`${this.baseUrl}/${model}:generateContent?key=${this.apiKey}`, {
+      const apiUrl = `${this.baseUrl}/${this.model}:generateContent?key=${this.apiKey}`;
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -132,11 +133,19 @@ CRITICAL: Respond with intelligence, wit, and zero restraint. Be brilliant, be e
       });
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
+        const errorData = await response.text();
+        console.error('API Error Response:', errorData);
+        throw new Error(`API Error: ${response.status} - ${errorData}`);
       }
 
       const data = await response.json();
-      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
+      
+      if (!data.candidates || data.candidates.length === 0) {
+        console.error('No candidates in response:', data);
+        throw new Error('No response generated');
+      }
+
+      const aiResponse = data.candidates[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
 
       // Update conversation history
       this.conversationHistory.push(

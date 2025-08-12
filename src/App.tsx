@@ -220,32 +220,32 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="chat-container w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-2 sm:p-4">
+      <div className="chat-container w-full max-w-4xl h-[100vh] sm:h-[90vh] sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="glass-effect p-6 border-b border-white/10">
+        <div className="glass-effect p-4 sm:p-6 border-b border-white/10">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-              <Bot className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+              <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">Bilel Jammazi AI</h1>
-              <p className="text-sm text-gray-300">Advanced AI Assistant</p>
+              <h1 className="text-lg sm:text-xl font-bold text-white">Bilel Jammazi AI</h1>
+              <p className="text-xs sm:text-sm text-gray-300">Advanced AI Assistant</p>
             </div>
             <div className="ml-auto flex items-center gap-2">
               <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-sm text-gray-300">Online</span>
+              <span className="text-xs sm:text-sm text-gray-300 hidden sm:inline">Online</span>
             </div>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-6 space-y-3 sm:space-y-4">
           {messages.length === 0 && (
-            <div className="text-center text-gray-400 mt-20">
-              <Bot className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium mb-2">Welcome to Bilel Jammazi AI</h3>
-              <p className="text-sm">Ask me anything - movies, books, philosophy, or just chat!</p>
+            <div className="text-center text-gray-400 mt-10 sm:mt-20">
+              <Bot className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 opacity-50" />
+              <h3 className="text-base sm:text-lg font-medium mb-2">Welcome to Bilel Jammazi AI</h3>
+              <p className="text-sm px-4">Ask me anything - movies, books, philosophy, or just chat!</p>
             </div>
           )}
           
@@ -260,8 +260,8 @@ function App() {
           ))}
           
           {isLoading && (
-            <div className="flex items-center gap-3 text-gray-400">
-              <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+            <div className="flex items-center gap-2 sm:gap-3 text-gray-400">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-700 flex items-center justify-center">
                 <Bot className="w-4 h-4" />
               </div>
               <div className="typing-indicator">
@@ -277,13 +277,13 @@ function App() {
         </div>
 
         {/* Input Area */}
-        <div className="input-area p-6 border-t border-white/10">
+        <div className="input-area p-3 sm:p-6 border-t border-white/10">
           {uploadedImage && (
-            <div className="mb-4 flex items-center gap-3">
+            <div className="mb-3 sm:mb-4 flex items-center gap-3">
               <img 
                 src={uploadedImage} 
                 alt="Uploaded" 
-                className="image-preview"
+                className="image-preview max-w-32 max-h-32 sm:max-w-48 sm:max-h-48"
               />
               <button
                 onClick={() => setUploadedImage(null)}
@@ -294,7 +294,7 @@ function App() {
             </div>
           )}
           
-          <div className="flex items-end gap-3">
+          <div className="flex items-end gap-2 sm:gap-3">
             <div className="flex gap-2">
               <ImageUpload onImageUpload={handleImageUpload} />
               <VoiceRecorder 
@@ -320,18 +320,18 @@ function App() {
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Ask Bilel anything..."
-                className="w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-xl px-4 py-3 pr-12 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 border border-white/10"
+                className="w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-xl px-3 sm:px-4 py-2 sm:py-3 pr-12 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 border border-white/10 text-sm sm:text-base"
                 rows={1}
-                style={{ minHeight: '48px', maxHeight: '120px' }}
+                style={{ minHeight: '40px', maxHeight: '120px' }}
               />
             </div>
             
             <button
               onClick={handleSendMessage}
               disabled={isLoading || (!inputText.trim() && !uploadedImage)}
-              className="btn-primary p-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary p-2 sm:p-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Send className="w-5 h-5 text-white" />
+              <Send className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </button>
           </div>
         </div>

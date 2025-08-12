@@ -31,10 +31,10 @@ export function ImageUpload({ onImageUpload }: ImageUploadProps) {
       />
       <button
         onClick={() => fileInputRef.current?.click()}
-        className="p-3 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors text-gray-300 hover:text-white"
+        className="p-2 sm:p-3 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors text-gray-300 hover:text-white"
         title="Upload image"
       >
-        <Image className="w-5 h-5" />
+        <Image className="w-4 h-4 sm:w-5 sm:h-5" />
       </button>
     </>
   );

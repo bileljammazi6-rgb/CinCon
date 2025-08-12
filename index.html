@@ -131,6 +131,23 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: rgba(102, 126, 234, 0.8);
         }
+        
+        /* Mobile optimizations */
+        @media (max-width: 640px) {
+            .line-clamp-3 {
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            
+            .line-clamp-4 {
+                display: -webkit-box;
+                -webkit-line-clamp: 4;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+        }
     </style>
 </head>
 <body>

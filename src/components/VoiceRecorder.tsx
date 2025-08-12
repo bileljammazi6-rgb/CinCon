@@ -66,14 +66,14 @@ export function VoiceRecorder({ onRecording, isRecording, setIsRecording, onErro
   return (
     <button
       onClick={toggleRecording}
-      className={`p-3 rounded-xl transition-colors ${
+      className={`p-2 sm:p-3 rounded-xl transition-colors ${
         isRecording 
           ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse' 
           : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white'
       }`}
       title={isRecording ? 'Stop recording' : 'Start voice recording'}
     >
-      {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+      {isRecording ? <MicOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Mic className="w-4 h-4 sm:w-5 sm:h-5" />}
     </button>
   );
 }
