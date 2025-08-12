@@ -1,14 +1,13 @@
 import React from 'react';
-import { MessageCircle, Film, Gamepad2, Settings } from 'lucide-react';
+import { MessageCircle, Film, Gamepad2, Users } from 'lucide-react';
 
 interface MobileNavProps {
-  active: 'chat' | 'movies' | 'games';
-  onChange: (tab: 'chat' | 'movies' | 'games') => void;
-  onSettings: () => void;
+  active: 'chat' | 'movies' | 'games' | 'community';
+  onChange: (tab: 'chat' | 'movies' | 'games' | 'community') => void;
 }
 
-export function MobileNav({ active, onChange, onSettings }: MobileNavProps) {
-  const item = (key: 'chat'|'movies'|'games', label: string, Icon: any) => (
+export function MobileNav({ active, onChange }: MobileNavProps) {
+  const item = (key: 'chat'|'movies'|'games'|'community', label: string, Icon: any) => (
     <button
       onClick={() => onChange(key)}
       className={`flex flex-col items-center justify-center flex-1 py-2 ${active===key? 'text-emerald-400' : 'text-gray-300'}`}
@@ -25,10 +24,7 @@ export function MobileNav({ active, onChange, onSettings }: MobileNavProps) {
         {item('chat', 'Chat', MessageCircle)}
         {item('movies', 'Movies', Film)}
         {item('games', 'Games', Gamepad2)}
-        <button onClick={onSettings} className="flex flex-col items-center justify-center flex-1 py-2 text-gray-300" aria-label="Settings">
-          <Settings className="w-6 h-6" />
-          <span className="text-[10px] mt-0.5">Settings</span>
-        </button>
+        {item('community', 'Community', Users)}
       </div>
     </nav>
   );

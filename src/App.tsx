@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Image, Mic, Bot, Heart, Flame, Trash2, Eraser, Download as DownloadIcon, Settings, Search, Sword } from 'lucide-react';
+import { Send, Image, Mic, Bot, Heart, Flame, Trash2, Eraser, Download as DownloadIcon, Settings, Search, Sword, Users } from 'lucide-react';
 import { ChatMessage } from './components/ChatMessage';
 import { MovieCard } from './components/MovieCard';
 import { ImageUpload } from './components/ImageUpload';
@@ -38,7 +38,7 @@ function App() {
   const [rpsOpen, setRpsOpen] = useState(false);
   const [mmOpen, setMmOpen] = useState(false);
   const [snakeOpen, setSnakeOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'chat'|'movies'|'games'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat'|'movies'|'games'|'community'>('chat');
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
@@ -231,6 +231,7 @@ function App() {
               <button onClick={()=>setActiveTab('chat')} className={`text-xs px-2 py-1 rounded ${activeTab==='chat'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Chat</button>
               <button onClick={()=>setActiveTab('movies')} className={`text-xs px-2 py-1 rounded ${activeTab==='movies'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Movies</button>
               <button onClick={()=>setActiveTab('games')} className={`text-xs px-2 py-1 rounded ${activeTab==='games'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Games</button>
+              <button onClick={()=>setActiveTab('community')} className={`text-xs px-2 py-1 rounded ${activeTab==='community'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Community</button>
             </div>
             <button onClick={()=>setChessOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5 md:bg-transparent"><Sword className="w-4 h-4"/></button>
             <button onClick={clearChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><Eraser className="w-4 h-4"/> Clear</button>
@@ -336,6 +337,27 @@ function App() {
                 <button onClick={()=>setSnakeOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">🐍 Snake</button>
               </div>
               <div className="text-xs text-gray-400">While playing, the assistant can comment on moves (chess) directly in chat.</div>
+            </div>
+          )}
+
+          {activeTab==='community' && (
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+              <div className="bg-white/5 rounded p-3">
+                <div className="flex items-center gap-2 text-white text-sm font-semibold"><Users className="w-4 h-4"/> Community (Coming Soon)</div>
+                <div className="text-xs text-gray-400 mt-2">
+                  - Realtime chat every 2s refresh (to be moved to websockets).<br/>
+                  - Friend invites for games and movies.<br/>
+                  - Neon Postgres for users, rooms, messages, invites.<br/>
+                </div>
+              </div>
+              <div className="bg-white/5 rounded p-3">
+                <div className="text-xs text-gray-300 mb-2">Global Chat (prototype)</div>
+                <div className="h-48 overflow-y-auto bg-[#0f1720] rounded p-2 text-xs text-gray-200">This will display realtime messages.</div>
+                <div className="mt-2 flex gap-2">
+                  <input placeholder="Type to the community..." className="flex-1 bg-[#2a3942] text-white rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-white/5"/>
+                  <button className="btn-primary px-3 py-2 rounded">Send</button>
+                </div>
+              </div>
             </div>
           )}
         </div>
