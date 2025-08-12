@@ -32,3 +32,33 @@ export async function createInvite(type: 'game' | 'movie', fromUser: string, toU
   const { error } = await supabase.from('invites').insert({ type, from_user: fromUser, to_user: toUser, payload: payload || null, status: 'pending' });
   if (error) throw error;
 }
+
+export function subscribeToMessages(roomId: string, onInsert: (msg: CommunityMessage) => void): () => void {
+  const channel = supabase
+    .channel(`messages-room-${roomId}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${roomId}` }, (payload) => {
+      const row = payload.new as any;
+      const msg: CommunityMessage = {
+        id: String(row.id),
+        room_id: row.room_id,
+        sender: row.sender,
+        content: row.content,
+        created_at: row.created_at,
+      };
+      onInsert(msg);
+    })
+    .subscribe();
+  return () => { supabase.removeChannel(channel); };
+}
+
+export async function fetchProfiles(usernames: string[]): Promise<Record<string, { avatar_url?: string }>> {
+  if (!usernames.length) return {};
+  const { data, error } = await supabase
+    .from('users')
+    .select('username, avatar_url')
+    .in('username', usernames);
+  if (error) throw error;
+  const map: Record<string, { avatar_url?: string }> = {};
+  (data || []).forEach((u: any) => { map[u.username] = { avatar_url: u.avatar_url || undefined }; });
+  return map;
+}

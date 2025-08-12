@@ -19,7 +19,7 @@ import { RockPaperScissorsModal } from './components/RockPaperScissorsModal';
 import { MobileNav } from './components/MobileNav';
 import { MemoryMatchModal } from './components/MemoryMatchModal';
 import { SnakeModal } from './components/SnakeModal';
-import { listMessages, sendMessage as sendCommunityMessage, CommunityMessage } from './services/communityService';
+import { listMessages, sendMessage as sendCommunityMessage, CommunityMessage, subscribeToMessages, fetchProfiles } from './services/communityService';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -47,6 +47,7 @@ function App() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
   const [lastCommunityAiAt, setLastCommunityAiAt] = useState<number>(0);
+  const [profileMap, setProfileMap] = useState<Record<string, { avatar_url?: string }>>({});
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   useEffect(() => { const saved = localStorage.getItem('bilel_chat_history'); if (saved) try { setMessages(JSON.parse(saved).map((m: any)=>({ ...m, timestamp: new Date(m.timestamp) })) ); } catch {} }, []);
@@ -56,31 +57,26 @@ function App() {
   useEffect(() => {
     if (activeTab !== 'community') return;
     let ignore = false;
-    const load = async () => {
+    const init = async () => {
       try {
-        const last = communityMessages[communityMessages.length - 1]?.created_at;
-        const msgs = await listMessages(COMMUNITY_ROOM_ID, last);
-        if (!ignore && msgs.length) {
-          const combined = [...communityMessages, ...msgs];
-          setCommunityMessages(combined);
-          // 10% chance to interject if at least 30s since last AI message
-          const now = Date.now();
-          const canSpeak = now - lastCommunityAiAt > 30000;
-          if (Math.random() < 0.1 && canSpeak) {
-            const context = combined.slice(-5).map(m=>`${m.sender}: ${m.content}`).join('\n');
-            try {
-              const ai = await geminiService.sendMessage(`Provide a single short, witty comment that fits seamlessly into this chat. Avoid interrupting or derailing. Be playful but concise. Context (last messages):\n${context}`);
-              setCommunityMessages(prev => [...prev, { id: `${Date.now()}-ai`, room_id: COMMUNITY_ROOM_ID, sender: 'Bilel AI', content: ai.split('\n')[0].slice(0,200), created_at: new Date().toISOString() }]);
-              setLastCommunityAiAt(now);
-            } catch {}
-          }
+        const msgs = await listMessages(COMMUNITY_ROOM_ID, undefined, 200);
+        if (!ignore) {
+          setCommunityMessages(msgs);
+          const usernames = Array.from(new Set(msgs.map(m=>m.sender)));
+          const profiles = await fetchProfiles(usernames);
+          if (!ignore) setProfileMap(profiles);
         }
       } catch {}
     };
-    load();
-    const id = setInterval(load, 2000);
-    return () => { ignore = true; clearInterval(id); };
-  }, [activeTab, communityMessages]);
+    init();
+    const unsub = subscribeToMessages(COMMUNITY_ROOM_ID, async (msg) => {
+      setCommunityMessages(prev => [...prev, msg]);
+      if (!profileMap[msg.sender]) {
+        try { const p = await fetchProfiles([msg.sender]); setProfileMap(prev => ({ ...prev, ...p })); } catch {}
+      }
+    });
+    return () => { ignore = true; unsub(); };
+  }, [activeTab]);
 
   useEffect(() => {
     const node = dropRef.current; if (!node) return;
@@ -394,9 +390,11 @@ function App() {
                 <div className="h-64 overflow-y-auto bg-[#0f1720] rounded p-2 text-xs text-gray-200 space-y-2">
                   {communityMessages.map(m => (
                     <div key={m.id} className="flex items-start gap-2">
-                      <div className="text-emerald-400 font-semibold">{m.sender}:</div>
-                      <div className="flex-1 whitespace-pre-wrap">{m.content}</div>
-                      <div className="text-[10px] text-gray-500">{new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                      <img src={profileMap[m.sender]?.avatar_url || 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(m.sender)} className="w-6 h-6 rounded-full"/>
+                      <div className="flex-1">
+                        <div className="text-emerald-400 font-semibold text-xs">{m.sender} <span className="text-[10px] text-gray-500">{new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>
+                        <div className="text-xs whitespace-pre-wrap text-gray-200">{m.content}</div>
+                      </div>
                     </div>
                   ))}
                   {communityMessages.length===0 && (
