@@ -31,6 +31,17 @@ Formatting:
     });
   }
 
+  private getEffectiveApiKey(): string | undefined {
+    const envKey = this.apiKey && this.apiKey.trim().length > 0 ? this.apiKey : undefined;
+    try {
+      const stored = localStorage.getItem('gemini_api_key') || '';
+      const lsKey = stored.trim().length > 0 ? stored.trim() : undefined;
+      return envKey ?? lsKey;
+    } catch {
+      return envKey;
+    }
+  }
+
   private async fetchWithRetry(url: string, init: RequestInit, retries = 2): Promise<Response> {
     let attempt = 0;
     let lastError: any = null;
@@ -59,8 +70,9 @@ Formatting:
 
   async sendMessage(text: string, imageData?: string): Promise<string> {
     try {
-      if (!this.apiKey || this.apiKey.trim().length < 10) {
-        throw new Error('AI API key missing or invalid. Please configure the Gemini API key.');
+      const effectiveKey = this.getEffectiveApiKey();
+      if (!effectiveKey || effectiveKey.trim().length < 10) {
+        throw new Error('AI API key missing or invalid. Set VITE_GEMINI_API_KEY and rebuild, or paste your key in Settings (stored locally).');
       }
 
       const parts: any[] = [{ text }];
@@ -99,9 +111,8 @@ Formatting:
         ]
       };
 
-      // Force the requested preview model for all requests
       const model = 'gemini-2.5-flash-preview-05-20';
-      const url = `${this.baseUrl}/${model}:generateContent?key=${this.apiKey}`;
+      const url = `${this.baseUrl}/${model}:generateContent?key=${effectiveKey}`;
       const response = await this.fetchWithRetry(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -132,7 +143,7 @@ Formatting:
 
       return aiResponse;
     } catch (error: any) {
-      const hint = error?.message?.includes('AI service error') ? '' : ' (check network/CORS)';
+      const hint = error?.message?.includes('AI service error') ? '' : ' (check key/network)';
       const msg = error?.message ? `AI error: ${error.message}${hint}` : 'AI error: unexpected failure.';
       throw new Error(msg);
     }
