@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Save, Globe, Zap, Gauge } from 'lucide-react';
+import { X, Save, Globe, Zap, Gauge, Key } from 'lucide-react';
 
 export interface AppSettings {
   displayName: string;
@@ -30,6 +30,9 @@ export function SettingsModal({ open, initial, onClose, onSave }: SettingsModalP
   const [model, setModel] = useState<'flash' | 'pro'>(initial.model || 'flash');
   const [pixeldrainOnly, setPixeldrainOnly] = useState<boolean>(!!initial.pixeldrainOnly);
   const [autoCitations, setAutoCitations] = useState<boolean>(initial.autoCitations ?? true);
+  const [geminiKey, setGeminiKey] = useState<string>(() => {
+    try { return localStorage.getItem('gemini_api_key') || ''; } catch { return ''; }
+  });
 
   useEffect(() => {
     setDisplayName(initial.displayName);
@@ -38,6 +41,13 @@ export function SettingsModal({ open, initial, onClose, onSave }: SettingsModalP
     setPixeldrainOnly(!!initial.pixeldrainOnly);
     setAutoCitations(initial.autoCitations ?? true);
   }, [initial]);
+
+  const persistGeminiKey = () => {
+    try {
+      if (geminiKey.trim().length > 0) localStorage.setItem('gemini_api_key', geminiKey.trim());
+      else localStorage.removeItem('gemini_api_key');
+    } catch {}
+  };
 
   if (!open) return null;
 
@@ -91,11 +101,16 @@ export function SettingsModal({ open, initial, onClose, onSave }: SettingsModalP
             <input id="auto-cite" type="checkbox" checked={autoCitations} onChange={(e)=>setAutoCitations(e.target.checked)} />
             <label htmlFor="auto-cite" className="text-xs text-gray-300">Auto request sources/evidence for answers</label>
           </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1"><Key className="w-4 h-4"/> Gemini API key (stored locally)</label>
+            <input value={geminiKey} onChange={(e)=>setGeminiKey(e.target.value)} placeholder="Paste your Gemini API key" className="w-full bg-gray-800 border border-white/10 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <div className="mt-1 text-[10px] text-gray-500">Used if env key is missing. Saved in your browser only.</div>
+          </div>
         </div>
         <div className="p-4 border-t border-white/10 flex justify-end gap-2">
           <button onClick={onClose} className="px-3 py-1.5 text-sm bg-white/5 hover:bg-white/10 rounded">Cancel</button>
           <button
-            onClick={() => onSave({ displayName: displayName.trim() || 'Rim', language, model, pixeldrainOnly, autoCitations })}
+            onClick={() => { persistGeminiKey(); onSave({ displayName: displayName.trim() || 'Rim', language, model, pixeldrainOnly, autoCitations }); }}
             className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded"
           >
             Save
