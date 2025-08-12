@@ -16,6 +16,7 @@ import { movieLinks } from './data/movieLinks';
 import { Message, MovieData } from './types';
 import { compressImageDataUrl } from './lib/image';
 import { RockPaperScissorsModal } from './components/RockPaperScissorsModal';
+import { MobileNav } from './components/MobileNav';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -192,7 +193,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen md:min-h-0 flex items-stretch md:items-center justify-stretch md:justify-center">
+    <div className="min-h-screen md:min-h-0 flex items-stretch md:items-center justify-stretch md:justify-center pb-14 md:pb-0">
       <div className="w-full md:max-w-6xl h-[100svh] md:h-[90vh] rounded-none md:rounded-2xl shadow-2xl flex overflow-hidden">
         {/* Left sidebar: hidden on mobile */}
         <aside className="hidden md:flex md:w-72 flex-col bg-[#111b21] border-r border-white/10">
@@ -284,7 +285,25 @@ function App() {
 
           {activeTab==='movies' && (
             <>
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-white/5 rounded p-2">
+                    <div className="text-xs text-gray-400 mb-1">Trending</div>
+                    <div className="flex gap-2 overflow-x-auto">
+                      {messages.filter((m:any)=>m.type==='movie').slice(0,5).map((m:any)=> (
+                        <img key={m.id} src={m.movieData?.poster_path ? `https://image.tmdb.org/t/p/w92${m.movieData.poster_path}` : 'https://via.placeholder.com/92x138/1e293b/64748b?text=No+Image'} className="w-[46px] h-[69px] rounded" />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-white/5 rounded p-2">
+                    <div className="text-xs text-gray-400 mb-1">Popular</div>
+                    <div className="flex gap-2 overflow-x-auto">
+                      {messages.filter((m:any)=>m.type==='movie').slice(5,10).map((m:any)=> (
+                        <img key={m.id} src={m.movieData?.poster_path ? `https://image.tmdb.org/t/p/w92${m.movieData.poster_path}` : 'https://via.placeholder.com/92x138/1e293b/64748b?text=No+Image'} className="w-[46px] h-[69px] rounded" />
+                      ))}
+                    </div>
+                  </div>
+                </div>
                 <div className="text-xs text-gray-400">Ask for recommendations or type “recommend ... / suggest ...”. Pixeldrain-only filter is in Settings.</div>
                 {messages.filter((m:any)=>m.type==='movie').length===0 && (
                   <div className="text-gray-400 text-xs">No movies yet. Try asking for a title.</div>
@@ -322,6 +341,7 @@ function App() {
       <Game2048Modal open={g2048Open} onClose={()=>setG2048Open(false)} />
       <DocsModal open={docsOpen} onClose={()=>setDocsOpen(false)} />
       <RockPaperScissorsModal open={rpsOpen} onClose={()=>setRpsOpen(false)} />
+      <MobileNav active={activeTab} onChange={setActiveTab} onSettings={()=>setSettingsOpen(true)} />
     </div>
   );
 }
