@@ -174,8 +174,20 @@ function App() {
       setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'movie', content: `Here's what I found for "${matchedTitle}":`, sender: 'ai', timestamp: new Date(), movieData: { ...(movieData || { title: matchedTitle, overview: '' }), downloadLinks: movieLinks[matchedTitle] } }]);
     } else {
       const movieData = await tmdbService.searchMovie(movieTitleQuery);
-      if (movieData) setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'movie', content: 'I found this movie for you:', sender: 'ai', timestamp: new Date(), movieData }]);
-      else { const response = await geminiService.sendMessage(query); setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: response, sender: 'ai', timestamp: new Date() }]); }
+      if (movieData) {
+        const providers = movieData.id ? await tmdbService.getWatchProviders(movieData.id) : {};
+        const extra = providers.link ? `\n\nWatch: ${providers.link}` : '';
+        const movieMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'movie',
+          content: `I found this movie for you:${extra}`,
+          sender: 'ai',
+          timestamp: new Date(),
+          movieData
+        };
+        setMessages(prev => [...prev, movieMessage]);
+      } else {
+        const response = await geminiService.sendMessage(query); setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: response, sender: 'ai', timestamp: new Date() }]); }
     }
   };
 

@@ -62,6 +62,23 @@ class TMDBService {
       return [];
     }
   }
+
+  async getWatchProviders(movieId: number, region = 'US'): Promise<{ link?: string; providers?: { provider_name: string; logo_path?: string }[] }> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/movie/${movieId}/watch/providers?api_key=${this.apiKey}`
+      );
+      if (!response.ok) throw new Error(`TMDB API Error: ${response.status}`);
+      const data = await response.json();
+      const regionData = data.results?.[region];
+      const link = regionData?.link as string | undefined;
+      const providers = (regionData?.flatrate || []) as { provider_name: string; logo_path?: string }[];
+      return { link, providers };
+    } catch (e) {
+      console.error('TMDB Providers Error:', e);
+      return {};
+    }
+  }
 }
 
 export const tmdbService = new TMDBService();
