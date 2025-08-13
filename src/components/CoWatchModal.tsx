@@ -6,16 +6,19 @@ interface CoWatchModalProps {
   open: boolean;
   onClose: () => void;
   username: string;
+  initialUrl?: string;
 }
 
 type ChatMsg = { user: string; text: string; ts: string };
 
-export function CoWatchModal({ open, onClose, username }: CoWatchModalProps) {
+export function CoWatchModal({ open, onClose, username, initialUrl }: CoWatchModalProps) {
   const [url, setUrl] = useState('');
   const [roomId, setRoomId] = useState('cowatch-global');
   const [chat, setChat] = useState<ChatMsg[]>([]);
   const [chatText, setChatText] = useState('');
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => { if (open && initialUrl) setUrl(initialUrl); }, [open, initialUrl]);
 
   useEffect(() => {
     if (!open) return;
