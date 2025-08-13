@@ -510,6 +510,11 @@ function App() {
                           <span className="text-[10px] text-gray-500 ml-1">{new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
                         </div>
                         <div className="text-xs whitespace-pre-wrap text-gray-200">{m.content}</div>
+                        <div className="mt-1 flex items-center gap-2 text-[11px] text-gray-400">
+                          <button onClick={()=>setCommunityInput(`@${m.sender} `)} className="hover:text-white">Reply</button>
+                          <button onClick={()=>{/* placeholder reaction */}} className="hover:text-white">👍</button>
+                          <button onClick={()=>{/* placeholder reaction */}} className="hover:text-white">❤️</button>
+                        </div>
                       </div>
                     </div>
                   ))}

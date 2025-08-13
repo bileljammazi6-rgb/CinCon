@@ -100,7 +100,7 @@ export async function listUsers(limit = 50): Promise<{ username: string; avatar_
 }
 
 // game moves
-export async function sendGameMove(roomId: string, move_type: 'tictactoe'|'chess', data: Record<string, any>) {
+export async function sendGameMove(roomId: string, move_type: 'tictactoe'|'chess'|'cowatch'|'cowatch_chat', data: Record<string, any>) {
   const { error } = await supabase.from('game_moves').insert({ room_id: roomId, move_type, data });
   if (error) throw error;
 }
@@ -121,8 +121,22 @@ export async function saveQuizScore(username: string, category: string, score: n
   if (error) throw error;
 }
 
+// Reactions (client-side simulated for now; store as {messageId, username, emoji} in a json table if available)
+export type Reaction = { messageId: string; username: string; emoji: string };
+
+export async function addReaction(_messageId: string, _username: string, _emoji: string) {
+  // Placeholder: integrate with a reactions table if you add one in Supabase
+  return;
+}
+
+export async function addReply(roomId: string, parentMessageId: string, sender: string, content: string) {
+  // Simple approach: include parent id in content prefix; or add a replies table
+  const formatted = `(reply to #${parentMessageId}) ${content}`;
+  await sendMessage(roomId, sender, formatted);
+}
+
 export async function updateUserProfile(username: string, patch: { avatar_url?: string | null; bio?: string | null; full_name?: string | null; website?: string | null; location?: string | null; }) {
-  const { error } = await supabase.from('users').update({ ...patch, updated_at: new Date().toISOString() }).eq('username', username);
+  const { error } = await supabase.from('users').update({ ...patch, updated_at: new Date().toISOString() as any }).eq('username', username);
   if (error) throw error;
 }
 
