@@ -36,11 +36,9 @@ Formatting:
     try {
       const stored = localStorage.getItem('gemini_api_key') || '';
       const lsKey = stored.trim().length > 0 ? stored.trim() : undefined;
-      const fallback = 'AIzaSyDgwpq2i6hUBCkP3JDtKRlmGJUM6jXFPAM';
-      return envKey ?? lsKey ?? fallback;
+      return envKey ?? lsKey;
     } catch {
-      const fallback = 'AIzaSyDgwpq2i6hUBCkP3JDtKRlmGJUM6jXFPAM';
-      return envKey ?? fallback;
+      return envKey;
     }
   }
 
@@ -74,7 +72,7 @@ Formatting:
     try {
       const effectiveKey = this.getEffectiveApiKey();
       if (!effectiveKey || effectiveKey.trim().length < 10) {
-        throw new Error('AI API key missing or invalid. Set VITE_GEMINI_API_KEY and rebuild, or paste your key in Settings (stored locally).');
+        throw new Error('AI API key missing. Add VITE_GEMINI_API_KEY in your environment or paste a key in Settings.');
       }
 
       const parts: any[] = [{ text }];

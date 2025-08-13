@@ -156,6 +156,18 @@ export function SettingsModal({ open, initial, onClose, onSave }: SettingsModalP
             <label htmlFor="auto-cite" className="text-xs text-gray-300">Auto request sources/evidence for answers</label>
           </div>
 
+          <div>
+            <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1"><Key className="w-4 h-4"/> Gemini API Key</label>
+            <input
+              type="password"
+              value={geminiKey}
+              onChange={(e)=>setGeminiKey(e.target.value)}
+              placeholder="Paste your Google AI Studio API key"
+              className="w-full bg-gray-800 border border-white/10 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="text-[10px] text-gray-500 mt-1">Stored locally in your browser. You can also set VITE_GEMINI_API_KEY in the environment.</div>
+          </div>
+
           <div className="pt-2 border-t border-white/10">
             <div className="text-xs text-gray-400 mb-1 flex items-center gap-1"><BookOpen className="w-4 h-4"/> Fiqh alignment</div>
             <div className="grid grid-cols-2 gap-2 mb-2">
