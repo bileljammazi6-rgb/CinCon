@@ -4,10 +4,15 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+  // Do not throw to avoid blank page; create a dummy client and warn
+  // eslint-disable-next-line no-console
+  console.error('Missing Supabase environment variables (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY). The app will not function until these are set.');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(
+  supabaseUrl || 'https://invalid.supabase.co',
+  supabaseAnonKey || 'public-anon-key'
+);
 
 export type Database = {
   public: {

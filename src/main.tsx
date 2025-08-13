@@ -8,8 +8,10 @@ function Root() {
   const [loading, setLoading] = React.useState(true);
   const [authed, setAuthed] = React.useState(false);
   const [recovery, setRecovery] = React.useState(false);
+  const [envOk, setEnvOk] = React.useState(true);
 
   React.useEffect(() => {
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) { setEnvOk(false); setLoading(false); return; }
     supabase.auth.getSession().then(({ data: { session } }) => {
       setAuthed(!!session);
       setLoading(false);
@@ -26,6 +28,11 @@ function Root() {
   }, []);
 
   if (loading) return null;
+  if (!envOk) return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[#0b141a] text-white text-sm">
+      Missing environment configuration. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env and rebuild.
+    </div>
+  );
   if (recovery) return <ResetPasswordScreen onDone={() => { setRecovery(false); setAuthed(true); }} />;
   if (!authed) return <AuthScreen/>;
   return <App/>;
