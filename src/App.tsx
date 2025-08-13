@@ -28,6 +28,7 @@ import { TajwidCoachModal } from './components/TajwidCoachModal';
 import { CoWatchModal } from './components/CoWatchModal';
 import { SmartDownloaderModal } from './components/SmartDownloaderModal';
 import { supabase } from './lib/supabase';
+import { ExamplesModal } from './components/ExamplesModal';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -66,6 +67,7 @@ function App() {
   const [downloaderOpen, setDownloaderOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState<'Home'|'History'|'Settings'|'Movie Chat'|'Community Chat'|'Games'|'Watch Together'|'Tajwid'>('Home');
   const [notify, setNotify] = useState<string>('');
+  const [examplesOpen, setExamplesOpen] = useState(false);
 
   const openSection = (name: 'Home'|'History'|'Settings') => {
     setActiveMenu(name);
@@ -358,6 +360,7 @@ function App() {
               <div className="text-sm text-white font-semibold truncate">{activeMenu}</div>
               <div className="text-[10px] md:text-[11px] text-emerald-400">{settings.displayName}</div>
             </div>
+            <button onClick={()=>setExamplesOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Examples</button>
             {activeTab==='movies' && (
               <button onClick={()=>setDownloaderOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Downloader</button>
             )}
@@ -520,6 +523,7 @@ function App() {
       <TajwidCoachModal open={tajwidOpen} onClose={()=>setTajwidOpen(false)} haptics={!!settings.haptics} />
       <CoWatchModal open={cowatchOpen} onClose={()=>setCowatchOpen(false)} username={settings.displayName || 'Anonymous'} />
       <SmartDownloaderModal open={downloaderOpen} onClose={()=>setDownloaderOpen(false)} />
+      <ExamplesModal open={examplesOpen} onClose={()=>setExamplesOpen(false)} onPick={(t)=>{ setInputText(t); setActiveMenu('Home'); setActiveTab('chat'); }} />
     </div>
   );
 }
