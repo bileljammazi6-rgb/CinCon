@@ -24,7 +24,9 @@ export function InviteModal({ open, onClose, fromUser }: InviteModalProps) {
       if (!toUser) throw new Error('Select a user');
       const roomId = `${game}-${fromUser}-${toUser}-${Date.now()}`;
       await createRoom(roomId, `${game} vs ${fromUser} & ${toUser}`, 'game');
-      await createInvite('game', fromUser, toUser, { game, roomId });
+      const payload: any = { game, roomId };
+      if (game==='chess') payload.colors = { [fromUser]: 'w', [toUser]: 'b' };
+      await createInvite('game', fromUser, toUser, payload);
       setMessage('Invite sent!');
     } catch (e:any) { setError(e?.message||'Failed to send invite'); }
     setLoading(false);
