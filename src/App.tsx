@@ -29,6 +29,7 @@ import { CoWatchModal } from './components/CoWatchModal';
 import { SmartDownloaderModal } from './components/SmartDownloaderModal';
 import { supabase } from './lib/supabase';
 import { ExamplesModal } from './components/ExamplesModal';
+import { OnboardingModal } from './components/OnboardingModal';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -68,6 +69,7 @@ function App() {
   const [activeMenu, setActiveMenu] = useState<'Home'|'History'|'Settings'|'Movie Chat'|'Community Chat'|'Games'|'Watch Together'|'Tajwid'>('Home');
   const [notify, setNotify] = useState<string>('');
   const [examplesOpen, setExamplesOpen] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
 
   const openSection = (name: 'Home'|'History'|'Settings') => {
     setActiveMenu(name);
@@ -88,6 +90,10 @@ function App() {
   useEffect(() => { const saved = localStorage.getItem('bilel_chat_history'); if (saved) try { setMessages(JSON.parse(saved).map((m: any)=>({ ...m, timestamp: new Date(m.timestamp) })) ); } catch {} }, []);
   useEffect(() => { localStorage.setItem('bilel_chat_history', JSON.stringify(messages.map(m=>({ ...m, timestamp: m.timestamp.toISOString() })))); }, [messages]);
   useEffect(() => { localStorage.setItem('bilel_settings', JSON.stringify(settings)); }, [settings]);
+
+  useEffect(() => {
+    try { const done = localStorage.getItem('onboarded'); if (!done) setOnboardingOpen(true); } catch {}
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -524,6 +530,7 @@ function App() {
       <CoWatchModal open={cowatchOpen} onClose={()=>setCowatchOpen(false)} username={settings.displayName || 'Anonymous'} />
       <SmartDownloaderModal open={downloaderOpen} onClose={()=>setDownloaderOpen(false)} />
       <ExamplesModal open={examplesOpen} onClose={()=>setExamplesOpen(false)} onPick={(t)=>{ setInputText(t); setActiveMenu('Home'); setActiveTab('chat'); }} />
+      <OnboardingModal open={onboardingOpen} onClose={()=>setOnboardingOpen(false)} onSave={(d)=>{ setSettings(prev=>({ ...prev, displayName: d.username, language: d.language, model: d.model })); if (d.avatar_url) setMyAvatar(d.avatar_url); }} />
     </div>
   );
 }
