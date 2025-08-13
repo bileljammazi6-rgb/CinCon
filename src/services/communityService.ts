@@ -72,16 +72,21 @@ export function subscribeToMessages(roomId: string, onInsert: (msg: CommunityMes
   return () => { supabase.removeChannel(channel); };
 }
 
-export async function fetchProfiles(usernames: string[]): Promise<Record<string, { avatar_url?: string }>> {
-  if (!usernames.length) return {};
+export async function fetchProfiles(usernames: string[]): Promise<Record<string, { avatar_url?: string; last_seen?: string }>> {
+  if (!usernames.length) return {} as any;
   const { data, error } = await supabase
     .from('users')
-    .select('username, avatar_url')
+    .select('username, avatar_url, last_seen')
     .in('username', usernames);
   if (error) throw error;
-  const map: Record<string, { avatar_url?: string }> = {};
-  (data || []).forEach((u: any) => { map[u.username] = { avatar_url: u.avatar_url || undefined }; });
+  const map: Record<string, { avatar_url?: string; last_seen?: string }> = {};
+  (data || []).forEach((u: any) => { map[u.username] = { avatar_url: u.avatar_url || undefined, last_seen: u.last_seen || undefined }; });
   return map;
+}
+
+export async function updateLastSeen(username: string) {
+  const { error } = await supabase.from('users').update({ last_seen: new Date().toISOString() }).eq('username', username);
+  if (error) throw error;
 }
 
 export async function listUsers(limit = 50): Promise<{ username: string; avatar_url?: string }[]> {

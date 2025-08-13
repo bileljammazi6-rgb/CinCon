@@ -19,7 +19,7 @@ import { RockPaperScissorsModal } from './components/RockPaperScissorsModal';
 import { MobileNav } from './components/MobileNav';
 import { MemoryMatchModal } from './components/MemoryMatchModal';
 import { SnakeModal } from './components/SnakeModal';
-import { listMessages, sendMessage as sendCommunityMessage, CommunityMessage, subscribeToMessages, fetchProfiles } from './services/communityService';
+import { listMessages, sendMessage as sendCommunityMessage, CommunityMessage, subscribeToMessages, fetchProfiles, updateLastSeen } from './services/communityService';
 import { InviteModal } from './components/InviteModal';
 import { InvitesPanel } from './components/InvitesPanel';
 import { QuizModal } from './components/QuizModal';
@@ -82,6 +82,13 @@ function App() {
     });
     return () => { ignore = true; unsub(); };
   }, [activeTab]);
+
+  useEffect(() => {
+    let id: any;
+    const tick = async () => { try { await updateLastSeen(settings.displayName || 'Anonymous'); } catch {} };
+    tick(); id = setInterval(tick, 60000);
+    return () => clearInterval(id);
+  }, [settings.displayName]);
 
   useEffect(() => {
     const node = dropRef.current; if (!node) return;
@@ -415,7 +422,12 @@ function App() {
                     <div key={m.id} className="flex items-start gap-2">
                       <img src={profileMap[m.sender]?.avatar_url || 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(m.sender)} className="w-6 h-6 rounded-full"/>
                       <div className="flex-1">
-                        <div className="text-emerald-400 font-semibold text-xs">{m.sender} <span className="text-[10px] text-gray-500">{new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>
+                        <div className="text-emerald-400 font-semibold text-xs flex items-center gap-1">{m.sender}
+                          {profileMap[m.sender]?.last_seen && (Date.now() - new Date(profileMap[m.sender]!.last_seen!).getTime() < 120000) && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" title="online"></span>
+                          )}
+                          <span className="text-[10px] text-gray-500 ml-1">{new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                        </div>
                         <div className="text-xs whitespace-pre-wrap text-gray-200">{m.content}</div>
                       </div>
                     </div>
