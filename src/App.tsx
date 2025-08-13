@@ -21,6 +21,7 @@ import { MemoryMatchModal } from './components/MemoryMatchModal';
 import { SnakeModal } from './components/SnakeModal';
 import { listMessages, sendMessage as sendCommunityMessage, CommunityMessage, subscribeToMessages, fetchProfiles } from './services/communityService';
 import { InviteModal } from './components/InviteModal';
+import { InvitesPanel } from './components/InvitesPanel';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -423,6 +424,7 @@ function App() {
                   <button onClick={handleSendCommunity} className="btn-primary px-3 py-2 rounded">Send</button>
                 </div>
               </div>
+              <InvitesPanel username={settings.displayName || 'Anonymous'} />
             </div>
           )}
         </div>

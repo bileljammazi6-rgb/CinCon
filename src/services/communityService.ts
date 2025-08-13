@@ -33,6 +33,21 @@ export async function createInvite(type: 'game' | 'movie', fromUser: string, toU
   if (error) throw error;
 }
 
+export async function listInvitesForUser(username: string) {
+  const { data, error } = await supabase
+    .from('invites')
+    .select('id, type, from_user, to_user, status, payload, created_at')
+    .eq('to_user', username)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function updateInviteStatus(inviteId: number, status: 'accepted'|'declined'|'cancelled') {
+  const { error } = await supabase.from('invites').update({ status }).eq('id', inviteId);
+  if (error) throw error;
+}
+
 export async function createRoom(roomId: string, name: string, type: 'dm'|'group'|'game'|'movie'|'global'): Promise<void> {
   const { error } = await supabase.from('rooms').insert({ id: roomId, name, type }).select().single();
   if (error && !String(error.message).includes('duplicate')) throw error;
@@ -76,4 +91,21 @@ export async function listUsers(limit = 50): Promise<{ username: string; avatar_
     .limit(limit);
   if (error) throw error;
   return (data || []) as any;
+}
+
+// game moves
+export async function sendGameMove(roomId: string, move_type: 'tictactoe'|'chess', data: Record<string, any>) {
+  const { error } = await supabase.from('game_moves').insert({ room_id: roomId, move_type, data });
+  if (error) throw error;
+}
+
+export function subscribeToGameMoves(roomId: string, onInsert: (payload: { move_type: string; data: any; created_at: string }) => void): () => void {
+  const channel = supabase
+    .channel(`game-moves-${roomId}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'game_moves', filter: `room_id=eq.${roomId}` }, (payload) => {
+      const row = payload.new as any;
+      onInsert({ move_type: row.move_type, data: row.data, created_at: row.created_at });
+    })
+    .subscribe();
+  return () => { supabase.removeChannel(channel); };
 }
