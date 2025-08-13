@@ -20,6 +20,7 @@ import { MobileNav } from './components/MobileNav';
 import { MemoryMatchModal } from './components/MemoryMatchModal';
 import { SnakeModal } from './components/SnakeModal';
 import { listMessages, sendMessage as sendCommunityMessage, CommunityMessage, subscribeToMessages, fetchProfiles } from './services/communityService';
+import { InviteModal } from './components/InviteModal';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -48,6 +49,7 @@ function App() {
   const dropRef = useRef<HTMLDivElement>(null);
   const [lastCommunityAiAt, setLastCommunityAiAt] = useState<number>(0);
   const [profileMap, setProfileMap] = useState<Record<string, { avatar_url?: string }>>({});
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   useEffect(() => { const saved = localStorage.getItem('bilel_chat_history'); if (saved) try { setMessages(JSON.parse(saved).map((m: any)=>({ ...m, timestamp: new Date(m.timestamp) })) ); } catch {} }, []);
@@ -288,6 +290,9 @@ function App() {
               <button onClick={()=>setActiveTab('games')} className={`text-xs px-2 py-1 rounded ${activeTab==='games'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Games</button>
               <button onClick={()=>setActiveTab('community')} className={`text-xs px-2 py-1 rounded ${activeTab==='community'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Community</button>
             </div>
+            {activeTab==='games' && (
+              <button onClick={()=>setInviteOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Invite</button>
+            )}
             <button onClick={()=>setChessOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5 md:bg-transparent"><Sword className="w-4 h-4"/></button>
             <button onClick={clearChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><Eraser className="w-4 h-4"/> Clear</button>
             <button onClick={exportChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><DownloadIcon className="w-4 h-4"/> Export</button>
@@ -432,6 +437,7 @@ function App() {
       <MobileNav active={activeTab} onChange={setActiveTab} onSettings={()=>setSettingsOpen(true)} />
       <MemoryMatchModal open={mmOpen} onClose={()=>setMmOpen(false)} />
       <SnakeModal open={snakeOpen} onClose={()=>setSnakeOpen(false)} />
+      <InviteModal open={inviteOpen} onClose={()=>setInviteOpen(false)} fromUser={settings.displayName || 'Anonymous'} />
     </div>
   );
 }

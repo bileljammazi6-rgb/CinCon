@@ -33,6 +33,11 @@ export async function createInvite(type: 'game' | 'movie', fromUser: string, toU
   if (error) throw error;
 }
 
+export async function createRoom(roomId: string, name: string, type: 'dm'|'group'|'game'|'movie'|'global'): Promise<void> {
+  const { error } = await supabase.from('rooms').insert({ id: roomId, name, type }).select().single();
+  if (error && !String(error.message).includes('duplicate')) throw error;
+}
+
 export function subscribeToMessages(roomId: string, onInsert: (msg: CommunityMessage) => void): () => void {
   const channel = supabase
     .channel(`messages-room-${roomId}`)
