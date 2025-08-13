@@ -44,8 +44,9 @@ export async function listInvitesForUser(username: string) {
 }
 
 export async function updateInviteStatus(inviteId: number, status: 'accepted'|'declined'|'cancelled') {
-  const { error } = await supabase.from('invites').update({ status }).eq('id', inviteId);
+  const { data, error } = await supabase.from('invites').update({ status }).eq('id', inviteId).select('id, type, from_user, to_user, status, payload, created_at').single();
   if (error) throw error;
+  return data;
 }
 
 export async function createRoom(roomId: string, name: string, type: 'dm'|'group'|'game'|'movie'|'global'): Promise<void> {

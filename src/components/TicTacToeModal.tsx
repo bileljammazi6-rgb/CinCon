@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X as Close } from 'lucide-react';
+import { sendGameMove, subscribeToGameMoves } from '../services/communityService';
 
 interface TicTacToeModalProps {
   open: boolean;
@@ -24,7 +25,28 @@ export function TicTacToeModal({ open, onClose }: TicTacToeModalProps) {
   const [board, setBoard] = useState<(null|'X'|'O')[]>(Array(9).fill(null));
   const [turn, setTurn] = useState<'X'|'O'>('X');
   const [online, setOnline] = useState(false);
+  const [roomId, setRoomId] = useState<string|undefined>(undefined);
+  const [myMark, setMyMark] = useState<'X'|'O'>('X');
+  const unsubRef = useRef<() => void>();
   const winner = useMemo(()=>checkWinner(board), [board]);
+
+  useEffect(() => {
+    if (!open) return;
+    const params = new URLSearchParams(window.location.hash.replace('#',''));
+    const game = params.get('game');
+    const room = params.get('room') || undefined;
+    if (game==='tictactoe' && room) {
+      setOnline(true); setRoomId(room);
+      if (unsubRef.current) unsubRef.current();
+      unsubRef.current = subscribeToGameMoves(room, ({ move_type, data }) => {
+        if (move_type!=='tictactoe') return;
+        const { index, mark } = data as { index: number; mark: 'X'|'O' };
+        setBoard(prev => { if (prev[index]) return prev; const copy=[...prev]; copy[index]=mark; return copy; });
+        setTurn(p=> p==='X'?'O':'X');
+      });
+    }
+    return () => { if (unsubRef.current) unsubRef.current(); };
+  }, [open]);
 
   const aiMove = () => {
     const empties = board.map((v,idx)=>v?null:idx).filter(v=>v!==null) as number[];
@@ -34,11 +56,19 @@ export function TicTacToeModal({ open, onClose }: TicTacToeModalProps) {
     setTurn('X');
   };
 
-  const play = (i: number) => {
-    if (winner || turn==='O' || board[i]) return;
-    setBoard(prev => { const copy=[...prev]; copy[i]='X'; return copy; });
-    setTurn('O');
-    setTimeout(()=>{ aiMove(); }, 250);
+  const play = async (i: number) => {
+    if (winner || board[i]) return;
+    if (online && roomId) {
+      if (turn!==myMark) return; // wait your turn
+      setBoard(prev => { const copy=[...prev]; copy[i]=myMark; return copy; });
+      setTurn(myMark==='X'?'O':'X');
+      await sendGameMove(roomId, 'tictactoe', { index: i, mark: myMark });
+    } else {
+      if (turn==='O') return;
+      setBoard(prev => { const copy=[...prev]; copy[i]='X'; return copy; });
+      setTurn('O');
+      setTimeout(()=>{ aiMove(); }, 250);
+    }
   };
 
   const reset = () => { setBoard(Array(9).fill(null)); setTurn('X'); };

@@ -16,7 +16,15 @@ export function InvitesPanel({ username }: InvitesPanelProps) {
   useEffect(() => { load(); }, [username]);
 
   const act = async (id: number, status: 'accepted'|'declined') => {
-    try { await updateInviteStatus(id, status); await load(); } catch(e:any) { setError(e?.message||'Failed to update invite'); }
+    try {
+      const inv = await updateInviteStatus(id, status);
+      await load();
+      if (status==='accepted' && inv?.payload?.roomId) {
+        const roomId = inv.payload.roomId as string;
+        const game = inv.payload.game as string;
+        window.location.hash = `#game=${encodeURIComponent(game)}&room=${encodeURIComponent(roomId)}`;
+      }
+    } catch(e:any) { setError(e?.message||'Failed to update invite'); }
   };
 
   return (
