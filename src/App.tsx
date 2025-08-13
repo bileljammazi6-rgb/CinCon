@@ -186,6 +186,9 @@ function App() {
     } catch {}
   }, []);
 
+  const cowRoomInit = (typeof window !== 'undefined') ? (localStorage.getItem('cowatch_room_init') || undefined) : undefined;
+  const cowUrlInit = (typeof window !== 'undefined') ? (localStorage.getItem('cowatch_url_init') || undefined) : undefined;
+
   const buildPrompt = (raw: string, isImageOnly: boolean) => {
     const lang = settings.language === 'auto' ? 'auto-detect' : settings.language;
     const fiqh = settings.fiqh ? `\nFiqh profile: madhhab=${settings.fiqh.madhhab}, strictness=${settings.fiqh.strictness}, includeMinority=${settings.fiqh.includeMinority}` : '';
