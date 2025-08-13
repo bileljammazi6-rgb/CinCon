@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Bot, Volume2, Copy } from 'lucide-react';
+import { User, Bot, Volume2, Copy, Shield } from 'lucide-react';
 import { Message } from '../types';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -8,6 +8,16 @@ import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface ChatMessageProps {
   message: Message;
+}
+
+function computeTrustScore(text: string): { score: number; color: string; label: string } {
+  const links = (text.match(/https?:\/\//g) || []).length;
+  const hasEvidence = /sources\s*\/\s*evidence|sources:|evidence:/i.test(text);
+  let score = 20 + links * 15 + (hasEvidence ? 20 : 0);
+  if (score > 100) score = 100;
+  const color = score >= 75 ? 'text-emerald-400' : score >= 50 ? 'text-amber-400' : 'text-red-400';
+  const label = score >= 75 ? 'High' : score >= 50 ? 'Medium' : 'Low';
+  return { score, color, label };
 }
 
 export function ChatMessage({ message }: ChatMessageProps) {
@@ -24,6 +34,8 @@ export function ChatMessage({ message }: ChatMessageProps) {
   const copyText = async (text: string) => {
     try { await navigator.clipboard.writeText(text); } catch {}
   };
+
+  const trust = message.sender === 'ai' ? computeTrustScore(message.content) : null;
 
   return (
     <div className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -78,6 +90,12 @@ export function ChatMessage({ message }: ChatMessageProps) {
           </div>
           
           <div className="flex items-center gap-1 flex-shrink-0">
+            {trust && (
+              <div className={`text-[10px] ${trust.color} flex items-center gap-1`} title={`Trust: ${trust.score}%`}>
+                <Shield className="w-3.5 h-3.5"/>
+                <span>{trust.label}</span>
+              </div>
+            )}
             <button
               onClick={() => copyText(message.content)}
               className="text-gray-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"

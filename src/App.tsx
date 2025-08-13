@@ -23,6 +23,9 @@ import { listMessages, sendMessage as sendCommunityMessage, CommunityMessage, su
 import { InviteModal } from './components/InviteModal';
 import { InvitesPanel } from './components/InvitesPanel';
 import { QuizModal } from './components/QuizModal';
+import { IsnadExplorerModal } from './components/IsnadExplorerModal';
+import { TajwidCoachModal } from './components/TajwidCoachModal';
+import { CoWatchModal } from './components/CoWatchModal';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -54,6 +57,9 @@ function App() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
   const [myAvatar, setMyAvatar] = useState<string | undefined>(undefined);
+  const [isnadOpen, setIsnadOpen] = useState(false);
+  const [tajwidOpen, setTajwidOpen] = useState(false);
+  const [cowatchOpen, setCowatchOpen] = useState(false);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   useEffect(() => { const saved = localStorage.getItem('bilel_chat_history'); if (saved) try { setMessages(JSON.parse(saved).map((m: any)=>({ ...m, timestamp: new Date(m.timestamp) })) ); } catch {} }, []);
@@ -103,7 +109,8 @@ function App() {
 
   const buildPrompt = (raw: string, isImageOnly: boolean) => {
     const lang = settings.language === 'auto' ? 'auto-detect' : settings.language;
-    const prefix = `User: ${settings.displayName}\nPreferred language: ${lang}`;
+    const fiqh = settings.fiqh ? `\nFiqh profile: madhhab=${settings.fiqh.madhhab}, strictness=${settings.fiqh.strictness}, includeMinority=${settings.fiqh.includeMinority}` : '';
+    const prefix = `User: ${settings.displayName}\nPreferred language: ${lang}${fiqh}`;
     return isImageOnly ? `${prefix}\nTask: Analyze the provided image in detail (objects, layout, colors, text/OCR, context, movie/actor references if any).` : `${prefix}\nTask: ${raw}`;
   };
 
@@ -307,6 +314,11 @@ function App() {
               <button onClick={()=>setActiveTab('games')} className={`text-xs px-2 py-1 rounded ${activeTab==='games'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Games</button>
               <button onClick={()=>setActiveTab('community')} className={`text-xs px-2 py-1 rounded ${activeTab==='community'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Community</button>
             </div>
+            <div className="hidden md:flex items-center gap-2">
+              <button onClick={()=>setIsnadOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Isnad</button>
+              <button onClick={()=>setTajwidOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Tajwid</button>
+              <button onClick={()=>setCowatchOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Co‑Watch</button>
+            </div>
             {activeTab==='games' && (
               <div className="flex items-center gap-2">
                 <button onClick={()=>setInviteOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Invite</button>
@@ -465,6 +477,9 @@ function App() {
       <SnakeModal open={snakeOpen} onClose={()=>setSnakeOpen(false)} />
       <InviteModal open={inviteOpen} onClose={()=>setInviteOpen(false)} fromUser={settings.displayName || 'Anonymous'} />
       <QuizModal open={quizOpen} onClose={()=>setQuizOpen(false)} username={settings.displayName || 'Anonymous'} />
+      <IsnadExplorerModal open={isnadOpen} onClose={()=>setIsnadOpen(false)} />
+      <TajwidCoachModal open={tajwidOpen} onClose={()=>setTajwidOpen(false)} haptics={!!settings.haptics} />
+      <CoWatchModal open={cowatchOpen} onClose={()=>setCowatchOpen(false)} username={settings.displayName || 'Anonymous'} />
     </div>
   );
 }

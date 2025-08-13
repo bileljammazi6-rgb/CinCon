@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Save, Globe, Zap, Gauge, Key, User as UserIcon, Image as ImageIcon, FileText } from 'lucide-react';
+import { X, Save, Globe, Zap, Gauge, Key, User as UserIcon, Image as ImageIcon, FileText, BookOpen, ShieldCheck, Vibrate } from 'lucide-react';
 import { getUserProfile, updateUserProfile } from '../services/communityService';
 
 export interface AppSettings {
@@ -8,6 +8,10 @@ export interface AppSettings {
   model?: 'flash' | 'pro';
   pixeldrainOnly?: boolean;
   autoCitations?: boolean;
+  fiqh?: { madhhab: 'hanafi'|'maliki'|'shafii'|'hanbali'|'athari'|'none'; strictness: 'lenient'|'balanced'|'strict'; includeMinority: boolean };
+  trustMeter?: boolean;
+  haptics?: boolean;
+  smartSubtitles?: boolean;
 }
 
 interface SettingsModalProps {
@@ -39,12 +43,25 @@ export function SettingsModal({ open, initial, onClose, onSave }: SettingsModalP
   const [bio, setBio] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
 
+  const [madhhab, setMadhhab] = useState<AppSettings['fiqh']['madhhab']>(initial.fiqh?.madhhab || 'none');
+  const [strictness, setStrictness] = useState<AppSettings['fiqh']['strictness']>(initial.fiqh?.strictness || 'balanced');
+  const [includeMinority, setIncludeMinority] = useState<boolean>(initial.fiqh?.includeMinority ?? true);
+  const [trustMeter, setTrustMeter] = useState<boolean>(initial.trustMeter ?? true);
+  const [haptics, setHaptics] = useState<boolean>(initial.haptics ?? true);
+  const [smartSubtitles, setSmartSubtitles] = useState<boolean>(initial.smartSubtitles ?? false);
+
   useEffect(() => {
     setDisplayName(initial.displayName);
     setLanguage(initial.language);
     setModel(initial.model || 'flash');
     setPixeldrainOnly(!!initial.pixeldrainOnly);
     setAutoCitations(initial.autoCitations ?? true);
+    setMadhhab(initial.fiqh?.madhhab || 'none');
+    setStrictness(initial.fiqh?.strictness || 'balanced');
+    setIncludeMinority(initial.fiqh?.includeMinority ?? true);
+    setTrustMeter(initial.trustMeter ?? true);
+    setHaptics(initial.haptics ?? true);
+    setSmartSubtitles(initial.smartSubtitles ?? false);
   }, [initial]);
 
   useEffect(() => {
@@ -94,7 +111,7 @@ export function SettingsModal({ open, initial, onClose, onSave }: SettingsModalP
         <div className="p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div className="text-xs text-gray-400">Signed in as</div>
-            <button onClick={()=>setProfileOpen(true)} className="text-xs px-2 py-1 rounded border border-white/10 bg-white/5 hover:bg-white/10 flex items-center gap-1"><UserIcon className="w-3.5 h-3.5"/> Edit profile</button>
+            <button onClick={()=>setProfileOpen(true)} className="text-xs px-2 py-1 rounded border border-white/10 bg_white/5 hover:bg-white/10 flex items-center gap-1"><UserIcon className="w-3.5 h-3.5"/> Edit profile</button>
           </div>
           <div>
             <label className="block text-xs text-gray-400 mb-1">Display name</label>
@@ -102,7 +119,7 @@ export function SettingsModal({ open, initial, onClose, onSave }: SettingsModalP
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your name"
-              className="w-full bg-gray-800 border border-white/10 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-gray-800 border border_white/10 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
@@ -138,10 +155,31 @@ export function SettingsModal({ open, initial, onClose, onSave }: SettingsModalP
             <input id="auto-cite" type="checkbox" checked={autoCitations} onChange={(e)=>setAutoCitations(e.target.checked)} />
             <label htmlFor="auto-cite" className="text-xs text-gray-300">Auto request sources/evidence for answers</label>
           </div>
-          <div>
-            <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1"><Key className="w-4 h-4"/> Gemini API key (stored locally)</label>
-            <input value={geminiKey} onChange={(e)=>setGeminiKey(e.target.value)} placeholder="Paste your Gemini API key" className="w-full bg-gray-800 border border-white/10 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <div className="mt-1 text-[10px] text-gray-500">Used if env key is missing. Saved in your browser only.</div>
+
+          <div className="pt-2 border-t border-white/10">
+            <div className="text-xs text-gray-400 mb-1 flex items-center gap-1"><BookOpen className="w-4 h-4"/> Fiqh alignment</div>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <select value={madhhab} onChange={(e)=>setMadhhab(e.target.value as any)} className="bg-gray-800 border border-white/10 rounded px-2 py-2 text-xs">
+                <option value="none">No madhhab</option>
+                <option value="hanafi">Hanafi</option>
+                <option value="maliki">Maliki</option>
+                <option value="shafii">Shafi'i</option>
+                <option value="hanbali">Hanbali</option>
+                <option value="athari">Athari</option>
+              </select>
+              <select value={strictness} onChange={(e)=>setStrictness(e.target.value as any)} className="bg-gray-800 border border-white/10 rounded px-2 py-2 text-xs">
+                <option value="lenient">Lenient</option>
+                <option value="balanced">Balanced</option>
+                <option value="strict">Strict</option>
+              </select>
+            </div>
+            <label className="flex items-center gap-2 text-xs text-gray-300"><input type="checkbox" checked={includeMinority} onChange={(e)=>setIncludeMinority(e.target.checked)} /> Include minority opinions</label>
+          </div>
+
+          <div className="pt-2 border-t border-white/10 grid gap-2">
+            <label className="flex items-center gap-2 text-xs text-gray-300"><ShieldCheck className="w-4 h-4"/> <input type="checkbox" checked={trustMeter} onChange={(e)=>setTrustMeter(e.target.checked)} /> Enable Trust Meter</label>
+            <label className="flex items-center gap-2 text-xs text-gray-300"><Vibrate className="w-4 h-4"/> <input type="checkbox" checked={haptics} onChange={(e)=>setHaptics(e.target.checked)} /> Haptic cues</label>
+            <label className="flex items-center gap-2 text-xs text-gray-300"><span className="w-4 h-4 inline-block"/> <input type="checkbox" checked={smartSubtitles} onChange={(e)=>setSmartSubtitles(e.target.checked)} /> Smart Subtitles (beta)</label>
           </div>
 
           {profileOpen && (
@@ -169,7 +207,21 @@ export function SettingsModal({ open, initial, onClose, onSave }: SettingsModalP
         <div className="p-4 border-t border-white/10 flex justify-end gap-2">
           <button onClick={onClose} className="px-3 py-1.5 text-sm bg-white/5 hover:bg-white/10 rounded">Cancel</button>
           <button
-            onClick={() => { persistGeminiKey(); localStorage.setItem('last_username', displayName.trim()); onSave({ displayName: displayName.trim() || (localStorage.getItem('last_username') || 'You'), language, model, pixeldrainOnly, autoCitations }); }}
+            onClick={() => { 
+              persistGeminiKey(); 
+              localStorage.setItem('last_username', displayName.trim()); 
+              onSave({ 
+                displayName: displayName.trim() || (localStorage.getItem('last_username') || 'You'), 
+                language, 
+                model, 
+                pixeldrainOnly, 
+                autoCitations, 
+                fiqh: { madhhab, strictness, includeMinority },
+                trustMeter,
+                haptics,
+                smartSubtitles,
+              }); 
+            }}
             className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded"
           >
             Save

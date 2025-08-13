@@ -36,7 +36,6 @@ Formatting:
     try {
       const stored = localStorage.getItem('gemini_api_key') || '';
       const lsKey = stored.trim().length > 0 ? stored.trim() : undefined;
-      // Hardcoded fallback per request (use only if no env or localStorage key)
       const fallback = 'AIzaSyDgwpq2i6hUBCkP3JDtKRlmGJUM6jXFPAM';
       return envKey ?? lsKey ?? fallback;
     } catch {
@@ -71,7 +70,7 @@ Formatting:
     throw lastError || new Error('Network error');
   }
 
-  async sendMessage(text: string, imageData?: string): Promise<string> {
+  async sendMessage(text: string, imageData?: string, options?: { model?: 'flash'|'pro' }): Promise<string> {
     try {
       const effectiveKey = this.getEffectiveApiKey();
       if (!effectiveKey || effectiveKey.trim().length < 10) {
@@ -114,8 +113,8 @@ Formatting:
         ]
       };
 
-      // Use the exact model string and URL format requested
-      const model = 'gemini-2.5-flash-preview-05-20';
+      const modelChoice = options?.model || 'flash';
+      const model = modelChoice === 'pro' ? 'gemini-1.5-pro' : 'gemini-2.5-flash-preview-05-20';
       const apiKey = effectiveKey;
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 

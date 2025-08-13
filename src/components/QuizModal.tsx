@@ -41,8 +41,10 @@ export function QuizModal({ open, onClose, username }: QuizModalProps) {
       setTime(20);
       if (timerRef.current) window.clearInterval(timerRef.current);
       timerRef.current = window.setInterval(()=> setTime(t => {
+        const next = t-1;
+        if (next === 5) { try { navigator.vibrate?.(50); } catch {} }
         if (t<=1) { window.clearInterval(timerRef.current!); submit(); return 0; }
-        return t-1;
+        return next;
       }), 1000) as unknown as number;
     } catch { setState('idle'); }
   };
@@ -52,7 +54,7 @@ export function QuizModal({ open, onClose, username }: QuizModalProps) {
     const ok = answer.trim().toLowerCase() === correctRef.current.toLowerCase();
     setState('result');
     if (ok) { setScore(s=>s+1); setStreak(s=>s+1); }
-    else { setStreak(0); }
+    else { setStreak(0); try { navigator.vibrate?.([30, 50, 30]); } catch {} }
   };
 
   const next = async () => { await ask(); };
