@@ -58,7 +58,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
           />
         )}
         
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start justify_between gap-3">
           <div className="text-sm leading-relaxed whitespace-pre-wrap flex-1 prose prose-invert prose-sm max-w-none">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}

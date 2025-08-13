@@ -100,7 +100,7 @@ export async function listUsers(limit = 50): Promise<{ username: string; avatar_
 }
 
 // game moves
-export async function sendGameMove(roomId: string, move_type: 'tictactoe'|'chess'|'cowatch'|'cowatch_chat', data: Record<string, any>) {
+export async function sendGameMove(roomId: string, move_type: 'tictactoe'|'chess'|'cowatch'|'cowatch_chat'|'quiz', data: Record<string, any>) {
   const { error } = await supabase.from('game_moves').insert({ room_id: roomId, move_type, data });
   if (error) throw error;
 }
@@ -121,18 +121,64 @@ export async function saveQuizScore(username: string, category: string, score: n
   if (error) throw error;
 }
 
-// Reactions (client-side simulated for now; store as {messageId, username, emoji} in a json table if available)
 export type Reaction = { messageId: string; username: string; emoji: string };
 
-export async function addReaction(_messageId: string, _username: string, _emoji: string) {
-  // Placeholder: integrate with a reactions table if you add one in Supabase
-  return;
+export async function addReaction(messageId: string, username: string, emoji: string) {
+  const { error } = await supabase.from('message_reactions').insert({ message_id: Number(messageId), username, emoji });
+  if (error) throw error;
 }
 
+export async function listReactions(messageIds: string[]): Promise<Record<string, Reaction[]>> {
+  if (!messageIds.length) return {} as any;
+  const ids = messageIds.map(id => Number(id));
+  const { data, error } = await supabase.from('message_reactions').select('message_id, username, emoji').in('message_id', ids);
+  if (error) throw error;
+  const map: Record<string, Reaction[]> = {};
+  (data || []).forEach((r: any) => {
+    const k = String(r.message_id);
+    if (!map[k]) map[k] = [];
+    map[k].push({ messageId: k, username: r.username, emoji: r.emoji });
+  });
+  return map;
+}
+
+export function subscribeToReactions(roomId: string, onInsert: (r: Reaction & { messageId: string }) => void): () => void {
+  const channel = supabase
+    .channel(`reactions-${roomId}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'message_reactions' }, (payload) => {
+      const row = payload.new as any;
+      onInsert({ messageId: String(row.message_id), username: row.username, emoji: row.emoji });
+    })
+    .subscribe();
+  return () => { supabase.removeChannel(channel); };
+}
+
+export type ThreadReply = { id: string; parent_message_id: string; sender: string; content: string; created_at: string };
+
 export async function addReply(roomId: string, parentMessageId: string, sender: string, content: string) {
-  // Simple approach: include parent id in content prefix; or add a replies table
-  const formatted = `(reply to #${parentMessageId}) ${content}`;
-  await sendMessage(roomId, sender, formatted);
+  const { error } = await supabase.from('message_threads').insert({ room_id: roomId, parent_message_id: Number(parentMessageId), sender, content });
+  if (error) throw error;
+}
+
+export async function listReplies(parentMessageId: string): Promise<ThreadReply[]> {
+  const { data, error } = await supabase
+    .from('message_threads')
+    .select('id, parent_message_id, sender, content, created_at')
+    .eq('parent_message_id', Number(parentMessageId))
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return (data || []) as any;
+}
+
+export function subscribeToReplies(parentMessageId: string, onInsert: (r: ThreadReply) => void): () => void {
+  const channel = supabase
+    .channel(`replies-${parentMessageId}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'message_threads', filter: `parent_message_id=eq.${Number(parentMessageId)}` }, (payload) => {
+      const row = payload.new as any;
+      onInsert({ id: String(row.id), parent_message_id: String(row.parent_message_id), sender: row.sender, content: row.content, created_at: row.created_at });
+    })
+    .subscribe();
+  return () => { supabase.removeChannel(channel); };
 }
 
 export async function updateUserProfile(username: string, patch: { avatar_url?: string | null; bio?: string | null; full_name?: string | null; website?: string | null; location?: string | null; }) {
