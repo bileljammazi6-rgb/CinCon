@@ -79,3 +79,37 @@ create table if not exists public.quiz_scores (
 
 alter table public.users add column if not exists bio text null;
 alter table public.users add column if not exists last_seen timestamptz null;
+
+-- Reactions
+create table if not exists public.message_reactions (
+  id bigserial primary key,
+  message_id bigint not null references public.messages(id) on delete cascade,
+  username text not null,
+  emoji text not null check (char_length(emoji) <= 8),
+  created_at timestamptz not null default now()
+);
+create index if not exists mr_message_idx on public.message_reactions(message_id);
+
+-- Threads (message replies)
+create table if not exists public.message_threads (
+  id bigserial primary key,
+  room_id text not null references public.rooms(id) on delete cascade,
+  parent_message_id bigint not null references public.messages(id) on delete cascade,
+  sender text not null,
+  content text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists mt_parent_idx on public.message_threads(parent_message_id);
+
+-- Quiz rooms for head-to-head
+create table if not exists public.quiz_rooms (
+  id text primary key,
+  created_at timestamptz not null default now(),
+  status text not null default 'waiting' check (status in ('waiting','running','finished'))
+);
+create table if not exists public.quiz_participants (
+  room_id text references public.quiz_rooms(id) on delete cascade,
+  username text not null,
+  score int not null default 0,
+  primary key(room_id, username)
+);
