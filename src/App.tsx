@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Image, Mic, Bot, Heart, Flame, Trash2, Eraser, Download as DownloadIcon, Settings, Search, Sword, Users } from 'lucide-react';
+import { Send, Image, Mic, Bot, Heart, Flame, Trash2, Eraser, Download as DownloadIcon, Settings, Search, Sword, Users, Settings as SettingsIcon, Home as HomeIcon, History as HistoryIcon, Film as FilmIcon, Users as UsersIcon, Gamepad, Book as BookIcon, MonitorPlay } from 'lucide-react';
 import { ChatMessage } from './components/ChatMessage';
 import { MovieCard } from './components/MovieCard';
 import { ImageUpload } from './components/ImageUpload';
@@ -64,6 +64,23 @@ function App() {
   const [cowatchOpen, setCowatchOpen] = useState(false);
   const [moviesBanner, setMoviesBanner] = useState<string>('');
   const [downloaderOpen, setDownloaderOpen] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<'Home'|'History'|'Settings'|'Movie Chat'|'Community Chat'|'Games'|'Watch Together'|'Tajwid'>('Home');
+  const [notify, setNotify] = useState<string>('');
+
+  const openSection = (name: 'Home'|'History'|'Settings') => {
+    setActiveMenu(name);
+    if (name === 'Home') setActiveTab('chat');
+    if (name === 'History') setNotify('History is coming soon');
+    if (name === 'Settings') setSettingsOpen(true);
+  };
+  const openAiSection = (name: 'Movie Chat'|'Community Chat'|'Games'|'Watch Together'|'Tajwid') => {
+    setActiveMenu(name);
+    if (name === 'Movie Chat') setActiveTab('movies');
+    if (name === 'Community Chat') setActiveTab('community');
+    if (name === 'Games') setActiveTab('games');
+    if (name === 'Watch Together') setCowatchOpen(true);
+    if (name === 'Tajwid') setTajwidOpen(true);
+  };
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   useEffect(() => { const saved = localStorage.getItem('bilel_chat_history'); if (saved) try { setMessages(JSON.parse(saved).map((m: any)=>({ ...m, timestamp: new Date(m.timestamp) })) ); } catch {} }, []);
@@ -303,50 +320,43 @@ function App() {
   return (
     <div className="min-h-screen md:min-h-0 flex items-stretch md:items-center justify-stretch md:justify-center pb-14 md:pb-0">
       <div className="w-full md:max-w-6xl h-[100svh] md:h-[90vh] rounded-none md:rounded-2xl shadow-2xl flex overflow-hidden">
-        {/* Left sidebar: hidden on mobile */}
-        <aside className="hidden md:flex md:w-72 flex-col bg-[#111b21] border-r border-white/10">
-          <div className="p-3 border-b border-white/10 flex items-center gap-2">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center"><Bot className="w-4 h-4 text-white"/></div>
-            <div className="text-sm text-white font-semibold">Bilel Jammazi AI</div>
-            <div className="ml-auto flex items-center gap-2">
-              <button onClick={() => setSettingsOpen(true)} className="text-gray-300 hover:text-white"><Settings className="w-4 h-4"/></button>
-            </div>
+        {/* Left sidebar: clean menu */}
+        <aside className="hidden md:flex md:w-72 flex-col bg-[#0f1216] border-r border-white/10">
+          <div className="p-4 border-b border-white/10 flex items-center gap-2">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center"><Bot className="w-5 h-5 text-white"/></div>
+            <div className="text-sm text-white font-semibold">AI Hub</div>
+            <button onClick={() => setSettingsOpen(true)} className="ml-auto text-gray-300 hover:text-white"><SettingsIcon className="w-4 h-4"/></button>
           </div>
-          <div className="p-3"><div className="flex items-center gap-2 bg-white/5 rounded px-2 py-1 text-gray-300 text-sm"><Search className="w-4 h-4"/><input className="bg-transparent outline-none flex-1" placeholder="Search or start a new chat"/></div></div>
-          <div className="flex-1 overflow-y-auto">
-            <div className="px-3 py-2 text-xs text-gray-400">Recent</div>
-            <button className="w-full text-left px-3 py-2 hover:bg-white/5">
-              <div className="text-sm text-white">{settings.displayName || 'You'}</div>
-              <div className="text-xs text-gray-400">Open chat</div>
-            </button>
-          </div>
+          <nav className="p-3">
+            <div className="text-[11px] uppercase tracking-wider text-gray-500 mb-2">Core</div>
+            <ul className="mb-4">
+              <li className="mb-2"><button onClick={()=>openSection('Home')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='Home'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><HomeIcon className="w-4 h-4"/> Home</button></li>
+              <li className="mb-2"><button onClick={()=>openSection('History')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='History'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><HistoryIcon className="w-4 h-4"/> History</button></li>
+              <li className="mb-2"><button onClick={()=>openSection('Settings')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='Settings'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><SettingsIcon className="w-4 h-4"/> Settings</button></li>
+            </ul>
+            <div className="text-[11px] uppercase tracking-wider text-gray-500 mb-2">AI Tools</div>
+            <ul className="space-y-2 overflow-y-auto pr-1">
+              <li><button onClick={()=>openAiSection('Movie Chat')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='Movie Chat'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><FilmIcon className="w-4 h-4"/> Movie Chat</button></li>
+              <li><button onClick={()=>openAiSection('Community Chat')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='Community Chat'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><UsersIcon className="w-4 h-4"/> Community Chat</button></li>
+              <li><button onClick={()=>openAiSection('Games')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='Games'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><Gamepad className="w-4 h-4"/> Games</button></li>
+              <li><button onClick={()=>openAiSection('Watch Together')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='Watch Together'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><MonitorPlay className="w-4 h-4"/> Watch Together</button></li>
+              <li><button onClick={()=>openAiSection('Tajwid')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='Tajwid'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><BookIcon className="w-4 h-4"/> Tajwid</button></li>
+            </ul>
+          </nav>
         </aside>
 
-        {/* Right chat pane */}
+        {/* Right pane */}
         <div className="flex-1 flex flex-col wa-bg" ref={dropRef}>
           {/* Header */}
-          <div className="glass-effect p-2 md:p-3 border-b border-white/10 flex items-center gap-2 md:gap-3">
+          <div className="glass-effect p-3 border-b border-white/10 flex items-center gap-3">
             {myAvatar ? (
               <img src={myAvatar} alt="avatar" className="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover" />
             ) : (
               <img src={'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(settings.displayName || 'You')} alt="avatar" className="w-8 h-8 md:w-9 md:h-9 rounded-full" />
             )}
             <div className="flex-1">
-              <div className="text-sm text-white font-semibold truncate">{settings.displayName}</div>
-              <div className="text-[10px] md:text-[11px] text-emerald-400">online</div>
-            </div>
-            <div className="flex items-center gap-1 overflow-x-auto max-w-[50vw] md:max-w-none scrollbar-none">
-              <button onClick={()=>setActiveTab('chat')} className={`text-xs px-2 py-1 rounded ${activeTab==='chat'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Chat</button>
-              <button onClick={()=>setActiveTab('movies')} className={`text-xs px-2 py-1 rounded ${activeTab==='movies'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Movies</button>
-              <button onClick={()=>setActiveTab('games')} className={`text-xs px-2 py-1 rounded ${activeTab==='games'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Games</button>
-              <button onClick={()=>setActiveTab('community')} className={`text-xs px-2 py-1 rounded ${activeTab==='community'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Community</button>
-            </div>
-            <div className="hidden md:flex items-center gap-2">
-              <button onClick={()=>setIsnadOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Isnad</button>
-              <button onClick={()=>setTajwidOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Tajwid</button>
-              <button onClick={()=>setCowatchOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Co‑Watch</button>
-              <button onClick={()=>setInviteOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Invite</button>
-              <button onClick={()=>setQuizOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Quiz</button>
+              <div className="text-sm text-white font-semibold truncate">{activeMenu}</div>
+              <div className="text-[10px] md:text-[11px] text-emerald-400">{settings.displayName}</div>
             </div>
             {activeTab==='movies' && (
               <button onClick={()=>setDownloaderOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Downloader</button>
@@ -355,6 +365,12 @@ function App() {
             <button onClick={clearChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><Eraser className="w-4 h-4"/> Clear</button>
             <button onClick={exportChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><DownloadIcon className="w-4 h-4"/> Export</button>
           </div>
+          {notify && (
+            <div className="px-3 py-2 bg-amber-500/10 text-amber-300 text-xs flex items-center justify-between border-b border-amber-500/20">
+              <span>{notify}</span>
+              <button onClick={()=>setNotify('')} className="text-amber-300">Dismiss</button>
+            </div>
+          )}
 
           {/* Body */}
           {activeTab==='chat' && (
