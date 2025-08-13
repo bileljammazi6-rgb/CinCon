@@ -1,11 +1,12 @@
 import { MovieData, TMDBResponse } from '../types';
 
 class TMDBService {
-  private apiKey = ((import.meta as any).env?.VITE_TMDB_API_KEY as string | undefined) || '0a7ef230ab60a26cca44c7d8a6d24c25';
+  private apiKey = ((import.meta as any).env?.VITE_TMDB_API_KEY as string | undefined);
   private baseUrl = 'https://api.themoviedb.org/3';
 
   async searchMovie(query: string): Promise<MovieData | null> {
     try {
+      if (!this.apiKey) throw new Error('TMDB API key missing. Set VITE_TMDB_API_KEY.');
       const response = await fetch(
         `${this.baseUrl}/search/movie?api_key=${this.apiKey}&query=${encodeURIComponent(query)}&language=en-US`
       );
@@ -29,6 +30,7 @@ class TMDBService {
 
   async getPopularMovies(): Promise<MovieData[]> {
     try {
+      if (!this.apiKey) throw new Error('TMDB API key missing. Set VITE_TMDB_API_KEY.');
       const response = await fetch(
         `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&language=en-US&page=1`
       );
@@ -47,6 +49,7 @@ class TMDBService {
 
   async getTrendingMovies(): Promise<MovieData[]> {
     try {
+      if (!this.apiKey) throw new Error('TMDB API key missing. Set VITE_TMDB_API_KEY.');
       const response = await fetch(
         `${this.baseUrl}/trending/movie/week?api_key=${this.apiKey}`
       );
@@ -65,6 +68,7 @@ class TMDBService {
 
   async getWatchProviders(movieId: number, region = 'US'): Promise<{ link?: string; providers?: { provider_name: string; logo_path?: string }[] }> {
     try {
+      if (!this.apiKey) throw new Error('TMDB API key missing. Set VITE_TMDB_API_KEY.');
       const response = await fetch(
         `${this.baseUrl}/movie/${movieId}/watch/providers?api_key=${this.apiKey}`
       );
