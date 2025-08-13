@@ -32,6 +32,7 @@ import { ExamplesModal } from './components/ExamplesModal';
 import { OnboardingModal } from './components/OnboardingModal';
 import { NotificationCenter, AppNotification } from './components/NotificationCenter';
 import { VoiceChatModal } from './components/VoiceChatModal';
+import { QuizRoomModal } from './components/QuizRoomModal';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -75,6 +76,7 @@ function App() {
   const [notifyCenterOpen, setNotifyCenterOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [voiceOpen, setVoiceOpen] = useState(false);
+  const [quizRoomOpen, setQuizRoomOpen] = useState(false);
 
   const pushNotification = (text: string) => setNotifications(prev => [{ id: String(Date.now()), text, ts: new Date().toISOString() }, ...prev].slice(0,100));
 
@@ -367,6 +369,7 @@ function App() {
             <button onClick={()=>setChessOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5 md:bg-transparent"><Sword className="w-4 h-4"/></button>
             <button onClick={clearChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><Eraser className="w-4 h-4"/> Clear</button>
             <button onClick={exportChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><DownloadIcon className="w-4 h-4"/> Export</button>
+            <button onClick={()=>setQuizRoomOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Quiz Room</button>
           </div>
           {notify && (
             <div className="px-3 py-2 bg-amber-500/10 text-amber-300 text-xs flex items-center justify-between border-b border-amber-500/20">
@@ -532,6 +535,7 @@ function App() {
       <OnboardingModal open={onboardingOpen} onClose={()=>setOnboardingOpen(false)} onSave={(d)=>{ setSettings(prev=>({ ...prev, displayName: d.username, language: d.language, model: d.model })); if (d.avatar_url) setMyAvatar(d.avatar_url); }} />
       <NotificationCenter open={notifyCenterOpen} onClose={()=>setNotifyCenterOpen(false)} items={notifications} onClearAll={()=>setNotifications([])} />
       <VoiceChatModal open={voiceOpen} onClose={()=>setVoiceOpen(false)} language={settings.language==='auto'?'auto':(settings.language==='ar'?'ar-SA':'en-US')} />
+      <QuizRoomModal open={quizRoomOpen} onClose={()=>setQuizRoomOpen(false)} username={settings.displayName || 'Anonymous'} />
     </div>
   );
 }

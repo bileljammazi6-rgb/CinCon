@@ -191,3 +191,31 @@ export async function getUserProfile(username: string): Promise<{ username: stri
   if (error) throw error;
   return data as any;
 }
+
+export async function createQuizRoom(roomId: string) {
+  const { error } = await supabase.from('quiz_rooms').insert({ id: roomId, status: 'waiting' });
+  if (error && !String(error.message).includes('duplicate')) throw error;
+}
+
+export async function setQuizRoomStatus(roomId: string, status: 'waiting'|'running'|'finished') {
+  const { error } = await supabase.from('quiz_rooms').update({ status }).eq('id', roomId);
+  if (error) throw error;
+}
+
+export async function upsertQuizParticipant(roomId: string, username: string, deltaScore = 0) {
+  const { data, error } = await supabase.from('quiz_participants').upsert({ room_id: roomId, username, score: deltaScore }, { onConflict: 'room_id,username' }).select('room_id, username, score');
+  if (error) throw error;
+  if (deltaScore !== 0) {
+    // Increment score
+    await supabase.rpc('increment_quiz_score', { p_room: roomId, p_user: username, p_delta: deltaScore }).catch(async () => {
+      // Fallback: manual update
+      await supabase.from('quiz_participants').update({ score: (data?.[0]?.score || 0) + deltaScore }).eq('room_id', roomId).eq('username', username);
+    });
+  }
+}
+
+export async function listQuizParticipants(roomId: string): Promise<{ username: string; score: number }[]> {
+  const { data, error } = await supabase.from('quiz_participants').select('username, score').eq('room_id', roomId).order('score', { ascending: false });
+  if (error) throw error;
+  return (data || []) as any;
+}
