@@ -31,6 +31,7 @@ import { supabase } from './lib/supabase';
 import { ExamplesModal } from './components/ExamplesModal';
 import { OnboardingModal } from './components/OnboardingModal';
 import { NotificationCenter, AppNotification } from './components/NotificationCenter';
+import { VoiceChatModal } from './components/VoiceChatModal';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -73,6 +74,7 @@ function App() {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [notifyCenterOpen, setNotifyCenterOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [voiceOpen, setVoiceOpen] = useState(false);
 
   const pushNotification = (text: string) => setNotifications(prev => [{ id: String(Date.now()), text, ts: new Date().toISOString() }, ...prev].slice(0,100));
 
@@ -377,6 +379,7 @@ function App() {
               <div className="text-[10px] md:text-[11px] text-emerald-400">{settings.displayName}</div>
             </div>
             <button onClick={()=>setExamplesOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Examples</button>
+            <button onClick={()=>setVoiceOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Voice</button>
             <button onClick={()=>setNotifyCenterOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5 flex items-center gap-1"><Bell className="w-4 h-4"/> {notifications.length>0 && <span className="text-emerald-400">{notifications.length}</span>}</button>
             {activeTab==='movies' && (
               <button onClick={()=>setDownloaderOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Downloader</button>
@@ -543,6 +546,7 @@ function App() {
       <ExamplesModal open={examplesOpen} onClose={()=>setExamplesOpen(false)} onPick={(t)=>{ setInputText(t); setActiveMenu('Home'); setActiveTab('chat'); }} />
       <OnboardingModal open={onboardingOpen} onClose={()=>setOnboardingOpen(false)} onSave={(d)=>{ setSettings(prev=>({ ...prev, displayName: d.username, language: d.language, model: d.model })); if (d.avatar_url) setMyAvatar(d.avatar_url); }} />
       <NotificationCenter open={notifyCenterOpen} onClose={()=>setNotifyCenterOpen(false)} items={notifications} onClearAll={()=>setNotifications([])} />
+      <VoiceChatModal open={voiceOpen} onClose={()=>setVoiceOpen(false)} language={settings.language==='auto'?'auto':(settings.language==='ar'?'ar-SA':'en-US')} />
     </div>
   );
 }
