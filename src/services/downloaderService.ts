@@ -8,7 +8,8 @@ export type StreamInfo = {
   audioOnly?: boolean;
 };
 
-const PROXY_ENDPOINT = (import.meta as any).env?.VITE_DOWNLOADER_ENDPOINT as string | undefined;
+// If deploying on Netlify, set RAPIDAPI_KEY in Netlify env, and use this function route.
+const PROXY_ENDPOINT = (import.meta as any).env?.VITE_DOWNLOADER_ENDPOINT as string | undefined || '/.netlify/functions/downloader';
 
 const PIPED_INSTANCES = [
   'https://piped.video',
@@ -82,8 +83,8 @@ export async function getYouTubeStreams(rawUrl: string): Promise<StreamInfo[]> {
 }
 
 export async function getViaProxy(rawUrl: string): Promise<StreamInfo[]> {
-  if (!PROXY_ENDPOINT) throw new Error('No proxy endpoint configured');
-  const res = await fetch(PROXY_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: rawUrl }) });
+  const endpoint = PROXY_ENDPOINT;
+  const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: rawUrl }) });
   if (!res.ok) throw new Error('Proxy error');
   const data = await res.json();
   const streams: StreamInfo[] = (data?.streams || []).map((s: any) => ({ url: s.url, quality: s.quality, mime: s.mime, size: s.size, audioOnly: !!s.audioOnly }));
