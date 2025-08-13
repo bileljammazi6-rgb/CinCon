@@ -17,15 +17,16 @@ export function ChessModal({ open, onClose, onComment }: ChessModalProps) {
   const [game] = useState(() => new Chess());
   const [fen, setFen] = useState(game.fen());
   const [from, setFrom] = useState<Square | null>(null);
-  const [status, setStatus] = useState<string>('Your move (White).');
+  const [status, setStatus] = useState<string>("White's Turn");
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [legalTargets, setLegalTargets] = useState<Square[]>([]);
+  const [showPromotion, setShowPromotion] = useState<{ row: number; col: number; color: 'w'|'b' } | null>(null);
 
   useEffect(() => {
     if (!open) return;
     setFen(game.fen());
     updateStatus();
-    setFrom(null); setLastMove(null); setLegalTargets([]);
+    setFrom(null); setLastMove(null); setLegalTargets([]); setShowPromotion(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -49,7 +50,7 @@ export function ChessModal({ open, onClose, onComment }: ChessModalProps) {
   const updateStatus = () => {
     if (game.isCheckmate()) setStatus(game.turn()==='w' ? 'Black wins by checkmate.' : 'White wins by checkmate.');
     else if (game.isDraw()) setStatus('Draw.');
-    else setStatus(game.turn()==='w' ? 'Your move (White).' : "AI's move (Black)...");
+    else setStatus(game.turn()==='w' ? "White's Turn" : "Black's Turn");
   };
 
   const aiMove = () => {
@@ -97,38 +98,40 @@ export function ChessModal({ open, onClose, onComment }: ChessModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 text-white rounded-xl w-full max-w-md border border-white/10 shadow-xl">
-        <div className="flex items-center justify-between p-3 border-b border-white/10">
-          <h3 className="text-sm font-semibold">Chess vs AI</h3>
+      <div className="bg-[#1a1a1a] text-[#e0e0e0] rounded-xl w-full max-w-xl border-[8px] border-[#4a4a4a] shadow-2xl">
+        <div className="flex items-center justify-between p-3">
+          <div id="message-box" className="bg-[#2e2e2e] px-4 py-2 rounded text-base font-bold">{status}</div>
           <button onClick={onClose} className="text-gray-400 hover:text-white"><X className="w-5 h-5"/></button>
         </div>
-        <div className="p-3">
-          <div className="grid grid-cols-8 gap-0 border border-white/10 rounded overflow-hidden">
-            {board.map((row, rIdx) => (
-              <React.Fragment key={rIdx}>
-                {row.map((cell, cIdx) => {
-                  const dark = (rIdx + cIdx) % 2 === 1;
-                  const isFrom = from === cell.square;
-                  const isLast = lastMove && (cell.square === lastMove.from || cell.square === lastMove.to);
-                  const isLegal = legalTargets.includes(cell.square);
-                  return (
-                    <button
-                      key={cell.square}
-                      onClick={() => onSquareClick(cell.square)}
-                      className={`w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center relative ${dark ? 'bg-[#3b4a54]' : 'bg-[#2a3942]'} ${isFrom ? 'ring-2 ring-emerald-500' : ''} ${isLast ? 'outline outline-2 outline-yellow-400/70' : ''}`}
-                      title={cell.square}
-                    >
-                      {isLegal && <span className="absolute w-2 h-2 bg-emerald-400/70 rounded-full"></span>}
-                      <span className="text-lg select-none">{cell.piece || ''}</span>
-                    </button>
-                  );
-                })}
-              </React.Fragment>
-            ))}
+        <div className="px-4 pb-4 flex flex-col items-center gap-3">
+          <div className="rounded-xl overflow-hidden shadow-2xl" style={{ backgroundColor: '#2e2e2e' }}>
+            <div className="grid grid-cols-8 gap-0" style={{ borderRadius: 12 }}>
+              {board.map((row, rIdx) => (
+                <React.Fragment key={rIdx}>
+                  {row.map((cell, cIdx) => {
+                    const dark = (rIdx + cIdx) % 2 === 1;
+                    const isFrom = from === cell.square;
+                    const isLast = lastMove && (cell.square === lastMove.from || cell.square === lastMove.to);
+                    const isLegal = legalTargets.includes(cell.square);
+                    return (
+                      <button
+                        key={cell.square}
+                        onClick={() => onSquareClick(cell.square)}
+                        className={`w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center relative ${dark ? 'bg-[#b58863]' : 'bg-[#f0d9b5]'} ${isFrom ? 'ring-2 ring-yellow-400/80' : ''} ${isLast ? 'outline outline-2 outline-green-400/70' : ''}`}
+                        title={cell.square}
+                        style={{ border: '1px solid rgba(0,0,0,0.1)' }}
+                      >
+                        {isLegal && <span className="absolute w-2 h-2 bg-emerald-600/80 rounded-full"></span>}
+                        <span className="text-2xl select-none" style={{ color: dark ? '#000' : '#000' }}>{cell.piece || ''}</span>
+                      </button>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
-          <div className="mt-2 text-xs text-gray-300">{status}</div>
-          <div className="mt-3 flex gap-2">
-            <button onClick={() => { game.reset(); setFen(game.fen()); setFrom(null); setLastMove(null); setLegalTargets([]); updateStatus(); }} className="px-3 py-1.5 text-xs bg-white/5 hover:bg-white/10 rounded">Reset</button>
+          <div className="button-container mt-2">
+            <button onClick={() => { game.reset(); setFen(game.fen()); setFrom(null); setLastMove(null); setLegalTargets([]); updateStatus(); }} className="action-button px-4 py-2 rounded font-bold" style={{ background: 'linear-gradient(145deg, #444444, #2c2c2c)', boxShadow: '0 5px 15px rgba(0,0,0,0.5)' }}>New Game</button>
           </div>
         </div>
       </div>

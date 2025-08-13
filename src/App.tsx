@@ -60,6 +60,7 @@ function App() {
   const [isnadOpen, setIsnadOpen] = useState(false);
   const [tajwidOpen, setTajwidOpen] = useState(false);
   const [cowatchOpen, setCowatchOpen] = useState(false);
+  const [moviesBanner, setMoviesBanner] = useState<string>('');
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   useEffect(() => { const saved = localStorage.getItem('bilel_chat_history'); if (saved) try { setMessages(JSON.parse(saved).map((m: any)=>({ ...m, timestamp: new Date(m.timestamp) })) ); } catch {} }, []);
@@ -138,13 +139,14 @@ function App() {
       if (/^recommend(\s|$)/i.test(userMessage.content) || /^suggest(\s|$)/i.test(userMessage.content)) {
         const terms = userMessage.content.replace(/^(recommend|suggest)\s*/i, '').trim().toLowerCase();
         const titles = Object.keys(movieLinks);
-        const filtered = settings.pixeldrainOnly ? titles : titles; // currently all are pixeldrain by definition
+        const filtered = settings.pixeldrainOnly ? titles : titles;
         const candidates = filtered.filter(title => terms ? title.includes(terms) : true).slice(0, 5);
         if (candidates.length > 0) {
           for (const title of candidates) {
             const data = await tmdbService.searchMovie(title);
             setMessages(prev => [...prev, { id: `${Date.now()}-${title}`, type: 'movie', content: `Available in Pixeldrain: "${title}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(data || { title, overview: '' }), downloadLinks: movieLinks[title] } }]);
           }
+          setActiveTab('movies');
           setIsLoading(false);
           return;
         }
@@ -156,6 +158,7 @@ function App() {
         if (matchedTitle) {
           const movieData = await tmdbService.searchMovie(matchedTitle);
           setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'movie', content: `This title exists in our Pixeldrain library: "${matchedTitle}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(movieData || { title: matchedTitle, overview: '' }), downloadLinks: movieLinks[matchedTitle] } }]);
+          setActiveTab('movies');
           setIsLoading(false);
           return;
         }
@@ -165,17 +168,19 @@ function App() {
       const isMovieQuery = !isImageOnly && movieKeywords.some(k => userMessage.content.toLowerCase().includes(k));
       if (isMovieQuery) {
         if (settings.pixeldrainOnly) {
-          // Only answer if locally available
           const normalizedQuery = userMessage.content.toLowerCase();
           const matchedTitle = Object.keys(movieLinks).find(t => normalizedQuery.includes(t.toLowerCase()) || t.toLowerCase().includes(normalizedQuery));
           if (matchedTitle) {
             const data = await tmdbService.searchMovie(matchedTitle);
             setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'movie', content: `This title exists in our Pixeldrain library: "${matchedTitle}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(data || { title: matchedTitle, overview: '' }), downloadLinks: movieLinks[matchedTitle] } }]);
+            setActiveTab('movies');
           } else {
-            setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: 'Not available in Pixeldrain library.', sender: 'ai', timestamp: new Date() }]);
+            setMoviesBanner('Not available in Pixeldrain library.');
+            setActiveTab('movies');
           }
         } else {
           await handleMovieQuery(userMessage.content);
+          setActiveTab('movies');
         }
       } else {
         const response = await geminiService.sendMessage(prompt, isImageOnly ? imageForAnalysis : undefined, { model: settings.model || 'flash' });
@@ -209,7 +214,8 @@ function App() {
         };
         setMessages(prev => [...prev, movieMessage]);
       } else {
-        const response = await geminiService.sendMessage(query); setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: response, sender: 'ai', timestamp: new Date() }]); }
+        setMoviesBanner('No results found.');
+      }
     }
   };
 
@@ -342,13 +348,9 @@ function App() {
                     <p className="text-xs">Send a message or drop an image to analyze.</p>
                   </div>
                 )}
-                {messages.map((message) => (
+                {messages.filter((m:any)=>m.type!=='movie').map((message) => (
                   <div key={message.id}>
-                    {(message as any).type === 'movie' && (message as any).movieData ? (
-                      <MovieCard movieData={(message as any).movieData} />
-                    ) : (
-                      <ChatMessage message={message} />
-                    )}
+                    <ChatMessage message={message} />
                   </div>
                 ))}
                 {isLoading && (
@@ -383,6 +385,7 @@ function App() {
           {activeTab==='movies' && (
             <>
               <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4">
+                {moviesBanner && <div className="text-xs px-3 py-2 rounded bg-white/5 border border_white/10 text-gray-300">{moviesBanner}</div>}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="bg-white/5 rounded p-2">
                     <div className="text-xs text-gray-400 mb-1">Trending</div>
@@ -411,7 +414,7 @@ function App() {
               </div>
               <div className="input-area p-2 md:p-3 border-t border-white/10">
                 <div className="flex items-end gap-2">
-                  <textarea value={movieInputText} onChange={(e)=>setMovieInputText(e.target.value)} onKeyPress={(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSendMovieMessage(); } }} placeholder="Search movies/series or ask for recommendations" className="flex-1 bg-[#2a3942] text-white placeholder-gray-400 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-white/5" rows={1} style={{ minHeight:'44px', maxHeight:'120px' }} />
+                  <textarea value={movieInputText} onChange={(e)=>setMovieInputText(e.target.value)} onKeyPress={(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSendMovieMessage(); } }} placeholder="Search movies/series or ask for recommendations" className="flex-1 bg-[#2a3942] text_white placeholder-gray-400 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-white/5" rows={1} style={{ minHeight:'44px', maxHeight:'120px' }} />
                   <button onClick={handleSendMovieMessage} disabled={isLoading || !movieInputText.trim()} className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50"><Send className="w-5 h-5 text-white"/></button>
                 </div>
               </div>
