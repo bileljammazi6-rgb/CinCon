@@ -193,67 +193,25 @@ function App() {
     setMessages(prev => [...prev, userMessage]); setInputText(''); setUploadedImage(null); setIsLoading(true);
 
     try {
-      // Pixeldrain recommendation command
-      if (/^recommend(\s|$)/i.test(userMessage.content) || /^suggest(\s|$)/i.test(userMessage.content)) {
-        const terms = userMessage.content.replace(/^(recommend|suggest)\s*/i, '').trim().toLowerCase();
-        const titles = Object.keys(movieLinks);
-        const filtered = settings.pixeldrainOnly ? titles : titles;
-        const candidates = filtered.filter(title => terms ? title.includes(terms) : true).slice(0, 5);
-        if (candidates.length > 0) {
-          for (const title of candidates) {
-            const data = await tmdbService.searchMovie(title);
-            setMessages(prev => [...prev, { id: `${Date.now()}-${title}`, type: 'movie', content: `Available in Pixeldrain: "${title}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(data || { title, overview: '' }), downloadLinks: movieLinks[title] } }]);
-          }
-          setActiveTab('movies');
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      if (!isImageOnly && userMessage.content.trim()) {
-        const normalizedQuery = userMessage.content.toLowerCase().trim();
-        const matchedTitle = Object.keys(movieLinks).find(title => normalizedQuery.includes(title.toLowerCase()) || title.toLowerCase().includes(normalizedQuery));
-        if (matchedTitle) {
-          const movieData = await tmdbService.searchMovie(matchedTitle);
-          setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'movie', content: `This title exists in our Pixeldrain library: "${matchedTitle}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(movieData || { title: matchedTitle, overview: '' }), downloadLinks: movieLinks[matchedTitle] } }]);
-          setActiveTab('movies');
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      const movieKeywords = ['movie','film','recommend','show','watch','فيلم','سلسلة','أوصي','شاهد'];
-      const isMovieQuery = !isImageOnly && movieKeywords.some(k => userMessage.content.toLowerCase().includes(k));
-      if (isMovieQuery) {
-        if (settings.pixeldrainOnly) {
-          const normalizedQuery = userMessage.content.toLowerCase();
-          const matchedTitle = Object.keys(movieLinks).find(t => normalizedQuery.includes(t.toLowerCase()) || t.toLowerCase().includes(normalizedQuery));
-          if (matchedTitle) {
-            const data = await tmdbService.searchMovie(matchedTitle);
-            setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'movie', content: `This title exists in our Pixeldrain library: "${matchedTitle}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(data || { title: matchedTitle, overview: '' }), downloadLinks: movieLinks[matchedTitle] } }]);
-            setActiveTab('movies');
-          } else {
-            setMoviesBanner('Not available in Pixeldrain library.');
-            setActiveTab('movies');
-          }
-        } else {
-          await handleMovieQuery(userMessage.content);
-          setActiveTab('movies');
-        }
-      } else {
-        const response = await geminiService.sendMessage(prompt, isImageOnly ? imageForAnalysis : undefined, { model: settings.model || 'flash' });
-        setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: response, sender: 'ai', timestamp: new Date() }]);
-        await maybeAppendCitations(response);
-      }
+      // Chat no longer handles movie queries; direct users to Movies tab
+      const response = await geminiService.sendMessage(prompt, isImageOnly ? imageForAnalysis : undefined, { model: settings.model || 'flash' });
+      setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: response, sender: 'ai', timestamp: new Date() }]);
+      await maybeAppendCitations(response);
     } catch (error: any) {
       setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: (error?.message || 'AI error.'), sender: 'ai', timestamp: new Date() }]);
     } finally { setIsLoading(false); }
   };
 
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g,'').replace(/\s+/g,' ').trim();
+
   const handleMovieQuery = async (query: string) => {
-    const movieTitleQuery = query.replace(/movie|film|recommend|show|watch|فيلم|سلسلة|أوصي|شاهد/gi, '').trim();
-    const normalizedQuery = movieTitleQuery.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-    const matchedTitle = Object.keys(movieLinks).find(title => normalizedQuery.includes(title.toLowerCase()) || title.toLowerCase().includes(normalizedQuery));
+    const qn = normalize(query);
+    if (qn.length < 3) { setMoviesBanner('Please type at least 3 characters.'); return; }
+    const movieTitleQuery = qn.replace(/\b(movie|film|recommend|show|watch|فيلم|سلسلة|أوصي|شاهد)\b/gi, '').trim();
+    const matchedTitle = Object.keys(movieLinks).find(title => {
+      const tn = normalize(title);
+      return tn.includes(movieTitleQuery) || movieTitleQuery.includes(tn);
+    });
     if (matchedTitle) {
       const movieData = await tmdbService.searchMovie(matchedTitle);
       setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'movie', content: `Here's what I found for "${matchedTitle}":`, sender: 'ai', timestamp: new Date(), movieData: { ...(movieData || { title: matchedTitle, overview: '' }), downloadLinks: movieLinks[matchedTitle] } }]);
@@ -286,6 +244,8 @@ function App() {
   const handleSendMovieMessage = async () => {
     const query = movieInputText.trim();
     if (!query) return;
+    const qn = normalize(query);
+    if (qn.length < 3) { setMoviesBanner('Please type at least 3 characters.'); return; }
 
     const userMessage: any = { id: Date.now().toString(), type: 'text', content: query, sender: 'user', timestamp: new Date() };
     setMessages(prev => [...prev, userMessage]);
@@ -294,18 +254,20 @@ function App() {
 
     try {
       if (settings.pixeldrainOnly) {
-        const normalized = query.toLowerCase();
-        const matchedTitle = Object.keys(movieLinks).find(t => normalized.includes(t.toLowerCase()) || t.toLowerCase().includes(normalized));
+        const matchedTitle = Object.keys(movieLinks).find(t => normalize(t).includes(qn) || qn.includes(normalize(t)));
         if (matchedTitle) {
           const data = await tmdbService.searchMovie(matchedTitle);
           setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'movie', content: `Available in Pixeldrain: "${matchedTitle}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(data || { title: matchedTitle, overview: '' }), downloadLinks: movieLinks[matchedTitle] } } as any]);
         } else {
-          setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: 'Not available in Pixeldrain library.', sender: 'ai', timestamp: new Date() } as any]);
+          setMoviesBanner('Not available in Pixeldrain library.');
         }
       } else {
         if (/^(recommend|suggest)(\s|$)/i.test(query)) {
-          const terms = query.replace(/^(recommend|suggest)\s*/i, '').trim().toLowerCase();
-          const candidates = Object.keys(movieLinks).filter(t => terms ? t.includes(terms) : true).slice(0,5);
+          const terms = normalize(query.replace(/^(recommend|suggest)\s*/i, ''));
+          const candidates = Object.keys(movieLinks).filter(t => {
+            const tn = normalize(t);
+            return terms ? tn.includes(terms) : true;
+          }).slice(0,5);
           if (candidates.length > 0) {
             for (const title of candidates) {
               const data = await tmdbService.searchMovie(title);
