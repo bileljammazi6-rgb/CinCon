@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+[template.environment]
+  APIFY_TOKEN = ""
+  APIFY_ACTOR = "andryerica/all-video-downloader"
+  # SUPABASE_KEY can be set if any serverless function needs private access (not used now)
+  SUPABASE_KEY = ""
