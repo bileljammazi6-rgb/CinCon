@@ -101,7 +101,7 @@ function AuthScreen() {
     setLoading(true); setError(''); setMsg('');
     try {
       const derived = username.trim() || email.split('@')[0];
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
       if (error) throw error;
       const { error: upsertErr } = await supabase.from('users').insert({ email, username: derived, full_name: fullName || null, avatar_url: null });
       if (upsertErr) throw upsertErr;
