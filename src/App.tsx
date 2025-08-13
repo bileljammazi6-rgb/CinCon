@@ -27,6 +27,7 @@ import { IsnadExplorerModal } from './components/IsnadExplorerModal';
 import { TajwidCoachModal } from './components/TajwidCoachModal';
 import { CoWatchModal } from './components/CoWatchModal';
 import { SmartDownloaderModal } from './components/SmartDownloaderModal';
+import { supabase } from './lib/supabase';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -68,6 +69,24 @@ function App() {
   useEffect(() => { const saved = localStorage.getItem('bilel_chat_history'); if (saved) try { setMessages(JSON.parse(saved).map((m: any)=>({ ...m, timestamp: new Date(m.timestamp) })) ); } catch {} }, []);
   useEffect(() => { localStorage.setItem('bilel_chat_history', JSON.stringify(messages.map(m=>({ ...m, timestamp: m.timestamp.toISOString() })))); }, [messages]);
   useEffect(() => { localStorage.setItem('bilel_settings', JSON.stringify(settings)); }, [settings]);
+
+  useEffect(() => {
+    let ignore = false;
+    const loadUser = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const email = session?.user?.email;
+        if (!email) return;
+        const { data, error } = await supabase.from('users').select('username').eq('email', email).single();
+        if (!error && data?.username && !ignore) {
+          setSettings(prev => ({ ...prev, displayName: data.username }));
+          try { localStorage.setItem('last_username', data.username); } catch {}
+        }
+      } catch {}
+    };
+    loadUser();
+    return () => { ignore = true; };
+  }, []);
 
   useEffect(() => { let ignore=false; const load=async()=>{ try{ if(!settings.displayName) return; const p=await getUserProfile(settings.displayName); if(!ignore) setMyAvatar(p?.avatar_url||undefined);}catch{} }; load(); return ()=>{ignore=true}; }, [settings.displayName]);
 
@@ -316,7 +335,7 @@ function App() {
               <div className="text-sm text-white font-semibold truncate">{settings.displayName}</div>
               <div className="text-[10px] md:text-[11px] text-emerald-400">online</div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 overflow-x-auto max-w-[50vw] md:max-w-none scrollbar-none">
               <button onClick={()=>setActiveTab('chat')} className={`text-xs px-2 py-1 rounded ${activeTab==='chat'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Chat</button>
               <button onClick={()=>setActiveTab('movies')} className={`text-xs px-2 py-1 rounded ${activeTab==='movies'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Movies</button>
               <button onClick={()=>setActiveTab('games')} className={`text-xs px-2 py-1 rounded ${activeTab==='games'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Games</button>
@@ -326,13 +345,9 @@ function App() {
               <button onClick={()=>setIsnadOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Isnad</button>
               <button onClick={()=>setTajwidOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Tajwid</button>
               <button onClick={()=>setCowatchOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Co‑Watch</button>
+              <button onClick={()=>setInviteOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Invite</button>
+              <button onClick={()=>setQuizOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Quiz</button>
             </div>
-            {activeTab==='games' && (
-              <div className="flex items-center gap-2">
-                <button onClick={()=>setInviteOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Invite</button>
-                <button onClick={()=>setQuizOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Quiz</button>
-              </div>
-            )}
             {activeTab==='movies' && (
               <button onClick={()=>setDownloaderOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Downloader</button>
             )}
