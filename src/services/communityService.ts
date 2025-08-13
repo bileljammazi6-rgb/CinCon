@@ -110,3 +110,8 @@ export function subscribeToGameMoves(roomId: string, onInsert: (payload: { move_
     .subscribe();
   return () => { supabase.removeChannel(channel); };
 }
+
+export async function saveQuizScore(username: string, category: string, score: number, streak: number) {
+  const { error } = await supabase.from('quiz_scores').insert({ username, category, score, streak });
+  if (error) throw error;
+}

@@ -22,6 +22,7 @@ import { SnakeModal } from './components/SnakeModal';
 import { listMessages, sendMessage as sendCommunityMessage, CommunityMessage, subscribeToMessages, fetchProfiles } from './services/communityService';
 import { InviteModal } from './components/InviteModal';
 import { InvitesPanel } from './components/InvitesPanel';
+import { QuizModal } from './components/QuizModal';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -51,6 +52,7 @@ function App() {
   const [lastCommunityAiAt, setLastCommunityAiAt] = useState<number>(0);
   const [profileMap, setProfileMap] = useState<Record<string, { avatar_url?: string }>>({});
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [quizOpen, setQuizOpen] = useState(false);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   useEffect(() => { const saved = localStorage.getItem('bilel_chat_history'); if (saved) try { setMessages(JSON.parse(saved).map((m: any)=>({ ...m, timestamp: new Date(m.timestamp) })) ); } catch {} }, []);
@@ -292,7 +294,10 @@ function App() {
               <button onClick={()=>setActiveTab('community')} className={`text-xs px-2 py-1 rounded ${activeTab==='community'?'bg-emerald-600 text-white':'text-gray-300 bg-white/5 hover:bg-white/10'}`}>Community</button>
             </div>
             {activeTab==='games' && (
-              <button onClick={()=>setInviteOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Invite</button>
+              <div className="flex items-center gap-2">
+                <button onClick={()=>setInviteOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Invite</button>
+                <button onClick={()=>setQuizOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Quiz</button>
+              </div>
             )}
             <button onClick={()=>setChessOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5 md:bg-transparent"><Sword className="w-4 h-4"/></button>
             <button onClick={clearChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><Eraser className="w-4 h-4"/> Clear</button>
@@ -440,6 +445,7 @@ function App() {
       <MemoryMatchModal open={mmOpen} onClose={()=>setMmOpen(false)} />
       <SnakeModal open={snakeOpen} onClose={()=>setSnakeOpen(false)} />
       <InviteModal open={inviteOpen} onClose={()=>setInviteOpen(false)} fromUser={settings.displayName || 'Anonymous'} />
+      <QuizModal open={quizOpen} onClose={()=>setQuizOpen(false)} username={settings.displayName || 'Anonymous'} />
     </div>
   );
 }
