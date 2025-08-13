@@ -77,6 +77,7 @@ function App() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [quizRoomOpen, setQuizRoomOpen] = useState(false);
+  const [globalSearch, setGlobalSearch] = useState('');
 
   const pushNotification = (text: string) => setNotifications(prev => [{ id: String(Date.now()), text, ts: new Date().toISOString() }, ...prev].slice(0,100));
 
@@ -328,8 +329,8 @@ function App() {
         {/* Left sidebar: clean menu */}
         <aside className="hidden md:flex md:w-72 flex-col bg-[#0f1216] border-r border-white/10">
           <div className="p-4 border-b border-white/10 flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center"><Bot className="w-5 h-5 text-white"/></div>
-            <div className="text-sm text-white font-semibold">AI Hub</div>
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center animate-pulse"><Bot className="w-5 h-5 text-white"/></div>
+            <div className="text-sm text-white font-semibold tracking-wide">AI Hub</div>
             <button onClick={() => setSettingsOpen(true)} className="ml-auto text-gray-300 hover:text-white"><SettingsIcon className="w-4 h-4"/></button>
           </div>
           <nav className="p-3">
@@ -353,15 +354,25 @@ function App() {
         {/* Right pane */}
         <div className="flex-1 flex flex-col wa-bg" ref={dropRef}>
           {/* Header */}
-          <div className="glass-effect p-3 border-b border-white/10 flex items-center gap-3">
+          <div className="glass-effect p-3 border-b border-white/10 flex items-center gap-3 sticky top-0 z-30">
             {myAvatar ? (
               <img src={myAvatar} alt="avatar" className="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover" />
             ) : (
               <img src={'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(settings.displayName || 'You')} alt="avatar" className="w-8 h-8 md:w-9 md:h-9 rounded-full" />
             )}
             <div className="flex-1">
-              <div className="text-sm text-white font-semibold truncate">{activeMenu}</div>
+              <div className="text-sm text-white font-semibold truncate flex items-center gap-2">
+                <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent animate-pulse">Bilel Jammazi AI</span>
+                <span className="hidden md:inline text-xs text-gray-400">• {activeMenu}</span>
+              </div>
               <div className="text-[10px] md:text-[11px] text-emerald-400">{settings.displayName}</div>
+            </div>
+            <div className="hidden md:flex items-center gap-2 flex-1 max-w-md">
+              <div className="relative flex-1">
+                <input value={globalSearch} onChange={(e)=>setGlobalSearch(e.target.value)} placeholder="Ask or search anything..." className="w-full bg-[#2a3942] text-white placeholder-gray-400 rounded-lg pl-8 pr-3 py-2 text-sm border border-white/5"/>
+                <Search className="w-4 h-4 text-gray-400 absolute left-2.5 top-2.5"/>
+              </div>
+              <button onClick={()=>{ if(globalSearch.trim()){ setInputText(globalSearch); setActiveMenu('Home'); setActiveTab('chat'); } }} className="btn-primary px-3 py-2 rounded-lg">Go</button>
             </div>
             <button onClick={()=>setExamplesOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Examples</button>
             <button onClick={()=>setVoiceOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Voice</button>
@@ -387,14 +398,14 @@ function App() {
               {/* Messages */}
               <div className="flex-1 overflow-y-auto custom-scrollbar p-2 md:p-4 space-y-2 md:space-y-3">
                 {messages.length === 0 && (
-                  <div className="text-center text-gray-400 mt-10 md:mt-12">
+                  <div className="text-center text-gray-400 mt-10 md:mt-12 animate-fadeIn">
                     <Bot className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 md:mb-3 opacity-50" />
                     <h3 className="text-sm font-medium mb-1">Welcome, {settings.displayName}</h3>
                     <p className="text-xs">Send a message or drop an image to analyze.</p>
                   </div>
                 )}
                 {messages.filter((m:any)=>m.type!=='movie').map((message) => (
-                  <div key={message.id}>
+                  <div key={message.id} className="animate-slideUp">
                     <ChatMessage message={message} />
                   </div>
                 ))}
@@ -459,7 +470,7 @@ function App() {
               </div>
               <div className="input-area p-2 md:p-3 border-t border-white/10">
                 <div className="flex items-end gap-2">
-                  <textarea value={movieInputText} onChange={(e)=>setMovieInputText(e.target.value)} onKeyPress={(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSendMovieMessage(); } }} placeholder="Search movies/series or ask for recommendations" className="flex-1 bg-[#2a3942] text_white placeholder-gray-400 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-white/5" rows={1} style={{ minHeight:'44px', maxHeight:'120px' }} />
+                  <textarea value={movieInputText} onChange={(e)=>setMovieInputText(e.target.value)} onKeyPress={(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSendMovieMessage(); } }} placeholder="Search movies/series or ask for recommendations" className="flex-1 bg-[#2a3942] text-white placeholder-gray-400 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-white/5" rows={1} style={{ minHeight:'44px', maxHeight:'120px' }} />
                   <button onClick={handleSendMovieMessage} disabled={isLoading || !movieInputText.trim()} className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50"><Send className="w-5 h-5 text-white"/></button>
                 </div>
               </div>
@@ -469,12 +480,12 @@ function App() {
           {activeTab==='games' && (
             <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                <button onClick={()=>setChessOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">♟ Chess</button>
-                <button onClick={()=>setTttOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">◻ Tic‑Tac‑Toe</button>
-                <button onClick={()=>setG2048Open(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">2048</button>
-                <button onClick={()=>setRpsOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">✂ Rock/Paper/Scissors</button>
-                <button onClick={()=>setMmOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">🧠 Memory Match</button>
-                <button onClick={()=>setSnakeOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white">🐍 Snake</button>
+                <button onClick={()=>setChessOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white transition-transform hover:scale-[1.02]">♟ Chess</button>
+                <button onClick={()=>setTttOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white transition-transform hover:scale-[1.02]">◻ Tic‑Tac‑Toe</button>
+                <button onClick={()=>setG2048Open(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white transition-transform hover:scale-[1.02]">2048</button>
+                <button onClick={()=>setRpsOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white transition-transform hover:scale-[1.02]">✂ Rock/Paper/Scissors</button>
+                <button onClick={()=>setMmOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white transition-transform hover:scale-[1.02]">🧠 Memory Match</button>
+                <button onClick={()=>setSnakeOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white transition-transform hover:scale-[1.02]">🐍 Snake</button>
               </div>
               <div className="text-xs text-gray-400">While playing, the assistant can comment on moves (chess) directly in chat.</div>
             </div>
