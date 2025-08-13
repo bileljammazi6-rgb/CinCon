@@ -25,6 +25,7 @@ export function CoWatchModal({ open, onClose, username, initialUrl, initialRoomI
   const [search, setSearch] = useState('');
   const [inviteTo, setInviteTo] = useState<string>('');
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>(InviteStatus.Idle);
+  const [presence, setPresence] = useState<string[]>([]);
 
   useEffect(() => { if (open && initialUrl) setUrl(initialUrl); }, [open, initialUrl]);
   useEffect(() => { if (open && initialRoomId) setRoomId(initialRoomId); }, [open, initialRoomId]);
@@ -43,9 +44,29 @@ export function CoWatchModal({ open, onClose, username, initialUrl, initialRoomI
       if (move_type === 'cowatch_chat') {
         setChat(prev => [...prev, data as ChatMsg]);
       }
+      if (move_type === 'cowatch_presence') {
+        const arr = (data?.users || []) as string[];
+        setPresence(arr);
+      }
     });
     return () => { unsub(); };
   }, [open, roomId]);
+
+  useEffect(() => {
+    if (!open) return;
+    const key = 'cowatch_presence_' + roomId;
+    const update = () => {
+      try {
+        const raw = localStorage.getItem(key) || '[]';
+        const users = Array.from(new Set([...(JSON.parse(raw) as string[]), username]));
+        localStorage.setItem(key, JSON.stringify(users));
+        sendGameMove(roomId, 'cowatch_presence', { users }).catch(()=>{});
+      } catch {}
+    };
+    update();
+    const int = setInterval(update, 10000);
+    return () => { clearInterval(int); };
+  }, [open, roomId, username]);
 
   if (!open) return null;
 
@@ -103,6 +124,7 @@ export function CoWatchModal({ open, onClose, username, initialUrl, initialRoomI
                 <div className="text-xs text-gray-400 p-6">Paste a Pixeldrain direct media URL to start.</div>
               )}
             </div>
+            <div className="text-[10px] text-gray-400">In room: {presence.length>0 ? presence.join(', ') : '—'}</div>
             <div className="text-[10px] text-gray-500">Share the Room ID with friends; playback and chat are synced.</div>
             <div className="flex flex-col h-64">
               <div className="flex-1 overflow-y-auto bg-white/5 border border-white/10 rounded p-2 text-xs space-y-1">

@@ -100,7 +100,7 @@ export async function listUsers(limit = 50): Promise<{ username: string; avatar_
 }
 
 // game moves
-export async function sendGameMove(roomId: string, move_type: 'tictactoe'|'chess'|'cowatch'|'cowatch_chat'|'quiz', data: Record<string, any>) {
+export async function sendGameMove(roomId: string, move_type: 'tictactoe'|'chess'|'cowatch'|'cowatch_chat'|'cowatch_presence'|'quiz', data: Record<string, any>) {
   const { error } = await supabase.from('game_moves').insert({ room_id: roomId, move_type, data });
   if (error) throw error;
 }
