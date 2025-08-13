@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Image, Mic, Bot, Heart, Flame, Trash2, Eraser, Download as DownloadIcon, Settings, Search, Sword, Users, Settings as SettingsIcon, Home as HomeIcon, History as HistoryIcon, Film as FilmIcon, Users as UsersIcon, Gamepad, Book as BookIcon, MonitorPlay } from 'lucide-react';
+import { Send, Image, Mic, Bot, Heart, Flame, Trash2, Eraser, Download as DownloadIcon, Settings, Search, Sword, Users, Settings as SettingsIcon, Home as HomeIcon, History as HistoryIcon, Film as FilmIcon, Users as UsersIcon, Gamepad, Book as BookIcon, MonitorPlay, Bell } from 'lucide-react';
 import { ChatMessage } from './components/ChatMessage';
 import { MovieCard } from './components/MovieCard';
 import { ImageUpload } from './components/ImageUpload';
@@ -30,6 +30,7 @@ import { SmartDownloaderModal } from './components/SmartDownloaderModal';
 import { supabase } from './lib/supabase';
 import { ExamplesModal } from './components/ExamplesModal';
 import { OnboardingModal } from './components/OnboardingModal';
+import { NotificationCenter, AppNotification } from './components/NotificationCenter';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -70,6 +71,10 @@ function App() {
   const [notify, setNotify] = useState<string>('');
   const [examplesOpen, setExamplesOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [notifyCenterOpen, setNotifyCenterOpen] = useState(false);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+
+  const pushNotification = (text: string) => setNotifications(prev => [{ id: String(Date.now()), text, ts: new Date().toISOString() }, ...prev].slice(0,100));
 
   const openSection = (name: 'Home'|'History'|'Settings') => {
     setActiveMenu(name);
@@ -153,6 +158,11 @@ function App() {
     ['dragenter','dragover','dragleave','drop'].forEach(evt => node.addEventListener(evt, prevent)); node.addEventListener('drop', onDrop);
     return () => { ['dragenter','dragover','dragleave','drop'].forEach(evt => node.removeEventListener(evt, prevent)); node.removeEventListener('drop', onDrop); };
   }, []);
+
+  useEffect(() => {
+    // Example hooks to add notifications; replace with real events
+    if (activeTab==='movies' && moviesBanner) pushNotification(moviesBanner);
+  }, [moviesBanner]);
 
   const buildPrompt = (raw: string, isImageOnly: boolean) => {
     const lang = settings.language === 'auto' ? 'auto-detect' : settings.language;
@@ -367,6 +377,7 @@ function App() {
               <div className="text-[10px] md:text-[11px] text-emerald-400">{settings.displayName}</div>
             </div>
             <button onClick={()=>setExamplesOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Examples</button>
+            <button onClick={()=>setNotifyCenterOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5 flex items-center gap-1"><Bell className="w-4 h-4"/> {notifications.length>0 && <span className="text-emerald-400">{notifications.length}</span>}</button>
             {activeTab==='movies' && (
               <button onClick={()=>setDownloaderOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Downloader</button>
             )}
@@ -531,6 +542,7 @@ function App() {
       <SmartDownloaderModal open={downloaderOpen} onClose={()=>setDownloaderOpen(false)} />
       <ExamplesModal open={examplesOpen} onClose={()=>setExamplesOpen(false)} onPick={(t)=>{ setInputText(t); setActiveMenu('Home'); setActiveTab('chat'); }} />
       <OnboardingModal open={onboardingOpen} onClose={()=>setOnboardingOpen(false)} onSave={(d)=>{ setSettings(prev=>({ ...prev, displayName: d.username, language: d.language, model: d.model })); if (d.avatar_url) setMyAvatar(d.avatar_url); }} />
+      <NotificationCenter open={notifyCenterOpen} onClose={()=>setNotifyCenterOpen(false)} items={notifications} onClearAll={()=>setNotifications([])} />
     </div>
   );
 }
