@@ -7,13 +7,14 @@ interface CoWatchModalProps {
   onClose: () => void;
   username: string;
   initialUrl?: string;
+  initialRoomId?: string;
 }
 
 type ChatMsg = { user: string; text: string; ts: string };
 
 enum InviteStatus { Idle, Sending, Sent, Error }
 
-export function CoWatchModal({ open, onClose, username, initialUrl }: CoWatchModalProps) {
+export function CoWatchModal({ open, onClose, username, initialUrl, initialRoomId }: CoWatchModalProps) {
   const [url, setUrl] = useState('');
   const [roomId, setRoomId] = useState('cowatch-' + Math.random().toString(36).slice(2,8));
   const [chat, setChat] = useState<ChatMsg[]>([]);
@@ -26,6 +27,7 @@ export function CoWatchModal({ open, onClose, username, initialUrl }: CoWatchMod
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>(InviteStatus.Idle);
 
   useEffect(() => { if (open && initialUrl) setUrl(initialUrl); }, [open, initialUrl]);
+  useEffect(() => { if (open && initialRoomId) setRoomId(initialRoomId); }, [open, initialRoomId]);
 
   useEffect(() => { if (!open) return; listUsers().then(setUsers).catch(()=>{}); }, [open]);
 
@@ -133,7 +135,7 @@ export function CoWatchModal({ open, onClose, username, initialUrl }: CoWatchMod
             <div className="p-3 rounded bg-white/5 border border-white/10">
               <div className="text-xs text-gray-400 mb-2">Share link</div>
               <div className="text-[10px] break-all bg-[#0f1720] border border-white/10 rounded p-2">{shareLink}</div>
-              <button onClick={copyShare} className="mt-2 w-full px-3 py-2 rounded bg-white/5 border border-white/10 flex items-center justify-center gap-2"><Copy className="w-4 h-4"/> Copy</button>
+              <button onClick={copyShare} className="mt-2 w-full px-3 py-2 rounded bg_white/5 border border-white/10 flex items-center justify-center gap-2"><Copy className="w-4 h-4"/> Copy</button>
             </div>
           </div>
         </div>

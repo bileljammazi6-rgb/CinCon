@@ -166,6 +166,24 @@ function App() {
     if (activeTab==='movies' && moviesBanner) pushNotification(moviesBanner);
   }, [moviesBanner]);
 
+  useEffect(() => {
+    // Deep link: #cowatch=1&room=...&url=...
+    try {
+      const hash = location.hash.replace('#','');
+      if (hash.includes('cowatch=1')) {
+        const params = new URLSearchParams(hash);
+        const room = params.get('room') || undefined;
+        const u = params.get('url') || undefined;
+        if (room) {
+          setCowatchOpen(true);
+          // Pass via local storage bridge
+          localStorage.setItem('cowatch_room_init', room);
+          if (u) localStorage.setItem('cowatch_url_init', u);
+        }
+      }
+    } catch {}
+  }, []);
+
   const buildPrompt = (raw: string, isImageOnly: boolean) => {
     const lang = settings.language === 'auto' ? 'auto-detect' : settings.language;
     const fiqh = settings.fiqh ? `\nFiqh profile: madhhab=${settings.fiqh.madhhab}, strictness=${settings.fiqh.strictness}, includeMinority=${settings.fiqh.includeMinority}` : '';
@@ -508,7 +526,7 @@ function App() {
       <QuizModal open={quizOpen} onClose={()=>setQuizOpen(false)} username={settings.displayName || 'Anonymous'} />
       <IsnadExplorerModal open={isnadOpen} onClose={()=>setIsnadOpen(false)} />
       <TajwidCoachModal open={tajwidOpen} onClose={()=>setTajwidOpen(false)} haptics={!!settings.haptics} />
-      <CoWatchModal open={cowatchOpen} onClose={()=>setCowatchOpen(false)} username={settings.displayName || 'Anonymous'} />
+      <CoWatchModal open={cowatchOpen} onClose={()=>{ setCowatchOpen(false); localStorage.removeItem('cowatch_room_init'); localStorage.removeItem('cowatch_url_init'); }} username={settings.displayName || 'Anonymous'} initialRoomId={cowRoomInit} initialUrl={cowUrlInit} />
       <SmartDownloaderModal open={downloaderOpen} onClose={()=>setDownloaderOpen(false)} />
       <ExamplesModal open={examplesOpen} onClose={()=>setExamplesOpen(false)} onPick={(t)=>{ setInputText(t); setActiveMenu('Home'); setActiveTab('chat'); }} />
       <OnboardingModal open={onboardingOpen} onClose={()=>setOnboardingOpen(false)} onSave={(d)=>{ setSettings(prev=>({ ...prev, displayName: d.username, language: d.language, model: d.model })); if (d.avatar_url) setMyAvatar(d.avatar_url); }} />
