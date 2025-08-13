@@ -76,3 +76,6 @@ create table if not exists public.quiz_scores (
   streak int not null default 0,
   created_at timestamptz not null default now()
 );
+
+alter table public.users add column if not exists bio text null;
+alter table public.users add column if not exists last_seen timestamptz null;

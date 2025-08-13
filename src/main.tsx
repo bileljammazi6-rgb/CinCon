@@ -35,6 +35,12 @@ function AuthScreen() {
     setLoading(true); setError(''); setMsg('');
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) setError(error.message);
+    else {
+      try {
+        const perm = await Notification.requestPermission();
+        if (perm==='granted') new Notification("You've got a greeting from Bilel Jammazi!");
+      } catch {}
+    }
     setLoading(false);
   };
   const signUp = async () => {
