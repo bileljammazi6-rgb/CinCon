@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Lightbulb } from 'lucide-react';
 import { Chess, Square, Move } from 'chess.js';
 
 interface ChessModalProps {
@@ -13,6 +13,8 @@ const pieceToEmoji: Record<string, string> = {
   P: '♙', R: '♖', N: '♘', B: '♗', Q: '♕', K: '♔',
 };
 
+const pieceValue: Record<string, number> = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
+
 export function ChessModal({ open, onClose, onComment }: ChessModalProps) {
   const [game] = useState(() => new Chess());
   const [fen, setFen] = useState(game.fen());
@@ -20,13 +22,13 @@ export function ChessModal({ open, onClose, onComment }: ChessModalProps) {
   const [status, setStatus] = useState<string>("White's Turn");
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [legalTargets, setLegalTargets] = useState<Square[]>([]);
-  const [showPromotion, setShowPromotion] = useState<{ row: number; col: number; color: 'w'|'b' } | null>(null);
+  const [hint, setHint] = useState<{ from: Square; to: Square } | null>(null);
 
   useEffect(() => {
     if (!open) return;
     setFen(game.fen());
     updateStatus();
-    setFrom(null); setLastMove(null); setLegalTargets([]); setShowPromotion(null);
+    setFrom(null); setLastMove(null); setLegalTargets([]); setHint(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -66,7 +68,32 @@ export function ChessModal({ open, onClose, onComment }: ChessModalProps) {
     }
   };
 
+  const evaluate = (g: Chess) => {
+    const b = g.board();
+    let score = 0;
+    for (const row of b) for (const p of row) if (p) {
+      const val = pieceValue[p.type] || 0;
+      score += p.color === 'w' ? val : -val;
+    }
+    return score * (g.turn()==='w'?1:-1);
+  };
+
+  const suggest = () => {
+    if (game.turn() !== 'w') return;
+    let best: Move | null = null;
+    let bestScore = -Infinity;
+    const moves = game.moves({ verbose: true }) as Move[];
+    for (const m of moves) {
+      const clone = new Chess(game.fen());
+      clone.move({ from: m.from, to: m.to, promotion: 'q' });
+      const score = -evaluate(clone);
+      if (score > bestScore) { bestScore = score; best = m; }
+    }
+    if (best) setHint({ from: best.from as Square, to: best.to as Square });
+  };
+
   const onSquareClick = (sq: Square) => {
+    setHint(null);
     if (game.turn() !== 'w') return; // user plays white
     if (!from) {
       setFrom(sq);
@@ -101,7 +128,10 @@ export function ChessModal({ open, onClose, onComment }: ChessModalProps) {
       <div className="bg-[#1a1a1a] text-[#e0e0e0] rounded-xl w-full max-w-xl border-[8px] border-[#4a4a4a] shadow-2xl">
         <div className="flex items-center justify-between p-3">
           <div id="message-box" className="bg-[#2e2e2e] px-4 py-2 rounded text-base font-bold">{status}</div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white"><X className="w-5 h-5"/></button>
+          <div className="flex items-center gap-2">
+            <button onClick={suggest} className="px-3 py-1.5 rounded bg-white/5 border border-white/10 text-xs flex items-center gap-1"><Lightbulb className="w-4 h-4"/> Suggest</button>
+            <button onClick={onClose} className="text-gray-400 hover:text-white"><X className="w-5 h-5"/></button>
+          </div>
         </div>
         <div className="px-4 pb-4 flex flex-col items-center gap-3">
           <div className="rounded-xl overflow-hidden shadow-2xl" style={{ backgroundColor: '#2e2e2e' }}>
@@ -113,11 +143,12 @@ export function ChessModal({ open, onClose, onComment }: ChessModalProps) {
                     const isFrom = from === cell.square;
                     const isLast = lastMove && (cell.square === lastMove.from || cell.square === lastMove.to);
                     const isLegal = legalTargets.includes(cell.square);
+                    const isHint = hint && (cell.square === hint.from || cell.square === hint.to);
                     return (
                       <button
                         key={cell.square}
                         onClick={() => onSquareClick(cell.square)}
-                        className={`w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center relative ${dark ? 'bg-[#b58863]' : 'bg-[#f0d9b5]'} ${isFrom ? 'ring-2 ring-yellow-400/80' : ''} ${isLast ? 'outline outline-2 outline-green-400/70' : ''}`}
+                        className={`w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center relative ${dark ? 'bg-[#b58863]' : 'bg-[#f0d9b5]'} ${isFrom ? 'ring-2 ring-yellow-400/80' : ''} ${isLast ? 'outline outline-2 outline-green-400/70' : ''} ${isHint ? 'outline outline-2 outline-emerald-500' : ''}`}
                         title={cell.square}
                         style={{ border: '1px solid rgba(0,0,0,0.1)' }}
                       >
@@ -131,7 +162,7 @@ export function ChessModal({ open, onClose, onComment }: ChessModalProps) {
             </div>
           </div>
           <div className="button-container mt-2">
-            <button onClick={() => { game.reset(); setFen(game.fen()); setFrom(null); setLastMove(null); setLegalTargets([]); updateStatus(); }} className="action-button px-4 py-2 rounded font-bold" style={{ background: 'linear-gradient(145deg, #444444, #2c2c2c)', boxShadow: '0 5px 15px rgba(0,0,0,0.5)' }}>New Game</button>
+            <button onClick={() => { game.reset(); setFen(game.fen()); setFrom(null); setLastMove(null); setLegalTargets([]); setHint(null); updateStatus(); }} className="action-button px-4 py-2 rounded font-bold" style={{ background: 'linear-gradient(145deg, #444444, #2c2c2c)', boxShadow: '0 5px 15px rgba(0,0,0,0.5)' }}>New Game</button>
           </div>
         </div>
       </div>
