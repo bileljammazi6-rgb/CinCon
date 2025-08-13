@@ -4,6 +4,25 @@ import App from './App';
 import { supabase } from './lib/supabase';
 import { Mail, Lock, User as UserIcon, Eye, EyeOff, Sparkles } from 'lucide-react';
 
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error?: any }>{
+  constructor(props: any){ super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error: any){ return { hasError: true, error }; }
+  componentDidCatch(error: any, info: any){ console.error('App crash:', error, info); }
+  render(){
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4 bg-[#0b141a] text-white text-sm">
+          <div>
+            <div className="text-red-400 font-semibold mb-2">Something went wrong.</div>
+            <div className="text-xs text-gray-300 whitespace-pre-wrap">{String(this.state.error)}</div>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children as any;
+  }
+}
+
 function Root() {
   const [loading, setLoading] = React.useState(true);
   const [authed, setAuthed] = React.useState(false);
@@ -236,6 +255,8 @@ function ResetPasswordScreen({ onDone }: { onDone: () => void }) {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <Root />
+    <ErrorBoundary>
+      <Root />
+    </ErrorBoundary>
   </React.StrictMode>
 );
