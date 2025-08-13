@@ -37,6 +37,10 @@ function AuthScreen() {
     if (error) setError(error.message);
     else {
       try {
+        const derived = (username.trim() || email.split('@')[0]);
+        localStorage.setItem('last_username', derived);
+      } catch {}
+      try {
         const perm = await Notification.requestPermission();
         if (perm==='granted') new Notification("You've got a greeting from Bilel Jammazi!");
       } catch {}
@@ -51,6 +55,7 @@ function AuthScreen() {
       if (error) throw error;
       const { error: upsertErr } = await supabase.from('users').insert({ email, username: derived, full_name: null, avatar_url: null });
       if (upsertErr) throw upsertErr;
+      try { localStorage.setItem('last_username', derived); } catch {}
       setMsg('Check your email to confirm your account before signing in.');
     } catch (e: any) {
       setError(e?.message || 'Failed to sign up');

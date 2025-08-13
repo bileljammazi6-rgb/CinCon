@@ -120,3 +120,14 @@ export async function saveQuizScore(username: string, category: string, score: n
   const { error } = await supabase.from('quiz_scores').insert({ username, category, score, streak });
   if (error) throw error;
 }
+
+export async function updateUserProfile(username: string, patch: { avatar_url?: string | null; bio?: string | null; full_name?: string | null; website?: string | null; location?: string | null; }) {
+  const { error } = await supabase.from('users').update({ ...patch, updated_at: new Date().toISOString() }).eq('username', username);
+  if (error) throw error;
+}
+
+export async function getUserProfile(username: string): Promise<{ username: string; avatar_url?: string | null; bio?: string | null; full_name?: string | null; website?: string | null; location?: string | null; }> {
+  const { data, error } = await supabase.from('users').select('username, avatar_url, bio, full_name, website, location').eq('username', username).single();
+  if (error) throw error;
+  return data as any;
+}

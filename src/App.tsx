@@ -19,7 +19,7 @@ import { RockPaperScissorsModal } from './components/RockPaperScissorsModal';
 import { MobileNav } from './components/MobileNav';
 import { MemoryMatchModal } from './components/MemoryMatchModal';
 import { SnakeModal } from './components/SnakeModal';
-import { listMessages, sendMessage as sendCommunityMessage, CommunityMessage, subscribeToMessages, fetchProfiles, updateLastSeen } from './services/communityService';
+import { listMessages, sendMessage as sendCommunityMessage, CommunityMessage, subscribeToMessages, fetchProfiles, updateLastSeen, getUserProfile } from './services/communityService';
 import { InviteModal } from './components/InviteModal';
 import { InvitesPanel } from './components/InvitesPanel';
 import { QuizModal } from './components/QuizModal';
@@ -33,7 +33,7 @@ function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings, setSettings] = useState<AppSettings>(() => {
-    try { return JSON.parse(localStorage.getItem('bilel_settings') || '') || { displayName: 'Rim', language: 'auto' }; } catch { return { displayName: 'Rim', language: 'auto' }; }
+    try { return JSON.parse(localStorage.getItem('bilel_settings') || '') || { displayName: (localStorage.getItem('last_username') || 'You'), language: 'auto' }; } catch { return { displayName: (localStorage.getItem('last_username') || 'You'), language: 'auto' }; }
   });
   const [chessOpen, setChessOpen] = useState(false);
   const [tttOpen, setTttOpen] = useState(false);
@@ -53,11 +53,14 @@ function App() {
   const [profileMap, setProfileMap] = useState<Record<string, { avatar_url?: string }>>({});
   const [inviteOpen, setInviteOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
+  const [myAvatar, setMyAvatar] = useState<string | undefined>(undefined);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   useEffect(() => { const saved = localStorage.getItem('bilel_chat_history'); if (saved) try { setMessages(JSON.parse(saved).map((m: any)=>({ ...m, timestamp: new Date(m.timestamp) })) ); } catch {} }, []);
   useEffect(() => { localStorage.setItem('bilel_chat_history', JSON.stringify(messages.map(m=>({ ...m, timestamp: m.timestamp.toISOString() })))); }, [messages]);
   useEffect(() => { localStorage.setItem('bilel_settings', JSON.stringify(settings)); }, [settings]);
+
+  useEffect(() => { let ignore=false; const load=async()=>{ try{ if(!settings.displayName) return; const p=await getUserProfile(settings.displayName); if(!ignore) setMyAvatar(p?.avatar_url||undefined);}catch{} }; load(); return ()=>{ignore=true}; }, [settings.displayName]);
 
   useEffect(() => {
     if (activeTab !== 'community') return;
@@ -279,7 +282,7 @@ function App() {
           <div className="flex-1 overflow-y-auto">
             <div className="px-3 py-2 text-xs text-gray-400">Recent</div>
             <button className="w-full text-left px-3 py-2 hover:bg-white/5">
-              <div className="text-sm text-white">Rim</div>
+              <div className="text-sm text-white">{settings.displayName || 'You'}</div>
               <div className="text-xs text-gray-400">Open chat</div>
             </button>
           </div>
@@ -289,7 +292,11 @@ function App() {
         <div className="flex-1 flex flex-col wa-bg" ref={dropRef}>
           {/* Header */}
           <div className="glass-effect p-2 md:p-3 border-b border-white/10 flex items-center gap-2 md:gap-3">
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-emerald-600 flex items-center justify-center"><Bot className="w-4 h-4 text-white"/></div>
+            {myAvatar ? (
+              <img src={myAvatar} alt="avatar" className="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover" />
+            ) : (
+              <img src={'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(settings.displayName || 'You')} alt="avatar" className="w-8 h-8 md:w-9 md:h-9 rounded-full" />
+            )}
             <div className="flex-1">
               <div className="text-sm text-white font-semibold truncate">{settings.displayName}</div>
               <div className="text-[10px] md:text-[11px] text-emerald-400">online</div>
