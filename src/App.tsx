@@ -26,6 +26,7 @@ import { QuizModal } from './components/QuizModal';
 import { IsnadExplorerModal } from './components/IsnadExplorerModal';
 import { TajwidCoachModal } from './components/TajwidCoachModal';
 import { CoWatchModal } from './components/CoWatchModal';
+import { SmartDownloaderModal } from './components/SmartDownloaderModal';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -61,6 +62,7 @@ function App() {
   const [tajwidOpen, setTajwidOpen] = useState(false);
   const [cowatchOpen, setCowatchOpen] = useState(false);
   const [moviesBanner, setMoviesBanner] = useState<string>('');
+  const [downloaderOpen, setDownloaderOpen] = useState(false);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   useEffect(() => { const saved = localStorage.getItem('bilel_chat_history'); if (saved) try { setMessages(JSON.parse(saved).map((m: any)=>({ ...m, timestamp: new Date(m.timestamp) })) ); } catch {} }, []);
@@ -331,6 +333,9 @@ function App() {
                 <button onClick={()=>setQuizOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Quiz</button>
               </div>
             )}
+            {activeTab==='movies' && (
+              <button onClick={()=>setDownloaderOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Downloader</button>
+            )}
             <button onClick={()=>setChessOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5 md:bg-transparent"><Sword className="w-4 h-4"/></button>
             <button onClick={clearChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><Eraser className="w-4 h-4"/> Clear</button>
             <button onClick={exportChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><DownloadIcon className="w-4 h-4"/> Export</button>
@@ -483,6 +488,7 @@ function App() {
       <IsnadExplorerModal open={isnadOpen} onClose={()=>setIsnadOpen(false)} />
       <TajwidCoachModal open={tajwidOpen} onClose={()=>setTajwidOpen(false)} haptics={!!settings.haptics} />
       <CoWatchModal open={cowatchOpen} onClose={()=>setCowatchOpen(false)} username={settings.displayName || 'Anonymous'} />
+      <SmartDownloaderModal open={downloaderOpen} onClose={()=>setDownloaderOpen(false)} />
     </div>
   );
 }
