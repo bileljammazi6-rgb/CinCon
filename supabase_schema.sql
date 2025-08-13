@@ -56,3 +56,23 @@ insert into public.rooms(id, name, type)
 -- alter table public.invites disable row level security;
 -- alter table public.rooms disable row level security;
 -- alter table public.room_members disable row level security;
+
+-- Online game moves
+create table if not exists public.game_moves (
+  id bigserial primary key,
+  room_id text not null references public.rooms(id) on delete cascade,
+  move_type text not null check (move_type in ('tictactoe','chess')),
+  data jsonb not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists game_moves_room_created_idx on public.game_moves(room_id, created_at);
+
+-- Quiz leaderboard
+create table if not exists public.quiz_scores (
+  id bigserial primary key,
+  username text not null,
+  category text not null,
+  score int not null default 0,
+  streak int not null default 0,
+  created_at timestamptz not null default now()
+);
