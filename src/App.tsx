@@ -11,6 +11,7 @@ import { MovieDetail } from './pages/MovieDetail';
 import { AuthProvider } from './contexts/AuthContext';
 import { MovieProvider } from './contexts/MovieContext';
 import './styles/globals.css';
+import { AuthForm } from './components/Auth/AuthForm';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
                 <Route path="/my-list" element={<MyList />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/movie/:id" element={<MovieDetail />} />
+                <Route path="/auth" element={<AuthForm />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>

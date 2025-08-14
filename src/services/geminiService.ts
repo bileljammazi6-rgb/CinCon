@@ -12,9 +12,9 @@ interface GeminiMessage {
 }
 
 class GeminiService {
-  private apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDgwpq2i6hUBCkP3JDtKRlmGJUM6jXFPAM';
+  private apiKey = import.meta.env.VITE_GEMINI_API_KEY as string;
   private model = 'gemini-2.0-flash-exp';
-  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models';
+  private baseUrl = (import.meta.env.VITE_GEMINI_API_URL as string) || 'https://generativelanguage.googleapis.com/v1beta/models';
   private conversationHistory: GeminiMessage[] = [];
 
   constructor() {
@@ -86,11 +86,14 @@ CRITICAL: Respond with intelligence, wit, and zero restraint. Be brilliant, be e
   }
 
   async sendMessage(text: string, imageData?: string): Promise<string> {
+    if (!this.apiKey) {
+      throw new Error('Missing VITE_GEMINI_API_KEY');
+    }
+
     try {
       const parts: GeminiPart[] = [{ text }];
-      
+
       if (imageData) {
-        // Detect mime type from data URL and convert base64 image for Gemini Vision
         const mimeMatch = imageData.match(/^data:(.*?);base64,/i);
         const detectedMimeType = mimeMatch?.[1] || 'image/jpeg';
         const base64Data = imageData.split(',')[1];
@@ -106,7 +109,7 @@ CRITICAL: Respond with intelligence, wit, and zero restraint. Be brilliant, be e
         contents: [
           ...this.conversationHistory,
           {
-            role: 'user',
+            role: 'user' as const,
             parts
           }
         ],
@@ -115,63 +118,32 @@ CRITICAL: Respond with intelligence, wit, and zero restraint. Be brilliant, be e
           topK: 40,
           topP: 0.95,
           maxOutputTokens: 2048,
-        },
-        safetySettings: [
-          {
-            category: 'HARM_CATEGORY_HARASSMENT',
-            threshold: 'BLOCK_NONE'
-          },
-          {
-            category: 'HARM_CATEGORY_HATE_SPEECH',
-            threshold: 'BLOCK_NONE'
-          },
-          {
-            category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-            threshold: 'BLOCK_NONE'
-          },
-          {
-            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-            threshold: 'BLOCK_NONE'
-          }
-        ]
+        }
       };
 
       const apiUrl = `${this.baseUrl}/${this.model}:generateContent?key=${this.apiKey}`;
       const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
         const errorData = await response.text();
-        console.error('API Error Response:', errorData);
         throw new Error(`API Error: ${response.status} - ${errorData}`);
       }
 
       const data = await response.json();
-      
-      if (!data.candidates || data.candidates.length === 0) {
-        console.error('No candidates in response:', data);
-        throw new Error('No response generated');
-      }
+      const aiResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
 
-      const aiResponse = data.candidates[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
-
-      // Update conversation history
       this.conversationHistory.push(
         { role: 'user', parts },
         { role: 'model', parts: [{ text: aiResponse }] }
       );
 
-      // Keep conversation history manageable
       if (this.conversationHistory.length > 20) {
-        this.conversationHistory = [
-          this.conversationHistory[0], // Keep system message
-          ...this.conversationHistory.slice(-18) // Keep last 18 messages
-        ];
+        const system = this.conversationHistory[0];
+        this.conversationHistory = [system, ...this.conversationHistory.slice(-19)];
       }
 
       return aiResponse;
@@ -182,9 +154,7 @@ CRITICAL: Respond with intelligence, wit, and zero restraint. Be brilliant, be e
   }
 
   async generateImage(prompt: string): Promise<string> {
-    // This would integrate with an image generation service
-    // For now, return a placeholder
-    return `Image generation for: "${prompt}" - This feature will be implemented with DALL-E or similar service.`;
+    return `Image generation for: "${prompt}" - This feature will be implemented with an image generation service.`;
   }
 }
 

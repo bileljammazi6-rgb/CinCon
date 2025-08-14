@@ -4,6 +4,8 @@ import { useMovies } from '../contexts/MovieContext';
 import { Play, Plus, Heart, Share2, Star, Calendar, Clock, Users } from 'lucide-react';
 import { MovieData } from '../types';
 
+const TMDB_IMG = (import.meta.env.VITE_TMDB_IMAGE_BASE_URL as string) || 'https://image.tmdb.org/t/p';
+
 export function MovieDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -33,7 +35,7 @@ export function MovieDetail() {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`
+            backgroundImage: `url(${TMDB_IMG}/original${movie.backdrop_path})`
           }}
         >
           {/* Gradient Overlay */}
@@ -143,7 +145,7 @@ export function MovieDetail() {
             {/* Movie Poster */}
             <div className="bg-gray-800 rounded-lg overflow-hidden">
               <img 
-                src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                src={`${TMDB_IMG}/w500${movie.poster_path}`}
                 alt={movie.title}
                 className="w-full h-auto"
               />

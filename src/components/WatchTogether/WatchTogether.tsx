@@ -4,6 +4,8 @@ import { useMovies } from '../../contexts/MovieContext';
 import { Play, Pause, Volume2, VolumeX, Users, Crown, MessageCircle, Film } from 'lucide-react';
 import { MovieData } from '../../types';
 
+const TMDB_IMG = (import.meta.env.VITE_TMDB_IMAGE_BASE_URL as string) || 'https://image.tmdb.org/t/p';
+
 interface WatchTogetherProps {
   onClose: () => void;
 }
@@ -173,7 +175,7 @@ export function WatchTogether({ onClose }: WatchTogetherProps) {
                 className="w-full h-full object-contain"
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={handleLoadedMetadata}
-                src={`https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4`} // Mock video
+                src={`https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4`}
               />
             ) : (
               <div className="flex items-center justify-center h-full">
@@ -406,7 +408,7 @@ export function WatchTogether({ onClose }: WatchTogetherProps) {
                     className="bg-gray-800 rounded-lg overflow-hidden cursor-pointer hover:bg-gray-700 transition-colors"
                   >
                     <img 
-                      src={`https://image.tmdb.org/t/p/w300${movie.poster_path}`}
+                      src={`${TMDB_IMG}/w300${movie.poster_path}`}
                       alt={movie.title}
                       className="w-full h-auto"
                     />
