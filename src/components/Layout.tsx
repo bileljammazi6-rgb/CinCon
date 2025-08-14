@@ -41,6 +41,7 @@ export function Layout({ children }: LayoutProps) {
     { name: 'Home', href: '/', icon: Home },
     { name: 'Movies', href: '/movies', icon: Film },
     { name: 'TV Shows', href: '/tv-shows', icon: Tv },
+    { name: 'Messages', href: '/messages', icon: MessageCircle },
     { name: 'My List', href: '/my-list', icon: Heart },
     { name: 'Search', href: '/search', icon: Search },
   ];

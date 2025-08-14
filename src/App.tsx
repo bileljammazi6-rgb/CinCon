@@ -4,6 +4,7 @@ import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
 import { Movies } from './pages/Movies';
 import { TVShows } from './pages/TVShows';
+import { Messages } from './pages/Messages';
 import { MyList } from './pages/MyList';
 import { Search } from './pages/Search';
 import { MovieDetail } from './pages/MovieDetail';
@@ -22,6 +23,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/movies" element={<Movies />} />
                 <Route path="/tv-shows" element={<TVShows />} />
+                <Route path="/messages" element={<Messages />} />
                 <Route path="/my-list" element={<MyList />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/movie/:id" element={<MovieDetail />} />
