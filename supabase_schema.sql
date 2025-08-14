@@ -1,0 +1,115 @@
+-- Run this SQL in Supabase SQL Editor for your project
+-- Schema for community chat, rooms, messages, invites, and users
+
+create table if not exists public.users (
+  id uuid primary key default gen_random_uuid(),
+  email text unique not null,
+  username text unique not null,
+  full_name text null,
+  avatar_url text null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.rooms (
+  id text primary key,
+  name text not null,
+  type text not null check (type in ('dm','group','game','movie','global')),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.room_members (
+  room_id text references public.rooms(id) on delete cascade,
+  user_id text not null,
+  role text not null default 'member',
+  primary key (room_id, user_id)
+);
+
+create table if not exists public.messages (
+  id bigserial primary key,
+  room_id text not null references public.rooms(id) on delete cascade,
+  sender text not null,
+  content text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists messages_room_created_idx on public.messages(room_id, created_at);
+
+create table if not exists public.invites (
+  id bigserial primary key,
+  type text not null check (type in ('game','movie')),
+  from_user text not null,
+  to_user text not null,
+  room_id text null references public.rooms(id) on delete set null,
+  payload jsonb null,
+  status text not null default 'pending' check (status in ('pending','accepted','declined','cancelled')),
+  created_at timestamptz not null default now()
+);
+
+-- Seed a global room if missing
+insert into public.rooms(id, name, type)
+  values ('global', 'Global Chat', 'global')
+  on conflict (id) do nothing;
+
+-- Optional: enable Realtime on messages table (toggle in Supabase: Database > Replication > Realtime)
+-- Security: For quick testing you can disable RLS (not recommended for production)
+-- alter table public.messages disable row level security;
+-- alter table public.invites disable row level security;
+-- alter table public.rooms disable row level security;
+-- alter table public.room_members disable row level security;
+
+-- Online game moves
+create table if not exists public.game_moves (
+  id bigserial primary key,
+  room_id text not null references public.rooms(id) on delete cascade,
+  move_type text not null check (move_type in ('tictactoe','chess')),
+  data jsonb not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists game_moves_room_created_idx on public.game_moves(room_id, created_at);
+
+-- Quiz leaderboard
+create table if not exists public.quiz_scores (
+  id bigserial primary key,
+  username text not null,
+  category text not null,
+  score int not null default 0,
+  streak int not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table public.users add column if not exists bio text null;
+alter table public.users add column if not exists last_seen timestamptz null;
+
+-- Reactions
+create table if not exists public.message_reactions (
+  id bigserial primary key,
+  message_id bigint not null references public.messages(id) on delete cascade,
+  username text not null,
+  emoji text not null check (char_length(emoji) <= 8),
+  created_at timestamptz not null default now()
+);
+create index if not exists mr_message_idx on public.message_reactions(message_id);
+
+-- Threads (message replies)
+create table if not exists public.message_threads (
+  id bigserial primary key,
+  room_id text not null references public.rooms(id) on delete cascade,
+  parent_message_id bigint not null references public.messages(id) on delete cascade,
+  sender text not null,
+  content text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists mt_parent_idx on public.message_threads(parent_message_id);
+
+-- Quiz rooms for head-to-head
+create table if not exists public.quiz_rooms (
+  id text primary key,
+  created_at timestamptz not null default now(),
+  status text not null default 'waiting' check (status in ('waiting','running','finished'))
+);
+create table if not exists public.quiz_participants (
+  room_id text references public.quiz_rooms(id) on delete cascade,
+  username text not null,
+  score int not null default 0,
+  primary key(room_id, username)
+);

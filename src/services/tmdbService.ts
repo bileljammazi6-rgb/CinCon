@@ -1,7 +1,7 @@
 import { MovieData, TMDBResponse } from '../types';
 
 class TMDBService {
-  private apiKey = '0a7ef230ab60a26cca44c7d8a6d24c25';
+  private apiKey = import.meta.env.VITE_TMDB_API_KEY || '0a7ef230ab60a26cca44c7d8a6d24c25';
   private baseUrl = 'https://api.themoviedb.org/3';
 
   async searchMovie(query: string): Promise<MovieData | null> {
