@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Play, ChevronDown, ChevronUp, Download, ExternalLink } from 'lucide-react';
 import { MovieData } from '../types';
 
+const TMDB_IMG = (import.meta.env.VITE_TMDB_IMAGE_BASE_URL as string) || 'https://image.tmdb.org/t/p';
+
 interface TVSeriesCardProps {
   series: {
     title: string;
@@ -24,7 +26,7 @@ export function TVSeriesCard({ series }: TVSeriesCardProps) {
       <div className="relative">
         {series.movieData?.backdrop_path ? (
           <img 
-            src={`https://image.tmdb.org/t/p/w500${series.movieData.backdrop_path}`}
+            src={`${TMDB_IMG}/w500${series.movieData.backdrop_path}`}
             alt={series.title}
             className="w-full h-48 object-cover"
           />

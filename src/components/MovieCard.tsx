@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { Play, Plus, Heart, Info } from 'lucide-react';
 import { MovieData } from '../types';
 
+const TMDB_IMG = (import.meta.env.VITE_TMDB_IMAGE_BASE_URL as string) || 'https://image.tmdb.org/t/p';
+
 interface MovieCardProps {
   movie: MovieData;
   viewMode?: 'grid' | 'list';
@@ -19,7 +21,7 @@ export function MovieCard({ movie, viewMode = 'grid', showProgress = false }: Mo
       <Link to={`/movie/${movie.id}`} className="block">
         <div className="flex items-center gap-4 p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors">
           <img 
-            src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
+            src={`${TMDB_IMG}/w200${movie.poster_path}`}
             alt={movie.title}
             className="w-20 h-30 object-cover rounded-lg"
           />
@@ -65,7 +67,7 @@ export function MovieCard({ movie, viewMode = 'grid', showProgress = false }: Mo
       <Link to={`/movie/${movie.id}`}>
         <div className="relative overflow-hidden rounded-lg">
           <img 
-            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+            src={`${TMDB_IMG}/w500${movie.poster_path}`}
             alt={movie.title}
             className="w-full h-auto transition-transform duration-300 group-hover:scale-105"
           />

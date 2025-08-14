@@ -6,6 +6,8 @@ import { Play, Info, ChevronLeft, ChevronRight, Tv, Film } from 'lucide-react';
 import { MovieData } from '../types';
 import { movieLinks } from '../data/movieLinks';
 
+const TMDB_IMG = (import.meta.env.VITE_TMDB_IMAGE_BASE_URL as string) || 'https://image.tmdb.org/t/p';
+
 export function Home() {
   const { trending, popular, loading } = useMovies();
   const [featuredMovie, setFeaturedMovie] = useState<MovieData | null>(null);
@@ -33,7 +35,7 @@ export function Home() {
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
-              backgroundImage: `url(https://image.tmdb.org/t/p/original${featuredMovie.backdrop_path})`
+              backgroundImage: `url(${TMDB_IMG}/original${featuredMovie.backdrop_path})`
             }}
           >
             {/* Gradient Overlay */}

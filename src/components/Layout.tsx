@@ -13,7 +13,8 @@ import {
   Menu,
   X,
   Play,
-  Plus
+  Plus,
+  MessageCircle
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
