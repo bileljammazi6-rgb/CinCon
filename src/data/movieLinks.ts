@@ -1,356 +1,140 @@
 export const movieLinks: { [key: string]: string[] } = {
-  // TV Series
-  "The Chestnut Man": [
-    "https://pixeldrain.com/api/file/bwLgnrZg", // Ep1
-    "https://pixeldrain.com/api/file/o9pSYTm1", // Ep2
-    "https://pixeldrain.com/api/file/8X2zDuMj", // Ep3
-    "https://pixeldrain.com/api/file/Duyo4u3J", // Ep4
-    "https://pixeldrain.com/api/file/nwPFNU59", // Ep5
-    "https://pixeldrain.com/api/file/E3TAe2Nz"  // Ep6
+  "mobland": [
+    "https://pixeldrain.com/api/file/c1yALumo",
+    "https://pixeldrain.com/api/file/5vByKXNB",
+    "https://pixeldrain.com/api/file/qwZSeP5c",
+    "https://download2391.mediafire.com/…/Mobland+S01+004+720p.mp4",
+    "https://pixeldrain.com/api/file/9F3gFRvF",
+    "https://pixeldrain.com/api/file/2untTLEh",
+    "https://pixeldrain.com/api/file/4JuMeWG8",
+    "https://pixeldrain.com/api/file/ykgLmxs9",
+    "https://pixeldrain.com/api/file/FKPTCSaQ",
+    "https://pixeldrain.com/api/file/aAcYYP26"
   ],
-
-  // Movies 2025
-  "Smurfs 2025": [
+  "all of us are dead": [
+    "https://pixeldrain.com/api/file/WG3NJoAK",
+    "https://pixeldrain.com/api/file/xv1y74MP",
+    "https://pixeldrain.com/api/file/TKkpUnwJ",
+    "https://pixeldrain.com/api/file/2GDstPyV",
+    "https://pixeldrain.com/api/file/EokWU4JK"
+  ],
+  "the queen's gambit": [
+    "https://pixeldrain.com/api/file/452dw9vK",
+    "https://pixeldrain.com/api/file/EE4Sx96w",
+    "https://pixeldrain.com/api/file/v96e4qxD",
+    "https://pixeldrain.com/api/file/YYa121XQ",
+    "https://pixeldrain.com/api/file/22icFfDJ"
+  ],
+  "attack on titan": [
+    "https://pixeldrain.com/api/file/jiAm7kxg",
+    "https://pixeldrain.com/api/file/SBVUfsvw",
+    "https://pixeldrain.com/api/file/RnKc3j6j",
+    "https://pixeldrain.com/api/file/TgA7Nf9p",
+    "https://pixeldrain.com/api/file/5YNAWddf",
+    "https://pixeldrain.com/api/file/4H5xGTt5"
+  ],
+  "the chestnut man": [
+    "https://pixeldrain.com/api/file/bwLgnrZg",
+    "https://pixeldrain.com/api/file/o9pSYTm1",
+    "https://pixeldrain.com/api/file/8X2zDuMj",
+    "https://pixeldrain.com/api/file/Duyo4u3J",
+    "https://pixeldrain.com/api/file/nwPFNU59",
+    "https://pixeldrain.com/api/file/E3TAe2Nz"
+  ],
+  "smurfs 2025": [
     "https://pixeldrain.com/api/file/wn35moT2"
   ],
-  
-  "Weapons 2025": [
+  "weapons 2025": [
     "https://pixeldrain.com/api/file/ZEig7fSJ"
   ],
-
-  "Jurassic World 2025": [
-    "https://pixeldrain.com/api/file/bSvpr6f9"
-  ],
-
-  // Other Movies
-  "The Pickup": [
+  "the pickup": [
     "https://pixeldrain.com/api/file/nW2DCHMF"
   ],
-
-  "Honest Thief": [
+  "jurassic world 2025": [
+    "https://pixeldrain.com/api/file/bSvpr6f9"
+  ],
+  "honest thief": [
     "https://pixeldrain.com/api/file/9LrTQZJP"
   ],
-
-  "Luck": [
+  "luck": [
     "https://pixeldrain.com/api/file/9Nz5wR53"
   ],
-
-  "How to Train Your Dragon": [
+  "how to train your dragon": [
     "https://pixeldrain.com/api/file/7hZHRPm8"
   ],
-
-  // Existing movies (keeping for reference)
-  "Inception": [
-    "https://pixeldrain.com/api/file/example1",
-    "https://pixeldrain.com/api/file/example2"
-  ],
-  
-  "The Matrix": [
-    "https://pixeldrain.com/api/file/example3"
-  ],
-  
-  "Interstellar": [
-    "https://pixeldrain.com/api/file/example4",
-    "https://pixeldrain.com/api/file/example5"
-  ],
-  
-  "The Dark Knight": [
-    "https://pixeldrain.com/api/file/example6"
-  ],
-  
-  "Pulp Fiction": [
-    "https://pixeldrain.com/api/file/example7"
-  ],
-  
-  "Fight Club": [
-    "https://pixeldrain.com/api/file/example8"
-  ],
-  
-  "Forrest Gump": [
-    "https://pixeldrain.com/api/file/example9"
-  ],
-  
-  "The Shawshank Redemption": [
-    "https://pixeldrain.com/api/file/example10"
-  ],
-  
-  "The Godfather": [
-    "https://pixeldrain.com/api/file/example11"
-  ],
-  
-  "Goodfellas": [
-    "https://pixeldrain.com/api/file/example12"
-  ],
-  
-  "Scarface": [
-    "https://pixeldrain.com/api/file/example13"
-  ],
-  
-  "Casino": [
-    "https://pixeldrain.com/api/file/example14"
-  ],
-  
-  "The Departed": [
-    "https://pixeldrain.com/api/file/example15"
-  ],
-  
-  "Heat": [
-    "https://pixeldrain.com/api/file/example16"
-  ],
-  
-  "Taxi Driver": [
-    "https://pixeldrain.com/api/file/example17"
-  ],
-  
-  "Raging Bull": [
-    "https://pixeldrain.com/api/file/example18"
-  ],
-  
-  "The Wolf of Wall Street": [
-    "https://pixeldrain.com/api/file/example19"
-  ],
-  
-  "American Psycho": [
-    "https://pixeldrain.com/api/file/example20"
-  ],
-  
-  "The Silence of the Lambs": [
-    "https://pixeldrain.com/api/file/example21"
-  ],
-  
-  "Se7en": [
-    "https://pixeldrain.com/api/file/example22"
-  ],
-  
-  "Zodiac": [
-    "https://pixeldrain.com/api/file/example23"
-  ],
-  
-  "Gone Girl": [
-    "https://pixeldrain.com/api/file/example24"
-  ],
-  
-  "The Social Network": [
-    "https://pixeldrain.com/api/file/example25"
-  ],
-  
-  "Steve Jobs": [
-    "https://pixeldrain.com/api/file/example26"
-  ],
-  
-  "The Big Short": [
-    "https://pixeldrain.com/api/file/example27"
-  ],
-  
-  "Margin Call": [
-    "https://pixeldrain.com/api/file/example28"
-  ],
-  
-  "Wall Street": [
-    "https://pixeldrain.com/api/file/example29"
-  ],
-  
-  "Boiler Room": [
-    "https://pixeldrain.com/api/file/example30"
-  ],
-  
-  "Glengarry Glen Ross": [
-    "https://pixeldrain.com/api/file/example31"
-  ],
-  
-  "The Aviator": [
-    "https://pixeldrain.com/api/file/example32"
-  ],
-  
-  "Catch Me If You Can": [
-    "https://pixeldrain.com/api/file/example33"
-  ],
-  
-  "The Terminal": [
-    "https://pixeldrain.com/api/file/example34"
-  ],
-  
-  "Saving Private Ryan": [
-    "https://pixeldrain.com/api/file/example35"
-  ],
-  
-  "Schindler's List": [
-    "https://pixeldrain.com/api/file/example36"
-  ],
-  
-  "Lincoln": [
-    "https://pixeldrain.com/api/file/example37"
-  ],
-  
-  "Bridge of Spies": [
-    "https://pixeldrain.com/api/file/example38"
-  ],
-  
-  "Munich": [
-    "https://pixeldrain.com/api/file/example39"
-  ],
-  
-  "War Horse": [
-    "https://pixeldrain.com/api/file/example40"
-  ],
-  
-  "The Post": [
-    "https://pixeldrain.com/api/file/example41"
-  ],
-  
-  "Ready Player One": [
-    "https://pixeldrain.com/api/file/example42"
-  ],
-  
-  "West Side Story": [
-    "https://pixeldrain.com/api/file/example43"
-  ],
-  
-  "The Fabelmans": [
-    "https://pixeldrain.com/api/file/example44"
-  ],
-  
-  "Killers of the Flower Moon": [
-    "https://pixeldrain.com/api/file/example45"
-  ],
-  
-  "Oppenheimer": [
-    "https://pixeldrain.com/api/file/example46"
-  ],
-  
-  "Dune": [
-    "https://pixeldrain.com/api/file/example47"
-  ],
-  
-  "Dune: Part Two": [
-    "https://pixeldrain.com/api/file/example48"
-  ],
-  
-  "Blade Runner 2049": [
-    "https://pixeldrain.com/api/file/example49"
-  ],
-  
-  "Arrival": [
-    "https://pixeldrain.com/api/file/example50"
-  ],
-  
-  "Sicario": [
-    "https://pixeldrain.com/api/file/example51"
-  ],
-  
-  "Prisoners": [
-    "https://pixeldrain.com/api/file/example52"
-  ],
-  
-  "Enemy": [
-    "https://pixeldrain.com/api/file/example53"
-  ],
-  
-  "Incendies": [
-    "https://pixeldrain.com/api/file/example54"
-  ],
-  
-  "Polytechnique": [
-    "https://pixeldrain.com/api/file/example55"
-  ],
-  
-  "Maelström": [
-    "https://pixeldrain.com/api/file/example56"
-  ],
-  
-  "Un 32 août sur terre": [
-    "https://pixeldrain.com/api/file/example57"
-  ],
-  
-  "Cosmos": [
-    "https://pixeldrain.com/api/file/example58"
-  ],
-  
-  "Next Floor": [
-    "https://pixeldrain.com/api/file/example59"
-  ],
-  
-  "Lights Out": [
-    "https://pixeldrain.com/api/file/example60"
-  ],
-  
-  "Mama": [
-    "https://pixeldrain.com/api/file/example61"
-  ],
-  
-  "The Conjuring": [
-    "https://pixeldrain.com/api/file/example62"
-  ],
-  
-  "The Conjuring 2": [
-    "https://pixeldrain.com/api/file/example63"
-  ],
-  
-  "The Conjuring: The Devil Made Me Do It": [
-    "https://pixeldrain.com/api/file/example64"
-  ],
-  
-  "Annabelle": [
-    "https://pixeldrain.com/api/file/example65"
-  ],
-  
-  "Annabelle: Creation": [
-    "https://pixeldrain.com/api/file/example66"
-  ],
-  
-  "Annabelle Comes Home": [
-    "https://pixeldrain.com/api/file/example67"
-  ],
-  
-  "The Nun": [
-    "https://pixeldrain.com/api/file/example68"
-  ],
-  
-  "The Nun II": [
-    "https://pixeldrain.com/api/file/example69"
-  ],
-  
-  "The Curse of La Llorona": [
-    "https://pixeldrain.com/api/file/example70"
-  ],
-  
-  "The Crooked Man": [
-    "https://pixeldrain.com/api/file/example71"
-  ],
-  
-  "The Crooked Man: The Crooked Man": [
-    "https://pixeldrain.com/api/file/example72"
-  ],
-  
-  "The Crooked Man: The Crooked Man Returns": [
-    "https://pixeldrain.com/api/file/example73"
-  ],
-  
-  "The Crooked Man: The Crooked Man's Revenge": [
-    "https://pixeldrain.com/api/file/example74"
-  ],
-  
-  "The Crooked Man: The Crooked Man's Curse": [
-    "https://pixeldrain.com/api/file/example75"
-  ],
-  
-  "The Crooked Man: The Crooked Man's Legacy": [
-    "https://pixeldrain.com/api/file/example76"
-  ],
-  
-  "The Crooked Man: The Crooked Man's End": [
-    "https://pixeldrain.com/api/file/example77"
-  ],
-  
-  "The Crooked Man: The Crooked Man's Beginning": [
-    "https://pixeldrain.com/api/file/example78"
-  ],
-  
-  "The Crooked Man: The Crooked Man's Origin": [
-    "https://pixeldrain.com/api/file/example79"
-  ],
-  
-  "The Crooked Man: The Crooked Man's Fate": [
-    "https://pixeldrain.com/api/file/example80"
-  ]
+  "interstellar": ["https://pixeldrain.com/api/file/AeJScF7G"],
+  "17 again": ["https://pixeldrain.com/api/file/DNGsiNcv"],
+  "mission impossible final reckoning": ["https://pixeldrain.com/api/file/ByucVF3t"],
+  "stranger when we meet": ["https://pixeldrain.com/api/file/r4cB6Aj5"],
+  "vini jr": ["https://pixeldrain.com/api/file/kBkZSXe4"],
+  "sonic 3": ["https://pixeldrain.com/api/file/GyzsmZsU"],
+  "death of the unicorn": ["https://pixeldrain.com/api/file/UtcYURtk"],
+  "memento": ["https://pixeldrain.com/api/file/vZeEZ7WM"],
+  "mirage": ["https://pixeldrain.com/api/file/x5LY56c9"],
+  "garfield": ["https://pixeldrain.com/api/file/ZbnWak2C"],
+  "elemental": ["https://pixeldrain.com/api/file/X1cAtnCo"],
+  "moana": ["https://pixeldrain.com/api/file/tg6RPcZj"],
+  "moana 2": ["https://pixeldrain.com/api/file/PvcFhorc"],
+  "big hero 6": ["https://pixeldrain.com/api/file/Z3usXvQR"],
+  "frozen": ["https://pixeldrain.com/api/file/nhGyUEWE"],
+  "the match": ["https://pixeldrain.com/api/file/cCbj6zmF"],
+  "inception": ["https://pixeldrain.com/api/file/gknricf2"],
+  "shutter island": ["https://pixeldrain.com/api/file/mohEYXXw"],
+  "the conjuring": ["https://pixeldrain.com/api/file/A2F5GF4n"],
+  "gone girl": ["https://pixeldrain.com/api/file/SEUBGe5E"],
+  "the shawshank redemption": ["https://pixeldrain.com/api/file/1BDdAyo9"],
+  "deadpool": ["https://pixeldrain.com/api/file/7q5fNMVX"],
+  "hereditary": ["https://pixeldrain.com/api/file/TcoXyNTd"],
+  "blade runner 2049": ["https://pixeldrain.com/api/file/3WE1FrNn"],
+  "se7en": ["https://pixeldrain.com/api/file/5WCTREq7"],
+  "oldboy": ["https://pixeldrain.com/api/file/mJHcZype"],
+  "a quiet place": ["https://pixeldrain.com/api/file/ZFHXra4f"],
+  "parasite": ["https://pixeldrain.com/api/file/z3x7ufGR"],
+  "the matrix": ["https://pixeldrain.com/api/file/wh3iPhbw"],
+  "get out": ["https://pixeldrain.com/api/file/tRMxPrEh"],
+  "fight club": ["https://pixeldrain.com/api/file/1GSreeCN"],
+  "zombieland": ["https://pixeldrain.com/api/file/31erh9yM"],
+  "the dark knight": ["https://pixeldrain.com/api/file/2XxUnAiL"],
+  "pulp fiction": ["https://pixeldrain.com/api/file/xhmTwHc5"],
+  "arrival": ["https://pixeldrain.com/api/file/GSiZcGxu"],
+  "the exorcist": ["https://pixeldrain.com/api/file/Vqu2u1jZ"],
+  "la la land": ["https://pixeldrain.com/api/file/9eMsbMaT"],
+  "the big lebowski": ["https://pixeldrain.com/api/file/sk84MG4s"],
+  "prisoners": ["https://pixeldrain.com/api/file/r4e4kqXZ"],
+  "mad max: fury road": ["https://pixeldrain.com/api/file/enEkogsJ"],
+  "whiplash": ["https://pixeldrain.com/api/file/bduADEUE"],
+  "django unchained": ["https://pixeldrain.com/api/file/bduADEU"],
+  "her": ["https://pixeldrain.com/api/file/mBpGfW5k"],
+  "the sixth sense": ["https://pixeldrain.com/api/file/N7BqqAcR"],
+  "guardians of the galaxy": ["https://pixeldrain.com/api/file/Ay2n7tbE"],
+  "it": ["https://pixeldrain.com/api/file/pvMFBERU"],
+  "knives out": ["https://pixeldrain.com/api/file/vbz3UouH"],
+  "the wolf of wall street": ["https://pixeldrain.com/api/file/NRYezmAR"],
+  "ex machina": ["https://pixeldrain.com/api/file/MsnSAGph"],
+  "amelie": ["https://pixeldrain.com/api/file/okivRoKv"],
+  "drive": ["https://pixeldrain.com/api/file/Ynk1UBSZ"],
+  "spirited away": ["https://pixeldrain.com/api/file/SwBc7Xmn"],
+  "the departed": ["https://pixeldrain.com/api/file/k2Jwycuc"],
+  "train to busan": ["https://pixeldrain.com/api/file/HFzG4HAp"],
+  "edge of tomorrow": ["https://pixeldrain.com/api/file/5jeA4biy"],
+  "black swan": ["https://pixeldrain.com/api/file/RqNxZDhr"],
+  "good will hunting": ["https://pixeldrain.com/api/file/yeHG7CJY"],
+  "sicario": ["https://pixeldrain.com/api/file/iJ5Rrvab"],
+  "the truman show": ["https://pixeldrain.com/api/file/Zs1t2nZe"],
+  "annihilation": ["https://pixeldrain.com/api/file/9ihL6zh5"],
+  "there will be blood": ["https://pixeldrain.com/api/file/3yp82uMk"],
+  "inglourious basterds": ["https://pixeldrain.com/api/file/QDFGSrwX"],
+  "the social network": ["https://pixeldrain.com/api/file/33VZYPQV"],
+  "the fast and the furious": ["https://pixeldrain.com/api/file/Fg2hjBDz"],
+  "2 fast 2 furious": ["https://pixeldrain.com/api/file/hjjiiJNu"],
+  "the fast and the furious: tokyo drift": ["https://pixeldrain.com/api/file/Sbf3majB"],
+  "fast & furious": ["https://pixeldrain.com/api/file/FnBffMgK"],
+  "fast & furious 6": ["https://pixeldrain.com/api/file/NYExaXxu"],
+  "furious 7": ["https://pixeldrain.com/api/file/ffbrzfyK"],
+  "the fate of the furious": ["https://pixeldrain.com/api/file/KkemW2Ez"],
+  "fast & furious presents: hobbs & shaw": ["https://pixeldrain.com/api/file/kCBtproH"],
+  "f9: the fast saga": ["https://pixeldrain.com/api/file/m2EdMHuv"],
+  "your name": ["https://pixeldrain.com/api/file/i6QpqBUi"],
+  "a silent voice": ["https://pixeldrain.com/api/file/SqALgvZU"],
+  "real steel": ["https://pixeldrain.com/api/file/EqUVUAoi"]
 };
