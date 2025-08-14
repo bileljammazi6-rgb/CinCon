@@ -4,62 +4,60 @@ class TMDBService {
   private apiKey = import.meta.env.VITE_TMDB_API_KEY || '0a7ef230ab60a26cca44c7d8a6d24c25';
   private baseUrl = 'https://api.themoviedb.org/3';
 
-  async searchMovie(query: string): Promise<MovieData | null> {
+  private async makeRequest<T>(endpoint: string): Promise<T> {
+    const url = `${this.baseUrl}${endpoint}?api_key=${this.apiKey}&language=en-US`;
+    
     try {
-      const response = await fetch(
-        `${this.baseUrl}/search/movie?api_key=${this.apiKey}&query=${encodeURIComponent(query)}&language=en-US`
-      );
-
+      const response = await fetch(url);
       if (!response.ok) {
-        throw new Error(`TMDB API Error: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      const data: TMDBResponse = await response.json();
-      
-      if (data.results && data.results.length > 0) {
-        return data.results[0];
-      }
-
-      return null;
+      return await response.json();
     } catch (error) {
-      console.error('TMDB Search Error:', error);
-      return null;
-    }
-  }
-
-  async getPopularMovies(): Promise<MovieData[]> {
-    try {
-      const response = await fetch(
-        `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&language=en-US&page=1`
-      );
-
-      if (!response.ok) {
-        throw new Error(`TMDB API Error: ${response.status}`);
-      }
-
-      const data: TMDBResponse = await response.json();
-      return data.results || [];
-    } catch (error) {
-      console.error('TMDB Popular Movies Error:', error);
-      return [];
+      console.error('TMDB API request failed:', error);
+      throw error;
     }
   }
 
   async getTrendingMovies(): Promise<MovieData[]> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/trending/movie/week?api_key=${this.apiKey}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`TMDB API Error: ${response.status}`);
-      }
-
-      const data: TMDBResponse = await response.json();
+      const data = await this.makeRequest<TMDBResponse>('/trending/movie/week');
       return data.results || [];
     } catch (error) {
-      console.error('TMDB Trending Movies Error:', error);
+      console.error('Error fetching trending movies:', error);
       return [];
+    }
+  }
+
+  async getPopularMovies(): Promise<MovieData[]> {
+    try {
+      const data = await this.makeRequest<TMDBResponse>('/movie/popular');
+      return data.results || [];
+    } catch (error) {
+      console.error('Error fetching popular movies:', error);
+      return [];
+    }
+  }
+
+  async searchMovies(query: string): Promise<MovieData[]> {
+    if (!query.trim()) return [];
+    
+    try {
+      const data = await this.makeRequest<TMDBResponse>(`/search/movie?query=${encodeURIComponent(query)}`);
+      return data.results || [];
+    } catch (error) {
+      console.error('Error searching movies:', error);
+      return [];
+    }
+  }
+
+  async getMovieById(id: number): Promise<MovieData | null> {
+    try {
+      const data = await this.makeRequest<MovieData>(`/movie/${id}`);
+      return data;
+    } catch (error) {
+      console.error('Error fetching movie by ID:', error);
+      return null;
     }
   }
 }

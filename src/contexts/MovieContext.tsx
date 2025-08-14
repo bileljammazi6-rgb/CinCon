@@ -3,12 +3,11 @@ import { tmdbService } from '../services/tmdbService';
 import { MovieData } from '../types';
 
 interface MovieContextType {
-  movies: MovieData[];
   trending: MovieData[];
   popular: MovieData[];
   loading: boolean;
-  searchMovies: (query: string) => Promise<void>;
-  getMovieById: (id: string) => Promise<MovieData | null>;
+  searchMovies: (query: string) => Promise<MovieData[]>;
+  getMovieById: (id: number) => MovieData | null;
 }
 
 const MovieContext = createContext<MovieContextType | undefined>(undefined);
@@ -26,7 +25,6 @@ interface MovieProviderProps {
 }
 
 export function MovieProvider({ children }: MovieProviderProps) {
-  const [movies, setMovies] = useState<MovieData[]>([]);
   const [trending, setTrending] = useState<MovieData[]>([]);
   const [popular, setPopular] = useState<MovieData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,9 +40,11 @@ export function MovieProvider({ children }: MovieProviderProps) {
         
         setTrending(trendingData);
         setPopular(popularData);
-        setMovies([...trendingData, ...popularData]);
       } catch (error) {
-        console.error('Error fetching initial movie data:', error);
+        console.error('Error fetching movie data:', error);
+        // Set fallback data
+        setTrending([]);
+        setPopular([]);
       } finally {
         setLoading(false);
       }
@@ -53,46 +53,21 @@ export function MovieProvider({ children }: MovieProviderProps) {
     fetchInitialData();
   }, []);
 
-  const searchMovies = async (query: string) => {
-    if (!query.trim()) {
-      setMovies([...trending, ...popular]);
-      return;
-    }
-
+  const searchMovies = async (query: string): Promise<MovieData[]> => {
     try {
-      setLoading(true);
-      const searchResults = await tmdbService.searchMovie(query);
-      if (searchResults) {
-        setMovies([searchResults]);
-      } else {
-        setMovies([]);
-      }
+      return await tmdbService.searchMovies(query);
     } catch (error) {
       console.error('Error searching movies:', error);
-      setMovies([]);
-    } finally {
-      setLoading(false);
+      return [];
     }
   };
 
-  const getMovieById = async (id: string): Promise<MovieData | null> => {
-    try {
-      // For now, we'll search through existing movies
-      // In a real app, you'd have a dedicated endpoint for this
-      const movie = movies.find(m => m.id.toString() === id);
-      if (movie) return movie;
-      
-      // If not found, try to search for it
-      const searchResult = await tmdbService.searchMovie(id);
-      return searchResult;
-    } catch (error) {
-      console.error('Error getting movie by ID:', error);
-      return null;
-    }
+  const getMovieById = (id: number): MovieData | null => {
+    const allMovies = [...trending, ...popular];
+    return allMovies.find(movie => movie.id === id) || null;
   };
 
   const value = {
-    movies,
     trending,
     popular,
     loading,

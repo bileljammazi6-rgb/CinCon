@@ -4,18 +4,16 @@ import {
   Home, 
   Search, 
   Film, 
-  Tv, 
-  Heart, 
+  Users, 
   User, 
   LogOut,
   Bell,
-  Settings,
   Menu,
   X,
-  Play,
-  Plus
+  Crown
 } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
+import { useChat } from '../contexts/ChatContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -23,6 +21,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { user, signOut } = useAuth();
+  const { unreadCount } = useChat();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -39,11 +38,9 @@ export function Layout({ children }: LayoutProps) {
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
-    { name: 'Movies', href: '/movies', icon: Film },
-    { name: 'TV Shows', href: '/tv-shows', icon: Tv },
-    { name: 'Messages', href: '/messages', icon: MessageCircle },
-    { name: 'My List', href: '/my-list', icon: Heart },
-    { name: 'Search', href: '/search', icon: Search },
+    { name: 'Browse', href: '/browse', icon: Film },
+    { name: 'Community', href: '/community', icon: Users },
+    { name: 'Profile', href: '/profile', icon: User },
   ];
 
   const handleSignOut = async () => {
@@ -51,19 +48,21 @@ export function Layout({ children }: LayoutProps) {
     navigate('/');
   };
 
+  const isAdmin = user?.email === 'bilel8x@example.com';
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-75 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div className={`
-        fixed top-0 left-0 h-full w-64 bg-black bg-opacity-95 backdrop-blur-md z-50 transform transition-transform duration-300 ease-in-out
+        fixed top-0 left-0 h-full w-72 bg-black bg-opacity-95 backdrop-blur-md z-50 transform transition-transform duration-300 ease-in-out
         lg:translate-x-0 lg:relative lg:z-auto
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
@@ -98,6 +97,11 @@ export function Layout({ children }: LayoutProps) {
                     >
                       <item.icon className="h-5 w-5" />
                       <span>{item.name}</span>
+                      {item.name === 'Community' && unreadCount > 0 && (
+                        <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                          {unreadCount}
+                        </span>
+                      )}
                     </Link>
                   </li>
                 );
@@ -114,9 +118,14 @@ export function Layout({ children }: LayoutProps) {
                     <User className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">
-                      {user.email}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-white truncate">
+                        {user.email}
+                      </p>
+                      {isAdmin && (
+                        <Crown className="h-4 w-4 text-yellow-500" />
+                      )}
+                    </div>
                   </div>
                 </div>
                 <button
@@ -140,10 +149,10 @@ export function Layout({ children }: LayoutProps) {
       </div>
 
       {/* Main Content */}
-      <div className="lg:ml-64">
+      <div className="lg:ml-72">
         {/* Header */}
         <header className={`
-          fixed top-0 right-0 left-0 lg:left-64 z-30 transition-all duration-300
+          fixed top-0 right-0 left-0 lg:left-72 z-30 transition-all duration-300
           ${scrolled ? 'bg-black bg-opacity-95 backdrop-blur-md' : 'bg-transparent'}
         `}>
           <div className="flex items-center justify-between px-6 py-4">
@@ -169,11 +178,13 @@ export function Layout({ children }: LayoutProps) {
 
             {/* Right Side Actions */}
             <div className="flex items-center space-x-4">
-              <button className="p-2 text-white hover:bg-gray-800 rounded-lg transition-colors">
+              <button className="p-2 text-white hover:bg-gray-800 rounded-lg transition-colors relative">
                 <Bell className="h-5 w-5" />
-              </button>
-              <button className="p-2 text-white hover:bg-gray-800 rounded-lg transition-colors">
-                <Settings className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
               </button>
             </div>
           </div>
