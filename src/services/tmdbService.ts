@@ -28,6 +28,45 @@ class TMDBService {
     }
   }
 
+  async searchTvSeries(query: string): Promise<MovieData | null> {
+    try {
+      if (!this.apiKey) throw new Error('TMDB API key missing. Set VITE_TMDB_API_KEY.');
+      const response = await fetch(
+        `${this.baseUrl}/search/tv?api_key=${this.apiKey}&query=${encodeURIComponent(query)}&language=en-US`
+      );
+
+      if (!response.ok) {
+        throw new Error(`TMDB API Error: ${response.status}`);
+      }
+
+      const data: TMDBResponse = await response.json();
+      
+      if (data.results && data.results.length > 0) {
+        const tvShow = data.results[0];
+        // Convert TV show data to MovieData format for consistency
+        return {
+          ...tvShow,
+          title: tvShow.title || tvShow.name || 'Unknown TV Show',
+          release_date: tvShow.first_air_date || tvShow.release_date
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('TMDB TV Search Error:', error);
+      return null;
+    }
+  }
+
+  async searchMovieOrTv(query: string): Promise<MovieData | null> {
+    // Try movie search first, then TV search
+    let result = await this.searchMovie(query);
+    if (!result) {
+      result = await this.searchTvSeries(query);
+    }
+    return result;
+  }
+
   async getPopularMovies(): Promise<MovieData[]> {
     try {
       if (!this.apiKey) throw new Error('TMDB API key missing. Set VITE_TMDB_API_KEY.');

@@ -33,6 +33,35 @@ export const movieLinks: Record<string, string[]> = {
     "https://pixeldrain.com/api/file/5YNAWddf",
     "https://pixeldrain.com/api/file/4H5xGTt5"
   ],
+  "the chestnut man": [
+    "https://pixeldrain.com/api/file/bwLgnrZg",
+    "https://pixeldrain.com/api/file/o9pSYTm1",
+    "https://pixeldrain.com/api/file/8X2zDuMj",
+    "https://pixeldrain.com/api/file/Duyo4u3J",
+    "https://pixeldrain.com/api/file/nwPFNU59",
+    "https://pixeldrain.com/api/file/E3TAe2Nz"
+  ],
+  "smurfs 2025": [
+    "https://pixeldrain.com/api/file/wn35moT2"
+  ],
+  "weapons 2025": [
+    "https://pixeldrain.com/api/file/ZEig7fSJ"
+  ],
+  "the pickup": [
+    "https://pixeldrain.com/api/file/nW2DCHMF"
+  ],
+  "jurassic world 2025": [
+    "https://pixeldrain.com/api/file/bSvpr6f9"
+  ],
+  "honest thief": [
+    "https://pixeldrain.com/api/file/9LrTQZJP"
+  ],
+  "luck": [
+    "https://pixeldrain.com/api/file/9Nz5wR53"
+  ],
+  "how to train your dragon": [
+    "https://pixeldrain.com/api/file/7hZHRPm8"
+  ],
   "interstellar": ["https://pixeldrain.com/api/file/AeJScF7G"],
   "17 again": ["https://pixeldrain.com/api/file/DNGsiNcv"],
   "mission impossible final reckoning": ["https://pixeldrain.com/api/file/ByucVF3t"],
