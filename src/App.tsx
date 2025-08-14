@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Image, Mic, Bot, Heart, Flame, Trash2, Eraser, Download as DownloadIcon, Settings, Search, Sword, Users, Settings as SettingsIcon, Home as HomeIcon, History as HistoryIcon, Film as FilmIcon, Users as UsersIcon, Gamepad, Book as BookIcon, MonitorPlay, Bell } from 'lucide-react';
+import { Send, Image, Mic, Bot, Heart, Flame, Trash2, Eraser, Download as DownloadIcon, Settings, Search, Sword, Users, Settings as SettingsIcon, Home as HomeIcon, History as HistoryIcon, Film as FilmIcon, Users as UsersIcon, MonitorPlay, Bell, Play, Tv, Star, Calendar, Download, ExternalLink, Copy } from 'lucide-react';
 import { ChatMessage } from './components/ChatMessage';
 import { MovieCard } from './components/MovieCard';
 import { TVSeriesCard } from './components/TVSeriesCard';
@@ -7,33 +7,14 @@ import { ImageUpload } from './components/ImageUpload';
 import { VoiceRecorder } from './components/VoiceRecorder';
 import { SpeechToText } from './components/SpeechToText';
 import { SettingsModal, AppSettings } from './components/SettingsModal';
-import { ChessModal } from './components/ChessModal';
-import { DocsModal } from './components/DocsModal';
-import { TicTacToeModal } from './components/TicTacToeModal';
-import { Game2048Modal } from './components/Game2048Modal';
 import { geminiService } from './services/geminiService';
 import { tmdbService } from './services/tmdbService';
 import { movieLinks } from './data/movieLinks';
 import { Message, MovieData } from './types';
 import { compressImageDataUrl } from './lib/image';
-import { RockPaperScissorsModal } from './components/RockPaperScissorsModal';
-import { MobileNav } from './components/MobileNav';
-import { MemoryMatchModal } from './components/MemoryMatchModal';
-import { SnakeModal } from './components/SnakeModal';
 import { listMessages, sendMessage as sendCommunityMessage, CommunityMessage, subscribeToMessages, fetchProfiles, updateLastSeen, getUserProfile } from './services/communityService';
-import { InviteModal } from './components/InviteModal';
-import { InvitesPanel } from './components/InvitesPanel';
-import { QuizModal } from './components/QuizModal';
-import { IsnadExplorerModal } from './components/IsnadExplorerModal';
-import { TajwidCoachModal } from './components/TajwidCoachModal';
-import { CoWatchModal } from './components/CoWatchModal';
-import { SmartDownloaderModal } from './components/SmartDownloaderModal';
 import { supabase } from './lib/supabase';
-import { ExamplesModal } from './components/ExamplesModal';
-import { OnboardingModal } from './components/OnboardingModal';
 import { NotificationCenter, AppNotification } from './components/NotificationCenter';
-import { VoiceChatModal } from './components/VoiceChatModal';
-import { QuizRoomModal } from './components/QuizRoomModal';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -46,14 +27,7 @@ function App() {
   const [settings, setSettings] = useState<AppSettings>(() => {
     try { return JSON.parse(localStorage.getItem('bilel_settings') || '') || { displayName: (localStorage.getItem('last_username') || 'You'), language: 'auto' }; } catch { return { displayName: (localStorage.getItem('last_username') || 'You'), language: 'auto' }; }
   });
-  const [chessOpen, setChessOpen] = useState(false);
-  const [tttOpen, setTttOpen] = useState(false);
-  const [g2048Open, setG2048Open] = useState(false);
-  const [docsOpen, setDocsOpen] = useState(false);
-  const [rpsOpen, setRpsOpen] = useState(false);
-  const [mmOpen, setMmOpen] = useState(false);
-  const [snakeOpen, setSnakeOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'chat'|'movies'|'games'|'community'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat'|'movies'|'community'>('chat');
   const [communityMessages, setCommunityMessages] = useState<CommunityMessage[]>([]);
   const [communityInput, setCommunityInput] = useState('');
   const COMMUNITY_ROOM_ID = 'global';
@@ -62,166 +36,51 @@ function App() {
   const dropRef = useRef<HTMLDivElement>(null);
   const [lastCommunityAiAt, setLastCommunityAiAt] = useState<number>(0);
   const [profileMap, setProfileMap] = useState<Record<string, { avatar_url?: string }>>({});
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const [quizOpen, setQuizOpen] = useState(false);
   const [myAvatar, setMyAvatar] = useState<string | undefined>(undefined);
-  const [isnadOpen, setIsnadOpen] = useState(false);
-  const [tajwidOpen, setTajwidOpen] = useState(false);
-  const [cowatchOpen, setCowatchOpen] = useState(false);
   const [moviesBanner, setMoviesBanner] = useState<string>('');
-  const [downloaderOpen, setDownloaderOpen] = useState(false);
-  const [activeMenu, setActiveMenu] = useState<'Home'|'History'|'Settings'|'Movie Chat'|'Community Chat'|'Games'|'Watch Together'|'Tajwid'>('Home');
-  const [notify, setNotify] = useState<string>('');
-  const [examplesOpen, setExamplesOpen] = useState(false);
-  const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [notifyCenterOpen, setNotifyCenterOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const [voiceOpen, setVoiceOpen] = useState(false);
-  const [quizRoomOpen, setQuizRoomOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
 
   const pushNotification = (text: string) => setNotifications(prev => [{ id: String(Date.now()), text, ts: new Date().toISOString() }, ...prev].slice(0,100));
 
-  const openSection = (name: 'Home'|'History'|'Settings') => {
-    setActiveMenu(name);
-    if (name === 'Home') setActiveTab('chat');
-    if (name === 'History') setNotify('History is coming soon');
-    if (name === 'Settings') setSettingsOpen(true);
-  };
-  const openAiSection = (name: 'Movie Chat'|'Community Chat'|'Games'|'Watch Together'|'Tajwid') => {
-    setActiveMenu(name);
-    if (name === 'Movie Chat') setActiveTab('movies');
-    if (name === 'Community Chat') setActiveTab('community');
-    if (name === 'Games') setActiveTab('games');
-    if (name === 'Watch Together') setCowatchOpen(true);
-    if (name === 'Tajwid') setTajwidOpen(true);
-  };
-
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   useEffect(() => { const saved = localStorage.getItem('bilel_chat_history'); if (saved) try { setMessages(JSON.parse(saved).map((m: any)=>({ ...m, timestamp: new Date(m.timestamp) })) ); } catch {} }, []);
-  useEffect(() => { localStorage.setItem('bilel_chat_history', JSON.stringify(messages.map(m=>({ ...m, timestamp: m.timestamp.toISOString() })))); }, [messages]);
-  useEffect(() => { localStorage.setItem('bilel_settings', JSON.stringify(settings)); }, [settings]);
+  useEffect(() => { localStorage.setItem('bilel_chat_history', JSON.stringify(messages)); }, [messages]);
+  useEffect(() => { if (activeTab === 'community') { loadCommunityMessages(); } }, [activeTab]);
+  useEffect(() => { if (activeTab === 'community') { const unsubscribe = subscribeToMessages(COMMUNITY_ROOM_ID, setCommunityMessages); return unsubscribe; } }, [activeTab]);
+  useEffect(() => { if (activeTab === 'community') { fetchProfiles().then(setProfileMap); } }, [activeTab]);
+  useEffect(() => { if (activeTab === 'community') { updateLastSeen(); } }, [activeTab]);
+  useEffect(() => { getUserProfile().then(profile => { if (profile?.avatar_url) setMyAvatar(profile.avatar_url); }); }, []);
 
-  useEffect(() => {
-    try { const done = localStorage.getItem('onboarded'); if (!done) setOnboardingOpen(true); } catch {}
-  }, []);
-
-  useEffect(() => {
-    let ignore = false;
-    const loadUser = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const email = session?.user?.email;
-        if (!email) return;
-        const { data, error } = await supabase.from('users').select('username').eq('email', email).single();
-        if (!error && data?.username && !ignore) {
-          setSettings(prev => ({ ...prev, displayName: data.username }));
-          try { localStorage.setItem('last_username', data.username); } catch {}
-        }
-      } catch {}
-    };
-    loadUser();
-    return () => { ignore = true; };
-  }, []);
-
-  useEffect(() => { let ignore=false; const load=async()=>{ try{ if(!settings.displayName) return; const p=await getUserProfile(settings.displayName); if(!ignore) setMyAvatar(p?.avatar_url||undefined);}catch{} }; load(); return ()=>{ignore=true}; }, [settings.displayName]);
-
-  useEffect(() => {
-    if (activeTab !== 'community') return;
-    let ignore = false;
-    const init = async () => {
-      try {
-        const msgs = await listMessages(COMMUNITY_ROOM_ID, undefined, 200);
-        if (!ignore) {
-          setCommunityMessages(msgs);
-          const usernames = Array.from(new Set(msgs.map(m=>m.sender)));
-          const profiles = await fetchProfiles(usernames);
-          if (!ignore) setProfileMap(profiles);
-        }
-      } catch {}
-    };
-    init();
-    const unsub = subscribeToMessages(COMMUNITY_ROOM_ID, async (msg) => {
-      setCommunityMessages(prev => [...prev, msg]);
-      if (!profileMap[msg.sender]) {
-        try { const p = await fetchProfiles([msg.sender]); setProfileMap(prev => ({ ...prev, ...p })); } catch {}
-      }
-    });
-    return () => { ignore = true; unsub(); };
-  }, [activeTab]);
-
-  useEffect(() => {
-    let id: any;
-    const tick = async () => { try { await updateLastSeen(settings.displayName || 'Anonymous'); } catch {} };
-    tick(); id = setInterval(tick, 60000);
-    return () => clearInterval(id);
-  }, [settings.displayName]);
-
-  useEffect(() => {
-    const node = dropRef.current; if (!node) return;
-    const prevent = (e: DragEvent) => { e.preventDefault(); e.stopPropagation(); };
-    const onDrop = (e: DragEvent) => { prevent(e); const f=e.dataTransfer?.files?.[0]; if (!f||!f.type.startsWith('image/')) return; const r=new FileReader(); r.onload=ev=>setUploadedImage(ev.target?.result as string); r.readAsDataURL(f); };
-    ['dragenter','dragover','dragleave','drop'].forEach(evt => node.addEventListener(evt, prevent)); node.addEventListener('drop', onDrop);
-    return () => { ['dragenter','dragover','dragleave','drop'].forEach(evt => node.removeEventListener(evt, prevent)); node.removeEventListener('drop', onDrop); };
-  }, []);
-
-  useEffect(() => {
-    // Example hooks to add notifications; replace with real events
-    if (activeTab==='movies' && moviesBanner) pushNotification(moviesBanner);
-  }, [moviesBanner]);
-
-  useEffect(() => {
-    // Deep link: #cowatch=1&room=...&url=...
+  const loadCommunityMessages = async () => {
     try {
-      const hash = location.hash.replace('#','');
-      if (hash.includes('cowatch=1')) {
-        const params = new URLSearchParams(hash);
-        const room = params.get('room') || undefined;
-        const u = params.get('url') || undefined;
-        if (room) {
-          setCowatchOpen(true);
-          // Pass via local storage bridge
-          localStorage.setItem('cowatch_room_init', room);
-          if (u) localStorage.setItem('cowatch_url_init', u);
-        }
-      }
-    } catch {}
-  }, []);
-
-  const cowRoomInit = (typeof window !== 'undefined') ? (localStorage.getItem('cowatch_room_init') || undefined) : undefined;
-  const cowUrlInit = (typeof window !== 'undefined') ? (localStorage.getItem('cowatch_url_init') || undefined) : undefined;
-
-  const buildPrompt = (raw: string, isImageOnly: boolean) => {
-    const lang = settings.language === 'auto' ? 'auto-detect' : settings.language;
-    const fiqh = settings.fiqh ? `\nFiqh profile: madhhab=${settings.fiqh.madhhab}, strictness=${settings.fiqh.strictness}, includeMinority=${settings.fiqh.includeMinority}` : '';
-    const prefix = `User: ${settings.displayName}\nPreferred language: ${lang}${fiqh}`;
-    return isImageOnly ? `${prefix}\nTask: Analyze the provided image in detail (objects, layout, colors, text/OCR, context, movie/actor references if any).` : `${prefix}\nTask: ${raw}`;
-  };
-
-  const maybeAppendCitations = async (context: string) => {
-    if (!settings.autoCitations) return;
-    try {
-      const prompt = `Provide 2-5 concise, credible references (URLs or precise citations) that support the previous answer. Format as bullet points.`;
-      const refs = await geminiService.sendMessage(prompt, undefined, { model: settings.model || 'flash' });
-      setMessages(prev => [...prev, { id: (Date.now()+2).toString(), type: 'text', content: `Sources / Evidence:\n\n${refs}`, sender: 'ai', timestamp: new Date() } as any]);
-    } catch {}
+      const msgs = await listMessages(COMMUNITY_ROOM_ID);
+      setCommunityMessages(msgs);
+    } catch (e) {
+      console.error('Failed to load community messages:', e);
+    }
   };
 
   const handleSendMessage = async () => {
-    if (!inputText.trim() && !uploadedImage) return;
-    const isImageOnly = uploadedImage && !inputText.trim();
-    const prompt = buildPrompt(isImageOnly ? '' : inputText, !!isImageOnly);
-    let imageForAnalysis: string | undefined;
-    if (uploadedImage) { try { imageForAnalysis = await compressImageDataUrl(uploadedImage, 1280, 0.8); } catch { imageForAnalysis = uploadedImage; } }
+    const text = inputText.trim();
+    if (!text && !uploadedImage) return;
 
-    const userMessage: Message = { id: Date.now().toString(), type: 'text', content: inputText || '[Image analysis request] ', sender: 'user', timestamp: new Date(), image: uploadedImage || undefined };
-    setMessages(prev => [...prev, userMessage]); setInputText(''); setUploadedImage(null); setIsLoading(true);
+    const userMessage: Message = { id: Date.now().toString(), type: 'text', content: text, sender: 'user', timestamp: new Date() };
+    setMessages(prev => [...prev, userMessage]);
+    setInputText('');
+    setUploadedImage(null);
+    setIsLoading(true);
 
     try {
-      // Chat no longer handles movie queries; direct users to Movies tab
-      const response = await geminiService.sendMessage(prompt, isImageOnly ? imageForAnalysis : undefined, { model: settings.model || 'flash' });
+      let response: string;
+      if (uploadedImage) {
+        response = await geminiService.sendMessage(text || 'Analyze this image', uploadedImage);
+      } else {
+        response = await geminiService.sendMessage(text);
+      }
+      
       setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: response, sender: 'ai', timestamp: new Date() }]);
-      await maybeAppendCitations(response);
     } catch (error: any) {
       setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'text', content: (error?.message || 'AI error.'), sender: 'ai', timestamp: new Date() }]);
     } finally { setIsLoading(false); }
@@ -260,12 +119,6 @@ function App() {
     }
   };
 
-  const handleImageUpload = (imageData: string) => setUploadedImage(imageData);
-  const handleVoiceRecording = async () => setMessages(prev => [...prev, { id: Date.now().toString(), type: 'text', content: '[Voice message recorded]', sender: 'user', timestamp: new Date() }]);
-  const handleKeyPress = (e: React.KeyboardEvent) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } };
-  const clearChat = () => { setMessages([]); localStorage.removeItem('bilel_chat_history'); };
-  const exportChat = () => { const text = messages.map(m => `${m.sender.toUpperCase()} [${m.timestamp.toLocaleString()}]: ${m.content}`).join('\n'); const blob = new Blob([text], { type: 'text/plain' }); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='chat.txt'; a.click(); URL.revokeObjectURL(url); };
-
   const handleSendMovieMessage = async () => {
     const query = movieInputText.trim();
     if (!query) return;
@@ -294,10 +147,10 @@ function App() {
             return terms ? tn.includes(terms) : true;
           }).slice(0,5);
           if (candidates.length > 0) {
-                      for (const title of candidates) {
-            const data = await tmdbService.searchMovieOrTv(title);
-            setMessages(prev => [...prev, { id: `${Date.now()}-${title}`, type: 'movie', content: `Available in Pixeldrain: "${title}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(data || { title, overview: '' }), downloadLinks: movieLinks[title] } } as any]);
-          }
+            for (const title of candidates) {
+              const data = await tmdbService.searchMovieOrTv(title);
+              setMessages(prev => [...prev, { id: `${Date.now()}-${title}`, type: 'movie', content: `Available in Pixeldrain: "${title}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(data || { title, overview: '' }), downloadLinks: movieLinks[title] } } as any]);
+            }
             setIsLoading(false);
             return;
           }
@@ -317,92 +170,79 @@ function App() {
     setCommunityInput('');
     try {
       await sendCommunityMessage(COMMUNITY_ROOM_ID, settings.displayName || 'Anonymous', text);
-      // optimistic add
       setCommunityMessages(prev => [...prev, { id: Date.now().toString(), room_id: COMMUNITY_ROOM_ID, sender: settings.displayName || 'Anonymous', content: text, created_at: new Date().toISOString() }]);
     } catch (e) {
-      // ignore for now
+      console.error('Failed to send community message:', e);
     }
   };
 
+  const clearChat = () => { setMessages([]); localStorage.removeItem('bilel_chat_history'); };
+  const exportChat = () => { const text = messages.map(m => `${m.sender.toUpperCase()} [${m.timestamp.toLocaleString()}]: ${m.content}`).join('\n'); const blob = new Blob([text], { type: 'text/plain' }); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='chat.txt'; a.click(); URL.revokeObjectURL(url); };
+
   return (
-    <div className="min-h-screen md:min-h-0 flex items-stretch md:items-center justify-stretch md:justify-center pb-14 md:pb-0">
-      <div className="w-full md:max-w-6xl h-[100svh] md:h-[90vh] rounded-none md:rounded-2xl shadow-2xl flex overflow-hidden">
-        {/* Left sidebar: clean menu */}
-        <aside className="hidden md:flex md:w-72 flex-col bg-[#0f1216] border-r border-white/10">
-          <div className="p-4 border-b border-white/10 flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center animate-pulse"><Bot className="w-5 h-5 text-white"/></div>
-            <div className="text-sm text-white font-semibold tracking-wide">AI Hub</div>
-            <button onClick={() => setSettingsOpen(true)} className="ml-auto text-gray-300 hover:text-white"><SettingsIcon className="w-4 h-4"/></button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="max-w-7xl mx-auto p-4">
+        {/* Header */}
+        <header className="mb-8 text-center">
+          <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-md rounded-full px-6 py-3 border border-white/20">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+              <Film className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-white">StreamVerse</h1>
+            <div className="text-sm text-gray-300">Your Ultimate Streaming Hub</div>
           </div>
-          <nav className="p-3">
-            <div className="text-[11px] uppercase tracking-wider text-gray-500 mb-2">Core</div>
-            <ul className="mb-4">
-              <li className="mb-2"><button onClick={()=>openSection('Home')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='Home'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><HomeIcon className="w-4 h-4"/> Home</button></li>
-              <li className="mb-2"><button onClick={()=>openSection('History')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='History'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><HistoryIcon className="w-4 h-4"/> History</button></li>
-              <li className="mb-2"><button onClick={()=>openSection('Settings')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='Settings'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><SettingsIcon className="w-4 h-4"/> Settings</button></li>
-            </ul>
-            <div className="text-[11px] uppercase tracking-wider text-gray-500 mb-2">AI Tools</div>
-            <ul className="space-y-2 overflow-y-auto pr-1">
-              <li><button onClick={()=>openAiSection('Movie Chat')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='Movie Chat'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><FilmIcon className="w-4 h-4"/> Movie Chat</button></li>
-              <li><button onClick={()=>openAiSection('Community Chat')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='Community Chat'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><UsersIcon className="w-4 h-4"/> Community Chat</button></li>
-              <li><button onClick={()=>openAiSection('Games')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='Games'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><Gamepad className="w-4 h-4"/> Games</button></li>
-              <li><button onClick={()=>openAiSection('Watch Together')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='Watch Together'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><MonitorPlay className="w-4 h-4"/> Watch Together</button></li>
-              <li><button onClick={()=>openAiSection('Tajwid')} className={`w-full flex items-center gap-2 px-3 py-2 rounded ${activeMenu==='Tajwid'?'bg-emerald-600/20 text-white':'text-gray-300 hover:bg-white/5'}`}><BookIcon className="w-4 h-4"/> Tajwid</button></li>
-            </ul>
-          </nav>
-        </aside>
+        </header>
 
-        {/* Right pane */}
-        <div className="flex-1 flex flex-col wa-bg" ref={dropRef}>
-          {/* Header */}
-          <div className="glass-effect p-3 border-b border-white/10 flex items-center gap-3 sticky top-0 z-30">
-            {myAvatar ? (
-              <img src={myAvatar} alt="avatar" className="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover" />
-            ) : (
-              <img src={'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(settings.displayName || 'You')} alt="avatar" className="w-8 h-8 md:w-9 md:h-9 rounded-full" />
-            )}
-            <div className="flex-1">
-              <div className="text-sm text-white font-semibold truncate flex items-center gap-2">
-                <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent animate-pulse">Bilel Jammazi AI</span>
-                <span className="hidden md:inline text-xs text-gray-400">• {activeMenu}</span>
-              </div>
-              <div className="text-[10px] md:text-[11px] text-emerald-400">{settings.displayName}</div>
-            </div>
-            <div className="hidden md:flex items-center gap-2 flex-1 max-w-md">
-              <div className="relative flex-1">
-                <input value={globalSearch} onChange={(e)=>setGlobalSearch(e.target.value)} placeholder="Ask or search anything..." className="w-full bg-[#2a3942] text-white placeholder-gray-400 rounded-lg pl-8 pr-3 py-2 text-sm border border-white/5"/>
-                <Search className="w-4 h-4 text-gray-400 absolute left-2.5 top-2.5"/>
-              </div>
-              <button onClick={()=>{ if(globalSearch.trim()){ setInputText(globalSearch); setActiveMenu('Home'); setActiveTab('chat'); } }} className="btn-primary px-3 py-2 rounded-lg">Go</button>
-            </div>
-            <button onClick={()=>setExamplesOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Examples</button>
-            <button onClick={()=>setVoiceOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Voice</button>
-            <button onClick={()=>setNotifyCenterOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5 flex items-center gap-1"><Bell className="w-4 h-4"/> {notifications.length>0 && <span className="text-emerald-400">{notifications.length}</span>}</button>
-            {activeTab==='movies' && (
-              <button onClick={()=>setDownloaderOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Downloader</button>
-            )}
-            <button onClick={()=>setChessOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5 md:bg-transparent"><Sword className="w-4 h-4"/></button>
-            <button onClick={clearChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><Eraser className="w-4 h-4"/> Clear</button>
-            <button onClick={exportChat} className="hidden md:inline-flex text-gray-300 hover:text-white text-xs flex items-center gap-1"><DownloadIcon className="w-4 h-4"/> Export</button>
-            <button onClick={()=>setQuizRoomOpen(true)} className="text-gray-300 hover:text-white text-xs px-2 py-1 rounded bg-white/5">Quiz Room</button>
+        {/* Navigation Tabs */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-white/10 backdrop-blur-md rounded-full p-1 border border-white/20">
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={`px-6 py-2 rounded-full transition-all ${
+                activeTab === 'chat' 
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
+                  : 'text-gray-300 hover:text-white'
+              }`}
+            >
+              <Bot className="w-4 h-4 inline mr-2" />
+              AI Chat
+            </button>
+            <button
+              onClick={() => setActiveTab('movies')}
+              className={`px-6 py-2 rounded-full transition-all ${
+                activeTab === 'movies' 
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
+                  : 'text-gray-300 hover:text-white'
+              }`}
+            >
+              <Film className="w-4 h-4 inline mr-2" />
+              Movies & Series
+            </button>
+            <button
+              onClick={() => setActiveTab('community')}
+              className={`px-6 py-2 rounded-full transition-all ${
+                activeTab === 'community' 
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
+                  : 'text-gray-300 hover:text-white'
+              }`}
+            >
+              <Users className="w-4 h-4 inline mr-2" />
+              Community
+            </button>
           </div>
-          {notify && (
-            <div className="px-3 py-2 bg-amber-500/10 text-amber-300 text-xs flex items-center justify-between border-b border-amber-500/20">
-              <span>{notify}</span>
-              <button onClick={()=>setNotify('')} className="text-amber-300">Dismiss</button>
-            </div>
-          )}
+        </div>
 
-          {/* Body */}
-          {activeTab==='chat' && (
+        {/* Main Content */}
+        <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden">
+          {/* AI Chat Tab */}
+          {activeTab === 'chat' && (
             <>
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-2 md:p-4 space-y-2 md:space-y-3">
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4 max-h-[70vh]">
                 {messages.length === 0 && (
-                  <div className="text-center text-gray-400 mt-10 md:mt-12 animate-fadeIn">
-                    <Bot className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 md:mb-3 opacity-50" />
-                    <h3 className="text-sm font-medium mb-1">Welcome, {settings.displayName}</h3>
-                    <p className="text-xs">Send a message or drop an image to analyze.</p>
+                  <div className="text-center text-gray-400 mt-10 animate-fadeIn">
+                    <Bot className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-xl font-medium mb-2">Welcome to StreamVerse AI</h3>
+                    <p className="text-gray-500">Ask me anything about movies, series, or just chat!</p>
                   </div>
                 )}
                 {messages.filter((m:any)=>m.type!=='movie').map((message) => (
@@ -412,149 +252,179 @@ function App() {
                 ))}
                 {isLoading && (
                   <div className="flex items-center gap-2 text-gray-400">
-                    <div className="typing-indicator"><div className="typing-dot"></div><div className="typing-dot"></div><div className="typing-dot"></div></div>
-                    <span className="text-xs">Typing...</span>
+                    <div className="typing-indicator">
+                      <div className="typing-dot"></div>
+                      <div className="typing-dot"></div>
+                      <div className="typing-dot"></div>
+                    </div>
+                    <span className="text-sm">AI is thinking...</span>
                   </div>
                 )}
                 <div ref={messagesEndRef} />
               </div>
-              {/* Composer */}
-              <div className="input-area p-2 md:p-3 border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
+              
+              {/* Chat Input */}
+              <div className="p-6 border-t border-white/10 bg-white/5">
                 {uploadedImage && (
-                  <div className="mb-2 flex items-center gap-2">
-                    <img src={uploadedImage} alt="Uploaded" className="image-preview"/>
-                    <button onClick={() => setUploadedImage(null)} className="text-red-400 hover:text-red-300">Remove</button>
+                  <div className="mb-4 flex items-center gap-2">
+                    <img src={uploadedImage} alt="Uploaded" className="w-20 h-20 object-cover rounded-lg border border-white/20"/>
+                    <button onClick={() => setUploadedImage(null)} className="text-red-400 hover:text-red-300 text-sm">Remove</button>
                   </div>
                 )}
-                <div className="flex items-end gap-2">
-                  <div className="flex gap-1">
+                <div className="flex items-end gap-3">
+                  <div className="flex gap-2">
                     <ImageUpload onImageUpload={(img)=>setUploadedImage(img)} />
                     <VoiceRecorder onRecording={()=>{}} isRecording={isRecording} setIsRecording={setIsRecording} onError={()=>{}} />
                     <SpeechToText onTranscript={setInputText} />
                   </div>
-                  <textarea ref={inputRef} value={inputText} onChange={(e)=>setInputText(e.target.value)} onKeyPress={(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSendMessage(); } }} placeholder="Type a message" className="flex-1 bg-[#2a3942] text-white placeholder-gray-400 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-white/5" rows={1} style={{ minHeight:'44px', maxHeight:'120px' }}/>
-                  <button onClick={handleSendMessage} disabled={isLoading || (!inputText.trim() && !uploadedImage)} className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50"><Send className="w-5 h-5 text-white"/></button>
+                  <textarea 
+                    ref={inputRef} 
+                    value={inputText} 
+                    onChange={(e)=>setInputText(e.target.value)} 
+                    onKeyPress={(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSendMessage(); } }} 
+                    placeholder="Ask me anything..." 
+                    className="flex-1 bg-white/10 text-white placeholder-gray-400 rounded-xl px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 border border-white/20" 
+                    rows={1} 
+                    style={{ minHeight:'48px', maxHeight:'120px' }}
+                  />
+                  <button 
+                    onClick={handleSendMessage} 
+                    disabled={isLoading || (!inputText.trim() && !uploadedImage)} 
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl disabled:opacity-50 hover:shadow-lg transition-all"
+                  >
+                    <Send className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
             </>
           )}
 
-          {activeTab==='movies' && (
+          {/* Movies Tab */}
+          {activeTab === 'movies' && (
             <>
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4">
-                {moviesBanner && <div className="text-xs px-3 py-2 rounded bg-white/5 border border_white/10 text-gray-300">{moviesBanner}</div>}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-white/5 rounded p-2">
-                    <div className="text-xs text-gray-400 mb-1">Trending</div>
-                    <div className="flex gap-2 overflow-x-auto">
-                      {messages.filter((m:any)=>m.type==='movie').slice(0,5).map((m:any)=> (
-                        <img key={m.id} src={m.movieData?.poster_path ? `https://image.tmdb.org/t/p/w92${m.movieData.poster_path}` : 'https://via.placeholder.com/92x138/1e293b/64748b?text=No+Image'} className="w-[46px] h-[69px] rounded" />
-                      ))}
-                    </div>
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 max-h-[70vh]">
+                {moviesBanner && (
+                  <div className="text-sm px-4 py-3 rounded-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-200">
+                    {moviesBanner}
                   </div>
-                  <div className="bg-white/5 rounded p-2">
-                    <div className="text-xs text-gray-400 mb-1">Popular</div>
-                    <div className="flex gap-2 overflow-x-auto">
-                      {messages.filter((m:any)=>m.type==='movie').slice(5,10).map((m:any)=> (
-                        <img key={m.id} src={m.movieData?.poster_path ? `https://image.tmdb.org/t/p/w92${m.movieData.poster_path}` : 'https://via.placeholder.com/92x138/1e293b/64748b?text=No+Image'} className="w-[46px] h-[69px] rounded" />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-xs text-gray-400">Ask for recommendations or type “recommend ... / suggest ...”. Pixeldrain-only filter is in Settings.</div>
-                {messages.filter((m:any)=>m.type==='movie').length===0 && (
-                  <div className="text-gray-400 text-xs">No movies yet. Try asking for a title.</div>
                 )}
-                {messages.filter((m:any)=>m.type==='movie').map((m:any)=>(
-                  m.movieData?.downloadLinks && m.movieData.downloadLinks.length > 1 ? (
-                    <TVSeriesCard key={m.id} movieData={m.movieData} downloadLinks={m.movieData.downloadLinks} />
-                  ) : (
-                    <MovieCard key={m.id} movieData={m.movieData} />
-                  )
-                ))}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {messages.filter((m:any)=>m.type==='movie').map((m:any)=>(
+                    m.movieData?.downloadLinks && m.movieData.downloadLinks.length > 1 ? (
+                      <TVSeriesCard key={m.id} movieData={m.movieData} downloadLinks={m.movieData.downloadLinks} />
+                    ) : (
+                      <MovieCard key={m.id} movieData={m.movieData} />
+                    )
+                  ))}
+                </div>
+                
+                {messages.filter((m:any)=>m.type==='movie').length === 0 && (
+                  <div className="text-center text-gray-400 py-12">
+                    <Film className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-xl font-medium mb-2">No content yet</h3>
+                    <p className="text-gray-500">Search for movies or series to get started!</p>
+                  </div>
+                )}
               </div>
-              <div className="input-area p-2 md:p-3 border-t border-white/10">
-                <div className="flex items-end gap-2">
-                  <textarea value={movieInputText} onChange={(e)=>setMovieInputText(e.target.value)} onKeyPress={(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSendMovieMessage(); } }} placeholder="Search movies/series or ask for recommendations" className="flex-1 bg-[#2a3942] text-white placeholder-gray-400 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-white/5" rows={1} style={{ minHeight:'44px', maxHeight:'120px' }} />
-                  <button onClick={handleSendMovieMessage} disabled={isLoading || !movieInputText.trim()} className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50"><Send className="w-5 h-5 text-white"/></button>
+              
+              {/* Movie Search Input */}
+              <div className="p-6 border-t border-white/10 bg-white/5">
+                <div className="flex items-end gap-3">
+                  <textarea 
+                    value={movieInputText} 
+                    onChange={(e)=>setMovieInputText(e.target.value)} 
+                    onKeyPress={(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSendMovieMessage(); } }} 
+                    placeholder="Search for movies, series, or ask for recommendations..." 
+                    className="flex-1 bg-white/10 text-white placeholder-gray-400 rounded-xl px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 border border-white/20" 
+                    rows={1} 
+                    style={{ minHeight:'48px', maxHeight:'120px' }} 
+                  />
+                  <button 
+                    onClick={handleSendMovieMessage} 
+                    disabled={isLoading || !movieInputText.trim()} 
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl disabled:opacity-50 hover:shadow-lg transition-all"
+                  >
+                    <Search className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
             </>
           )}
 
-          {activeTab==='games' && (
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                <button onClick={()=>setChessOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white transition-transform hover:scale-[1.02]">♟ Chess</button>
-                <button onClick={()=>setTttOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white transition-transform hover:scale-[1.02]">◻ Tic‑Tac‑Toe</button>
-                <button onClick={()=>setG2048Open(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white transition-transform hover:scale-[1.02]">2048</button>
-                <button onClick={()=>setRpsOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white transition-transform hover:scale-[1.02]">✂ Rock/Paper/Scissors</button>
-                <button onClick={()=>setMmOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white transition-transform hover:scale-[1.02]">🧠 Memory Match</button>
-                <button onClick={()=>setSnakeOpen(true)} className="bg-white/5 hover:bg-white/10 rounded p-3 text-left text-sm text-white transition-transform hover:scale-[1.02]">🐍 Snake</button>
-              </div>
-              <div className="text-xs text-gray-400">While playing, the assistant can comment on moves (chess) directly in chat.</div>
-            </div>
-          )}
-
-          {activeTab==='community' && (
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
-              <div className="bg-white/5 rounded p-3">
-                <div className="flex items-center gap-2 text-white text-sm font-semibold"><Users className="w-4 h-4"/> Community</div>
-                <div className="h-64 overflow-y-auto bg-[#0f1720] rounded p-2 text-xs text-gray-200 space-y-2">
+          {/* Community Tab */}
+          {activeTab === 'community' && (
+            <>
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4 max-h-[70vh]">
+                <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl p-4 border border-purple-500/30">
+                  <div className="flex items-center gap-2 text-purple-200 text-lg font-semibold">
+                    <Users className="w-5 h-5"/> 
+                    Global Community
+                  </div>
+                  <p className="text-purple-100 text-sm mt-1">Connect with other movie lovers and share your thoughts!</p>
+                </div>
+                
+                <div className="space-y-3">
                   {communityMessages.map(m => (
-                    <div key={m.id} className="flex items-start gap-2">
-                      <img src={profileMap[m.sender]?.avatar_url || 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(m.sender)} className="w-6 h-6 rounded-full"/>
+                    <div key={m.id} className="flex items-start gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-sm font-medium">
+                          {m.sender.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
                       <div className="flex-1">
-                        <div className="text-emerald-400 font-semibold text-xs flex items-center gap-1">{m.sender}
-                          {profileMap[m.sender]?.last_seen && (Date.now() - new Date(profileMap[m.sender]!.last_seen!).getTime() < 120000) && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" title="online"></span>
-                          )}
-                          <span className="text-[10px] text-gray-500 ml-1">{new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-medium text-white">{m.sender}</span>
+                          <span className="text-xs text-gray-400">
+                            {new Date(m.created_at).toLocaleTimeString()}
+                          </span>
                         </div>
-                        <div className="text-xs whitespace-pre-wrap text-gray-200">{m.content}</div>
-                        <div className="mt-1 flex items-center gap-2 text-[11px] text-gray-400">
-                          <button onClick={()=>setCommunityInput(`@${m.sender} `)} className="hover:text-white">Reply</button>
-                          <button onClick={()=>{/* placeholder reaction */}} className="hover:text-white">👍</button>
-                          <button onClick={()=>{/* placeholder reaction */}} className="hover:text-white">❤️</button>
-                        </div>
+                        <p className="text-gray-200 text-sm">{m.content}</p>
                       </div>
                     </div>
                   ))}
-                  {communityMessages.length===0 && (
-                    <div className="text-gray-500">No messages yet. Say hello!</div>
-                  )}
-                </div>
-                <div className="mt-2 flex gap-2">
-                  <input value={communityInput} onChange={(e)=>setCommunityInput(e.target.value)} onKeyPress={(e)=>{ if(e.key==='Enter'){ e.preventDefault(); handleSendCommunity(); } }} placeholder="Type to the community..." className="flex-1 bg-[#2a3942] text-white rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-white/5"/>
-                  <button onClick={handleSendCommunity} className="btn-primary px-3 py-2 rounded">Send</button>
                 </div>
               </div>
-              <InvitesPanel username={settings.displayName || 'Anonymous'} />
-            </div>
+              
+              {/* Community Input */}
+              <div className="p-6 border-t border-white/10 bg-white/5">
+                <div className="flex items-end gap-3">
+                  <textarea 
+                    value={communityInput} 
+                    onChange={(e)=>setCommunityInput(e.target.value)} 
+                    onKeyPress={(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSendCommunity(); } }} 
+                    placeholder="Share your thoughts with the community..." 
+                    className="flex-1 bg-white/10 text-white placeholder-gray-400 rounded-xl px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 border border-white/20" 
+                    rows={1} 
+                    style={{ minHeight:'48px', maxHeight:'120px' }} 
+                  />
+                  <button 
+                    onClick={handleSendCommunity} 
+                    disabled={!communityInput.trim()} 
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl disabled:opacity-50 hover:shadow-lg transition-all"
+                  >
+                    <Send className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </div>
-      </div>
 
-      <SettingsModal open={settingsOpen} initial={settings} onClose={()=>setSettingsOpen(false)} onSave={(s)=>{ setSettings(s); setSettingsOpen(false); }} />
-      <ChessModal open={chessOpen} onClose={()=>setChessOpen(false)} onComment={(text)=>setMessages(prev=>[...prev,{ id: (Date.now()+3).toString(), type: 'text', content: text, sender: 'ai', timestamp: new Date() } as any])} />
-      <TicTacToeModal open={tttOpen} onClose={()=>setTttOpen(false)} />
-      <Game2048Modal open={g2048Open} onClose={()=>setG2048Open(false)} />
-      <DocsModal open={docsOpen} onClose={()=>setDocsOpen(false)} />
-      <RockPaperScissorsModal open={rpsOpen} onClose={()=>setRpsOpen(false)} />
-      <MobileNav active={activeTab} onChange={setActiveTab} onSettings={()=>setSettingsOpen(true)} />
-      <MemoryMatchModal open={mmOpen} onClose={()=>setMmOpen(false)} />
-      <SnakeModal open={snakeOpen} onClose={()=>setSnakeOpen(false)} />
-      <InviteModal open={inviteOpen} onClose={()=>setInviteOpen(false)} fromUser={settings.displayName || 'Anonymous'} />
-      <QuizModal open={quizOpen} onClose={()=>setQuizOpen(false)} username={settings.displayName || 'Anonymous'} />
-      <IsnadExplorerModal open={isnadOpen} onClose={()=>setIsnadOpen(false)} />
-      <TajwidCoachModal open={tajwidOpen} onClose={()=>setTajwidOpen(false)} haptics={!!settings.haptics} />
-      <CoWatchModal open={cowatchOpen} onClose={()=>{ setCowatchOpen(false); localStorage.removeItem('cowatch_room_init'); localStorage.removeItem('cowatch_url_init'); }} username={settings.displayName || 'Anonymous'} initialRoomId={cowRoomInit} initialUrl={cowUrlInit} />
-      <SmartDownloaderModal open={downloaderOpen} onClose={()=>setDownloaderOpen(false)} />
-      <ExamplesModal open={examplesOpen} onClose={()=>setExamplesOpen(false)} onPick={(t)=>{ setInputText(t); setActiveMenu('Home'); setActiveTab('chat'); }} />
-      <OnboardingModal open={onboardingOpen} onClose={()=>setOnboardingOpen(false)} onSave={(d)=>{ setSettings(prev=>({ ...prev, displayName: d.username, language: d.language, model: d.model })); if (d.avatar_url) setMyAvatar(d.avatar_url); }} />
-      <NotificationCenter open={notifyCenterOpen} onClose={()=>setNotifyCenterOpen(false)} items={notifications} onClearAll={()=>setNotifications([])} />
-      <VoiceChatModal open={voiceOpen} onClose={()=>setVoiceOpen(false)} language={settings.language==='auto'?'auto':(settings.language==='ar'?'ar-SA':'en-US')} />
-      <QuizRoomModal open={quizRoomOpen} onClose={()=>setQuizRoomOpen(false)} username={settings.displayName || 'Anonymous'} />
+        {/* Settings Button */}
+        <div className="fixed bottom-6 right-6">
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="bg-white/10 backdrop-blur-md text-white p-3 rounded-full border border-white/20 hover:bg-white/20 transition-all hover:scale-110"
+          >
+            <Settings className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Modals */}
+        <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} settings={settings} onSettingsChange={setSettings} />
+        <NotificationCenter open={notifyCenterOpen} onClose={() => setNotifyCenterOpen(false)} notifications={notifications} />
+      </div>
     </div>
   );
 }
