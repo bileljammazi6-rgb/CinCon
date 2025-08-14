@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Image, Mic, Bot, Heart, Flame, Trash2, Eraser, Download as DownloadIcon, Settings, Search, Sword, Users, Settings as SettingsIcon, Home as HomeIcon, History as HistoryIcon, Film as FilmIcon, Users as UsersIcon, Gamepad, Book as BookIcon, MonitorPlay, Bell } from 'lucide-react';
 import { ChatMessage } from './components/ChatMessage';
 import { MovieCard } from './components/MovieCard';
+import { TVSeriesCard } from './components/TVSeriesCard';
 import { ImageUpload } from './components/ImageUpload';
 import { VoiceRecorder } from './components/VoiceRecorder';
 import { SpeechToText } from './components/SpeechToText';
@@ -237,17 +238,17 @@ function App() {
       return tn.includes(movieTitleQuery) || movieTitleQuery.includes(tn);
     });
     if (matchedTitle) {
-      const movieData = await tmdbService.searchMovie(matchedTitle);
+      const movieData = await tmdbService.searchMovieOrTv(matchedTitle);
       setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'movie', content: `Here's what I found for "${matchedTitle}":`, sender: 'ai', timestamp: new Date(), movieData: { ...(movieData || { title: matchedTitle, overview: '' }), downloadLinks: movieLinks[matchedTitle] } }]);
     } else {
-      const movieData = await tmdbService.searchMovie(movieTitleQuery);
+      const movieData = await tmdbService.searchMovieOrTv(movieTitleQuery);
       if (movieData) {
         const providers = movieData.id ? await tmdbService.getWatchProviders(movieData.id) : {};
         const extra = providers.link ? `\n\nWatch: ${providers.link}` : '';
         const movieMessage: Message = {
           id: (Date.now() + 1).toString(),
           type: 'movie',
-          content: `I found this movie for you:${extra}`,
+          content: `I found this content for you:${extra}`,
           sender: 'ai',
           timestamp: new Date(),
           movieData
@@ -280,7 +281,7 @@ function App() {
       if (settings.pixeldrainOnly) {
         const matchedTitle = Object.keys(movieLinks).find(t => normalize(t).includes(qn) || qn.includes(normalize(t)));
         if (matchedTitle) {
-          const data = await tmdbService.searchMovie(matchedTitle);
+          const data = await tmdbService.searchMovieOrTv(matchedTitle);
           setMessages(prev => [...prev, { id: (Date.now()+1).toString(), type: 'movie', content: `Available in Pixeldrain: "${matchedTitle}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(data || { title: matchedTitle, overview: '' }), downloadLinks: movieLinks[matchedTitle] } } as any]);
         } else {
           setMoviesBanner('Not available in Pixeldrain library.');
@@ -293,10 +294,10 @@ function App() {
             return terms ? tn.includes(terms) : true;
           }).slice(0,5);
           if (candidates.length > 0) {
-            for (const title of candidates) {
-              const data = await tmdbService.searchMovie(title);
-              setMessages(prev => [...prev, { id: `${Date.now()}-${title}`, type: 'movie', content: `Available in Pixeldrain: "${title}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(data || { title, overview: '' }), downloadLinks: movieLinks[title] } } as any]);
-            }
+                      for (const title of candidates) {
+            const data = await tmdbService.searchMovieOrTv(title);
+            setMessages(prev => [...prev, { id: `${Date.now()}-${title}`, type: 'movie', content: `Available in Pixeldrain: "${title}"`, sender: 'ai', timestamp: new Date(), movieData: { ...(data || { title, overview: '' }), downloadLinks: movieLinks[title] } } as any]);
+          }
             setIsLoading(false);
             return;
           }
@@ -465,7 +466,11 @@ function App() {
                   <div className="text-gray-400 text-xs">No movies yet. Try asking for a title.</div>
                 )}
                 {messages.filter((m:any)=>m.type==='movie').map((m:any)=>(
-                  <MovieCard key={m.id} movieData={m.movieData} />
+                  m.movieData?.downloadLinks && m.movieData.downloadLinks.length > 1 ? (
+                    <TVSeriesCard key={m.id} movieData={m.movieData} downloadLinks={m.movieData.downloadLinks} />
+                  ) : (
+                    <MovieCard key={m.id} movieData={m.movieData} />
+                  )
                 ))}
               </div>
               <div className="input-area p-2 md:p-3 border-t border-white/10">
