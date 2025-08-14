@@ -20,7 +20,7 @@ export function useAuth() {
         setLoading(false);
 
         // Create user profile if signing up
-        if (session?.user && _event === 'SIGNED_UP') {
+        if (session?.user && _event === 'SIGNED_IN') {
           const { error } = await supabase
             .from('users')
             .insert({

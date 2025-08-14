@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Star, Calendar, Download, ExternalLink } from 'lucide-react';
 import { MovieData } from '../types';
 

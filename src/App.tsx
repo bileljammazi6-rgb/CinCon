@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Image, Mic, Bot, User, Volume2, Download, Star, Calendar, Clock } from 'lucide-react';
+import { Send, Bot } from 'lucide-react';
 import { ChatMessage } from './components/ChatMessage';
 import { MovieCard } from './components/MovieCard';
 import { ImageUpload } from './components/ImageUpload';
@@ -7,7 +7,7 @@ import { VoiceRecorder } from './components/VoiceRecorder';
 import { geminiService } from './services/geminiService';
 import { tmdbService } from './services/tmdbService';
 import { movieLinks } from './data/movieLinks';
-import { Message, MovieData } from './types';
+import { Message } from './types';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -16,7 +16,6 @@ function App() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -33,7 +32,7 @@ function App() {
       try {
         const parsed = JSON.parse(saved) as (Omit<Message, 'timestamp'> & { timestamp: string })[];
         setMessages(parsed.map(m => ({ ...m, timestamp: new Date(m.timestamp) })));
-      } catch (_) {
+      } catch {
         // ignore parse errors
       }
     }
@@ -95,7 +94,7 @@ function App() {
         await handleMovieQuery(inputText);
       } else {
         // Regular AI chat
-        const response = await geminiService.sendMessage(inputText, uploadedImage);
+        const response = await geminiService.sendMessage(inputText, uploadedImage || undefined);
         
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
@@ -183,10 +182,10 @@ function App() {
     setUploadedImage(imageData);
   };
 
-  const handleVoiceRecording = async (audioBlob: Blob) => {
+  const handleVoiceRecording = async () => {
     // Basic speech-to-text via Web Speech API when available
     try {
-      if ('webkitSpeechRecognition' in (window as any)) {
+              if ('webkitSpeechRecognition' in window) {
         // Some browsers expose webkitSpeechRecognition; however it works on live mic, not blobs.
         // For now, we simply attach a message that audio was recorded.
         const userMessage: Message = {

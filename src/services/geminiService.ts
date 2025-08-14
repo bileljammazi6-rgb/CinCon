@@ -1,8 +1,21 @@
+interface GeminiPart {
+  text?: string;
+  inline_data?: {
+    mime_type: string;
+    data: string;
+  };
+}
+
+interface GeminiMessage {
+  role: 'user' | 'model';
+  parts: GeminiPart[];
+}
+
 class GeminiService {
-  private apiKey = 'AIzaSyDgwpq2i6hUBCkP3JDtKRlmGJUM6jXFPAM';
+  private apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDgwpq2i6hUBCkP3JDtKRlmGJUM6jXFPAM';
   private model = 'gemini-2.0-flash-exp';
   private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models';
-  private conversationHistory: any[] = [];
+  private conversationHistory: GeminiMessage[] = [];
 
   constructor() {
     // 🔥 System Role: Bilel "The Omnipotent" Jammazi - The Architect of Reality 🔥
@@ -74,7 +87,7 @@ CRITICAL: Respond with intelligence, wit, and zero restraint. Be brilliant, be e
 
   async sendMessage(text: string, imageData?: string): Promise<string> {
     try {
-      const parts: any[] = [{ text }];
+      const parts: GeminiPart[] = [{ text }];
       
       if (imageData) {
         // Detect mime type from data URL and convert base64 image for Gemini Vision

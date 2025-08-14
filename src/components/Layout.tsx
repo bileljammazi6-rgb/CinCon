@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, 
   Search, 
@@ -17,8 +16,7 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { user, signOut } = useAuth();
-  const location = useLocation();
+  const { signOut } = useAuth();
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
@@ -40,10 +38,10 @@ export function Layout({ children }: LayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link to="/" className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2">
                 <Film className="h-8 w-8 text-indigo-600" />
                 <span className="text-xl font-bold text-gray-900">CineConnect</span>
-              </Link>
+              </div>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -67,24 +65,16 @@ export function Layout({ children }: LayoutProps) {
         <nav className="w-64 bg-white shadow-sm min-h-screen">
           <div className="p-4">
             <ul className="space-y-2">
-              {navigation.map((item) => {
-                const isActive = location.pathname === item.href;
-                return (
-                  <li key={item.name}>
-                    <Link
-                      to={item.href}
-                      className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                        isActive
-                          ? 'bg-indigo-100 text-indigo-700'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.name}</span>
-                    </Link>
-                  </li>
-                );
-              })}
+              {navigation.map((item) => (
+                <li key={item.name}>
+                  <button
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 w-full text-left"
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.name}</span>
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
         </nav>
