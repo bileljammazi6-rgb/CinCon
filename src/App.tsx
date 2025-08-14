@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Send, Image, Mic, Bot, Heart, Flame, Trash2, Eraser, Download as DownloadIcon, 
   Settings, Search, Sword, Users, Settings as SettingsIcon, Home as HomeIcon, 
-  History as HistoryIcon, Film as FilmIcon, Users as UsersIcon, MonitorPlay, Bell,
+  History as HistoryIcon, Film, Users as UsersIcon, MonitorPlay, Bell,
   Play, Tv, Star, Calendar, Download, ExternalLink, Copy, Menu, X, MessageCircle,
   Video, Crown, ChevronDown, User, LogOut, Plus, Eye, EyeOff
 } from 'lucide-react';
