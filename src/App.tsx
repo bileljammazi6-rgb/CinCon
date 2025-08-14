@@ -891,8 +891,8 @@ function App() {
       </div>
 
       {/* Modals */}
-      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} settings={settings} onSettingsChange={setSettings} />
-      <NotificationCenter open={notifyCenterOpen} onClose={() => setNotifyCenterOpen(false)} notifications={notifications} />
+      <SettingsModal open={settingsOpen} initial={settings} onClose={() => setSettingsOpen(false)} onSave={(s)=>{ setSettings(s); setSettingsOpen(false); }} />
+      <NotificationCenter open={notifyCenterOpen} onClose={() => setNotifyCenterOpen(false)} items={notifications} onClearAll={()=>setNotifications([])} />
     </div>
   );
 }
