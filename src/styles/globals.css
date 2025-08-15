@@ -2,160 +2,350 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom Scrollbars */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+/* Apple TV-inspired Design System */
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+  --apple-bg: #000000;
+  --apple-card: #1c1c1e;
+  --apple-card-hover: #2c2c2e;
+  --apple-accent: #007aff;
+  --apple-accent-hover: #0056cc;
+  --apple-text: #ffffff;
+  --apple-text-secondary: #8e8e93;
+  --apple-border: #38383a;
+  --apple-glow: rgba(0, 122, 255, 0.3);
+  --apple-gradient: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+  --apple-gradient-hover: linear-gradient(135deg, #0056cc 0%, #4a4ac4 100%);
 }
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Custom Slider */
-.slider::-webkit-slider-thumb {
-  appearance: none;
-  height: 16px;
-  width: 16px;
-  border-radius: 50%;
-  background: #dc2626;
-  cursor: pointer;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
-}
-
-.slider::-moz-range-thumb {
-  height: 16px;
-  width: 16px;
-  border-radius: 50%;
-  background: #dc2626;
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
-}
-
-/* Mobile-first responsive design */
-@media (max-width: 640px) {
-  .text-4xl { font-size: 1.875rem; }
-  .text-6xl { font-size: 3.75rem; }
-  .p-8 { padding: 1.5rem; }
-  .px-8 { padding-left: 1.5rem; padding-right: 1.5rem; }
-  .py-8 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
-}
-
-/* Smooth transitions */
 * {
-  transition: all 0.2s ease-in-out;
+  box-sizing: border-box;
 }
 
-/* Custom animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+body {
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--apple-bg);
+  color: var(--apple-text);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
-@keyframes slideIn {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
+::-webkit-scrollbar-track {
+  background: var(--apple-card);
 }
 
-.animate-slideIn {
-  animation: slideIn 0.3s ease-out;
+::-webkit-scrollbar-thumb {
+  background: var(--apple-accent);
+  border-radius: 4px;
 }
 
-/* Mobile touch targets */
-button, a {
-  min-height: 44px;
-  min-width: 44px;
+::-webkit-scrollbar-thumb:hover {
+  background: var(--apple-accent-hover);
 }
 
-/* Focus states for accessibility */
-button:focus, input:focus, textarea:focus {
-  outline: 2px solid #dc2626;
-  outline-offset: 2px;
+/* Apple TV-inspired Components */
+.apple-card {
+  @apply bg-[#1c1c1e] border border-[#38383a] rounded-2xl backdrop-blur-xl;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Dark theme enhancements */
-.bg-black {
-  background-color: #000000;
+.apple-card:hover {
+  @apply bg-[#2c2c2e] border-[#007aff] shadow-2xl;
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 122, 255, 0.15);
 }
 
-.bg-gray-900 {
-  background-color: #111827;
+.apple-button {
+  @apply bg-gradient-to-r from-[#007aff] to-[#5856d6] text-white font-semibold px-6 py-3 rounded-2xl;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(0, 122, 255, 0.3);
 }
 
-.bg-gray-800 {
-  background-color: #1f2937;
+.apple-button:hover {
+  @apply from-[#0056cc] to-[#4a4ac4];
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 122, 255, 0.4);
 }
 
-.bg-gray-700 {
-  background-color: #374151;
+.apple-button-secondary {
+  @apply bg-[#2c2c2e] text-white font-semibold px-6 py-3 rounded-2xl border border-[#38383a];
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Netflix red */
-.bg-red-600 {
-  background-color: #dc2626;
+.apple-button-secondary:hover {
+  @apply bg-[#38383a] border-[#007aff];
+  transform: translateY(-2px);
 }
 
-.bg-red-700 {
-  background-color: #b91c1c;
+.apple-input {
+  @apply bg-[#1c1c1e] border border-[#38383a] text-white rounded-2xl px-4 py-3;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.hover\:bg-red-700:hover {
-  background-color: #b91c1c;
+.apple-input:focus {
+  @apply border-[#007aff] outline-none;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
 }
 
-/* Mobile navigation improvements */
-@media (max-width: 1024px) {
-  .lg\:ml-64 {
-    margin-left: 0;
-  }
-  
-  .lg\:block {
-    display: none;
-  }
-  
-  .lg\:hidden {
-    display: block;
-  }
+/* Glassmorphism Effects */
+.glass {
+  background: rgba(28, 28, 30, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(56, 56, 58, 0.3);
 }
 
-/* Enhanced mobile experience */
+.glass-card {
+  background: rgba(28, 28, 30, 0.6);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(56, 56, 58, 0.2);
+}
+
+/* Apple TV Navigation */
+.apple-nav {
+  @apply fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-2xl border-b border-[#38383a];
+}
+
+.apple-nav-item {
+  @apply text-[#8e8e93] hover:text-white transition-colors duration-200 font-medium;
+}
+
+.apple-nav-item.active {
+  @apply text-[#007aff];
+}
+
+/* Apple TV Hero Section */
+.apple-hero {
+  background: linear-gradient(135deg, #000000 0%, #1c1c1e 50%, #2c2c2e 100%);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.apple-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 122, 255, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Apple TV Content Grid */
+.apple-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.apple-grid-compact {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+/* Apple TV Focus States */
+.apple-focus {
+  @apply ring-2 ring-[#007aff] ring-offset-2 ring-offset-black;
+}
+
+/* Apple TV Animations */
+@keyframes apple-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.apple-float {
+  animation: apple-float 3s ease-in-out infinite;
+}
+
+@keyframes apple-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 122, 255, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(0, 122, 255, 0.6); }
+}
+
+.apple-glow {
+  animation: apple-glow 2s ease-in-out infinite;
+}
+
+/* Apple TV Typography */
+.apple-title {
+  @apply text-4xl md:text-6xl font-bold text-white;
+  background: linear-gradient(135deg, #ffffff 0%, #007aff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.apple-subtitle {
+  @apply text-xl md:text-2xl text-[#8e8e93] font-medium;
+}
+
+.apple-heading {
+  @apply text-2xl md:text-3xl font-bold text-white;
+}
+
+.apple-text {
+  @apply text-base text-[#8e8e93] leading-relaxed;
+}
+
+/* Apple TV Cards */
+.apple-movie-card {
+  @apply relative overflow-hidden rounded-2xl bg-[#1c1c1e] border border-[#38383a];
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.apple-movie-card:hover {
+  @apply border-[#007aff] bg-[#2c2c2e];
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 0 25px 50px rgba(0, 122, 255, 0.2);
+}
+
+.apple-movie-card img {
+  @apply w-full h-full object-cover transition-transform duration-500;
+}
+
+.apple-movie-card:hover img {
+  transform: scale(1.1);
+}
+
+/* Apple TV Buttons */
+.apple-play-button {
+  @apply absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity duration-300;
+}
+
+.apple-play-button svg {
+  @apply w-16 h-16 text-white;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+
+/* Apple TV Navigation */
+.apple-sidebar {
+  @apply fixed left-0 top-0 h-full w-64 bg-black/90 backdrop-blur-2xl border-r border-[#38383a] z-40;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.apple-sidebar.collapsed {
+  transform: translateX(-100%);
+}
+
+/* Apple TV Search */
+.apple-search {
+  @apply relative max-w-2xl mx-auto;
+}
+
+.apple-search input {
+  @apply w-full bg-[#1c1c1e] border border-[#38383a] text-white rounded-2xl pl-12 pr-4 py-4 text-lg;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.apple-search input:focus {
+  @apply border-[#007aff] bg-[#2c2c2e];
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+.apple-search-icon {
+  @apply absolute left-4 top-1/2 transform -translate-y-1/2 text-[#8e8e93];
+}
+
+/* Apple TV Player */
+.apple-player {
+  @apply fixed inset-0 z-50 bg-black;
+}
+
+.apple-player-controls {
+  @apply absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black via-black/80 to-transparent;
+}
+
+.apple-player-progress {
+  @apply w-full h-2 bg-[#38383a] rounded-full overflow-hidden;
+}
+
+.apple-player-progress-bar {
+  @apply h-full bg-gradient-to-r from-[#007aff] to-[#5856d6] rounded-full;
+  transition: width 0.1s ease;
+}
+
+/* Apple TV Modal */
+.apple-modal {
+  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl;
+}
+
+.apple-modal-content {
+  @apply bg-[#1c1c1e] border border-[#38383a] rounded-3xl p-8 max-w-2xl w-full mx-4;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Apple TV Loading */
+.apple-loading {
+  @apply flex items-center justify-center;
+}
+
+.apple-spinner {
+  @apply w-12 h-12 border-4 border-[#38383a] border-t-[#007aff] rounded-full animate-spin;
+}
+
+/* Apple TV Notifications */
+.apple-notification {
+  @apply fixed top-4 right-4 bg-[#1c1c1e] border border-[#38383a] text-white px-6 py-4 rounded-2xl shadow-2xl;
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Apple TV Responsive */
 @media (max-width: 768px) {
-  .p-4 { padding: 1rem; }
-  .px-4 { padding-left: 1rem; padding-right: 1rem; }
-  .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+  .apple-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
   
-  .text-lg { font-size: 1.125rem; }
-  .text-xl { font-size: 1.25rem; }
-  .text-2xl { font-size: 1.5rem; }
+  .apple-title {
+    @apply text-3xl;
+  }
   
-  .gap-4 { gap: 1rem; }
-  .gap-6 { gap: 1.5rem; }
-  .gap-8 { gap: 2rem; }
+  .apple-sidebar {
+    @apply w-full;
+  }
 }
 
-/* Touch-friendly buttons */
-.btn-primary {
-  @apply bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors;
-  min-height: 48px;
-  min-width: 48px;
+/* Apple TV Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --apple-bg: #000000;
+    --apple-card: #1c1c1e;
+    --apple-card-hover: #2c2c2e;
+  }
 }
 
-/* Enhanced mobile cards */
-.movie-card {
-  @apply bg-gray-800 rounded-lg overflow-hidden transition-transform duration-300;
+/* Apple TV High Contrast */
+@media (prefers-contrast: high) {
+  .apple-card {
+    @apply border-2;
+  }
+  
+  .apple-button {
+    @apply border-2 border-white;
+  }
 }
 
-.movie-card:hover {
-  transform: scale(1.05);
-}
-
-@media (max-width: 640px) {
-  .movie-card:hover {
-    transform: none;
+/* Apple TV Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -1,25 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Layout } from './components/Layout';
+import { AppleNav } from './components/AppleNav';
+import { AppleSidebar } from './components/AppleSidebar';
 import { Home } from './pages/Home';
 import { Movies } from './pages/Movies';
-import { TVShows } from './pages/TVShows';
-import { Messages } from './pages/Messages';
-import { MyList } from './pages/MyList';
+import { Series } from './pages/Series';
 import { Search } from './pages/Search';
-import { MovieDetail } from './pages/MovieDetail';
 import { Gaming } from './pages/Gaming';
-import AIChat from './pages/AIChat';
-import { AuthProvider } from './contexts/AuthContext';
-import { MovieProvider } from './contexts/MovieContext';
-import { FloatingAIChat } from './components/FloatingAIChat';
+import { Community } from './pages/Community';
+import { Profile } from './pages/Profile';
 import { MoviePlayer } from './components/MoviePlayer';
 import { SeriesPlayer } from './components/SeriesPlayer';
+import { FloatingAIChat } from './components/FloatingAIChat';
+import { AuthProvider } from './contexts/AuthContext';
+import { MovieProvider } from './contexts/MovieContext';
 import './styles/globals.css';
-import { AuthForm } from './components/Auth/AuthForm';
 
 function App() {
-  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [moviePlayer, setMoviePlayer] = useState<{
     isOpen: boolean;
     movie: any;
@@ -81,40 +79,47 @@ function App() {
     });
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <AuthProvider>
       <MovieProvider>
         <Router>
-          <div className="app">
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/movies" element={<Movies />} />
-                <Route path="/tv-shows" element={<TVShows />} />
-                <Route path="/messages" element={<Messages />} />
-                <Route path="/my-list" element={<MyList />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/movie/:id" element={<MovieDetail />} />
-                <Route path="/gaming" element={<Gaming />} />
-                <Route path="/ai-chat" element={<AIChat />} />
-                <Route path="/auth" element={<AuthForm />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Layout>
+          <div className="min-h-screen bg-black">
+            {/* Apple TV Navigation */}
+            <AppleNav onMenuClick={toggleSidebar} />
+            
+            {/* Apple TV Sidebar */}
+            <AppleSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            
+            {/* Main Content */}
+            <main className={`transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
+              <div className="pt-20">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/movies" element={<Movies />} />
+                  <Route path="/series" element={<Series />} />
+                  <Route path="/search" element={<Search />} />
+                  <Route path="/gaming" element={<Gaming />} />
+                  <Route path="/community" element={<Community />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </div>
+            </main>
             
             {/* Floating AI Chat - Always Accessible */}
-            <FloatingAIChat 
-              isOpen={isAIChatOpen} 
-              onToggle={() => setIsAIChatOpen(!isAIChatOpen)} 
-            />
-
+            <FloatingAIChat />
+            
             {/* Global Movie Player */}
             <MoviePlayer
               movie={moviePlayer.movie}
               isOpen={moviePlayer.isOpen}
               onClose={closeMoviePlayer}
             />
-
+            
             {/* Global Series Player */}
             <SeriesPlayer
               series={seriesPlayer.series}
