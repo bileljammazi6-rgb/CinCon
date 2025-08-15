@@ -29,7 +29,16 @@ import {
   List,
   Grid,
   Calendar,
-  Users
+  Users,
+  BookOpen,
+  Film,
+  Tv,
+  ArrowRight,
+  CheckCircle,
+  Lock,
+  Unlock,
+  EyeOff,
+  EyeOn
 } from 'lucide-react';
 import { geminiService } from '../services/geminiService';
 import { MovieData, SeriesEpisode } from '../data/movieLinks';
@@ -56,8 +65,10 @@ export function SeriesPlayer({ series, isOpen, onClose }: SeriesPlayerProps) {
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [quality, setQuality] = useState('1080p');
   const [showSettings, setShowSettings] = useState(false);
-  const [showEpisodeList, setShowEpisodeList] = useState(false);
+  const [showEpisodeSelector, setShowEpisodeSelector] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedSeason, setSelectedSeason] = useState(1);
+  const [showSeasonSelector, setShowSeasonSelector] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -209,6 +220,7 @@ export function SeriesPlayer({ series, isOpen, onClose }: SeriesPlayerProps) {
       videoRef.current.src = episode.links[0];
       videoRef.current.load();
     }
+    setShowEpisodeSelector(false);
   };
 
   const nextEpisode = () => {
@@ -227,7 +239,20 @@ export function SeriesPlayer({ series, isOpen, onClose }: SeriesPlayerProps) {
     }
   };
 
+  const getSeasonEpisodes = (season: number) => {
+    return series.episodes?.filter(ep => ep.season === season) || [];
+  };
+
+  const getSeasons = () => {
+    if (!series.episodes) return [];
+    const seasons = new Set(series.episodes.map(ep => ep.season || 1));
+    return Array.from(seasons).sort((a, b) => a - b);
+  };
+
   if (!isOpen || !selectedEpisode) return null;
+
+  const seasons = getSeasons();
+  const currentSeasonEpisodes = getSeasonEpisodes(selectedSeason);
 
   return (
     <div className="fixed inset-0 z-50 bg-black">
@@ -251,47 +276,71 @@ export function SeriesPlayer({ series, isOpen, onClose }: SeriesPlayerProps) {
         </video>
 
         {/* Overlay */}
-        <div className={`absolute inset-0 bg-black/20 transition-opacity duration-300 ${
+        <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40 transition-opacity duration-300 ${
           showControls ? 'opacity-100' : 'opacity-0'
         }`} />
 
         {/* Top Controls */}
-        <div className={`absolute top-0 left-0 right-0 p-4 transition-transform duration-300 ${
+        <div className={`absolute top-0 left-0 right-0 p-6 transition-transform duration-300 ${
           showControls ? 'translate-y-0' : '-translate-y-full'
         }`}>
           <div className="flex items-center justify-between">
             <button
               onClick={onClose}
-              className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
+              className="p-3 bg-black/50 hover:bg-black/70 text-white rounded-xl transition-all duration-200 hover:scale-110 backdrop-blur-sm"
             >
-              <X className="h-5 w-5" />
+              <X className="h-6 w-6" />
             </button>
             
-            <div className="flex items-center space-x-2">
-              <h2 className="text-white font-semibold text-lg">{series.title}</h2>
-              <span className="text-white text-sm bg-purple-600 px-2 py-1 rounded">
-                S{selectedEpisode.season || 1}E{selectedEpisode.episode}
-              </span>
+            <div className="flex items-center space-x-4">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-white mb-1">{series.title}</h2>
+                <div className="flex items-center justify-center space-x-3">
+                  <span className="bg-purple-600 text-white text-sm px-3 py-1 rounded-full font-medium flex items-center space-x-2">
+                    <Tv className="h-4 w-4" />
+                    <span>S{selectedEpisode.season || 1}E{selectedEpisode.episode}</span>
+                  </span>
+                  <span className="text-white text-sm bg-black/30 px-3 py-1 rounded-full backdrop-blur-sm">
+                    {selectedEpisode.title}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
               <button
-                onClick={() => setShowEpisodeList(!showEpisodeList)}
-                className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                onClick={() => setShowSeasonSelector(!showSeasonSelector)}
+                className="p-3 bg-blue-600/80 hover:bg-blue-700/80 text-white rounded-xl transition-all duration-200 hover:scale-110 backdrop-blur-sm flex items-center space-x-2"
+                title="Season Selector"
+              >
+                <BookOpen className="h-5 w-5" />
+                <span className="hidden sm:inline">Season {selectedSeason}</span>
+              </button>
+              
+              <button
+                onClick={() => setShowEpisodeSelector(!showEpisodeSelector)}
+                className="p-3 bg-green-600/80 hover:bg-green-700/80 text-white rounded-xl transition-all duration-200 hover:scale-110 backdrop-blur-sm flex items-center space-x-2"
                 title="Episode List"
               >
-                <List className="h-4 w-4" />
+                <List className="h-5 w-5" />
+                <span className="hidden sm:inline">Episodes</span>
               </button>
+              
               <button
                 onClick={() => setShowAIInsights(!showAIInsights)}
-                className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                className="p-3 bg-purple-600/80 hover:bg-purple-700/80 text-white rounded-xl transition-all duration-200 hover:scale-110 backdrop-blur-sm flex items-center space-x-2"
                 title="AI Insights"
               >
-                <Brain className="h-4 w-4" />
+                <Crown className="h-5 w-5" />
+                <span className="hidden sm:inline">AI Analysis</span>
               </button>
+              
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className="p-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors"
+                className="p-3 bg-slate-600/80 hover:bg-slate-700/80 text-white rounded-xl transition-all duration-200 hover:scale-110 backdrop-blur-sm"
                 title="Settings"
               >
-                <Settings className="h-4 w-4" />
+                <Settings className="h-5 w-5" />
               </button>
             </div>
           </div>
@@ -301,83 +350,85 @@ export function SeriesPlayer({ series, isOpen, onClose }: SeriesPlayerProps) {
         {!isPlaying && (
           <button
             onClick={togglePlay}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-4 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-6 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all duration-200 hover:scale-110 backdrop-blur-sm"
           >
-            <Play className="h-12 w-12" />
+            <Play className="h-16 w-16" />
           </button>
         )}
 
         {/* Episode Navigation */}
-        <div className="absolute top-1/2 left-4 transform -translate-y-1/2">
+        <div className="absolute top-1/2 left-6 transform -translate-y-1/2">
           <button
             onClick={previousEpisode}
             disabled={!series.episodes || selectedEpisode.episode <= 1}
-            className="p-2 bg-black/50 hover:bg-black/70 disabled:bg-black/20 disabled:text-gray-500 text-white rounded-lg transition-colors"
+            className="p-4 bg-black/50 hover:bg-black/70 disabled:bg-black/20 disabled:text-gray-500 text-white rounded-xl transition-all duration-200 hover:scale-110 backdrop-blur-sm disabled:hover:scale-100"
           >
-            <ChevronLeft className="h-6 w-6" />
+            <ChevronLeft className="h-8 w-8" />
           </button>
         </div>
 
-        <div className="absolute top-1/2 right-4 transform -translate-y-1/2">
+        <div className="absolute top-1/2 right-6 transform -translate-y-1/2">
           <button
             onClick={nextEpisode}
             disabled={!series.episodes || selectedEpisode.episode >= (series.episodes?.length || 0)}
-            className="p-2 bg-black/50 hover:bg-black/70 disabled:bg-black/20 disabled:text-gray-500 text-white rounded-lg transition-colors"
+            className="p-4 bg-black/50 hover:bg-black/70 disabled:bg-black/20 disabled:text-gray-500 text-white rounded-xl transition-all duration-200 hover:scale-110 backdrop-blur-sm disabled:hover:scale-100"
           >
-            <ChevronRight className="h-6 w-6" />
+            <ChevronRight className="h-8 w-8" />
           </button>
         </div>
 
         {/* Bottom Controls */}
-        <div className={`absolute bottom-0 left-0 right-0 p-4 transition-transform duration-300 ${
+        <div className={`absolute bottom-0 left-0 right-0 p-6 transition-transform duration-300 ${
           showControls ? 'translate-y-0' : 'translate-y-full'
         }`}>
           {/* Seek Bar */}
-          <div className="mb-4">
-            <input
-              type="range"
-              min="0"
-              max={duration || 0}
-              value={currentTime}
-              onChange={handleSeek}
-              className="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer slider"
-            />
-            <div className="flex justify-between text-sm text-white mt-1">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
+          <div className="mb-6">
+            <div className="relative">
+              <input
+                type="range"
+                min="0"
+                max={duration || 0}
+                value={currentTime}
+                onChange={handleSeek}
+                className="w-full h-3 bg-slate-600/50 rounded-lg appearance-none cursor-pointer slider-thumb bg-gradient-to-r from-purple-500 to-pink-500"
+              />
+              <div className="flex justify-between text-sm text-white mt-3">
+                <span className="bg-black/30 px-3 py-1 rounded-full backdrop-blur-sm">{formatTime(currentTime)}</span>
+                <span className="bg-black/30 px-3 py-1 rounded-full backdrop-blur-sm">{formatTime(duration)}</span>
+              </div>
             </div>
           </div>
 
           {/* Control Buttons */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={() => skipTime(-10)}
-                className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
+                className="p-3 bg-black/50 hover:bg-black/70 text-white rounded-xl transition-all duration-200 hover:scale-110 backdrop-blur-sm"
               >
-                <SkipBack className="h-5 w-5" />
+                <SkipBack className="h-6 w-6" />
               </button>
               
               <button
                 onClick={togglePlay}
-                className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
+                className="p-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all duration-200 hover:scale-110 shadow-lg"
               >
-                {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8" />}
               </button>
               
               <button
                 onClick={() => skipTime(10)}
-                className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
+                className="p-3 bg-black/50 hover:bg-black/70 text-white rounded-xl transition-all duration-200 hover:scale-110 backdrop-blur-sm"
               >
-                <SkipForward className="h-5 w-5" />
+                <SkipForward className="h-6 w-6" />
               </button>
 
-              <div className="flex items-center space-x-2 ml-4">
+              <div className="flex items-center space-x-3 ml-6">
                 <button
                   onClick={toggleMute}
-                  className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
+                  className="p-3 bg-black/50 hover:bg-black/70 text-white rounded-xl transition-all duration-200 hover:scale-110 backdrop-blur-sm"
                 >
-                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                  {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
                 </button>
                 <input
                   type="range"
@@ -386,71 +437,131 @@ export function SeriesPlayer({ series, isOpen, onClose }: SeriesPlayerProps) {
                   step="0.1"
                   value={volume}
                   onChange={handleVolumeChange}
-                  className="w-20 h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer slider"
+                  className="w-24 h-2 bg-slate-600/50 rounded-lg appearance-none cursor-pointer slider-thumb"
                 />
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <button
                 onClick={() => setShowSubtitles(!showSubtitles)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-3 rounded-xl transition-all duration-200 hover:scale-110 backdrop-blur-sm ${
                   showSubtitles 
                     ? 'bg-purple-600 text-white' 
                     : 'bg-black/50 hover:bg-black/70 text-white'
                 }`}
               >
-                <MessageCircle className="h-4 w-4" />
+                <MessageCircle className="h-5 w-5" />
               </button>
               
               <button
                 onClick={toggleFullscreen}
-                className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
+                className="p-3 bg-black/50 hover:bg-black/70 text-white rounded-xl transition-all duration-200 hover:scale-110 backdrop-blur-sm"
               >
-                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Episode List Panel */}
-        {showEpisodeList && (
-          <div className="absolute top-20 right-4 w-80 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-xl p-6 max-h-96 overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <List className="h-5 w-5 text-blue-400" />
-                <h3 className="text-lg font-semibold text-white">Episodes</h3>
+        {/* Season Selector Panel */}
+        {showSeasonSelector && (
+          <div className="absolute top-24 right-6 w-80 bg-gradient-to-br from-slate-800/95 via-slate-900/95 to-slate-800/95 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-xl p-6 max-h-96 overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <BookOpen className="h-6 w-6 text-blue-400" />
+                <h3 className="text-xl font-bold text-white">Select Season</h3>
               </div>
               <button
-                onClick={() => setShowEpisodeList(false)}
-                className="p-1 text-slate-400 hover:text-white transition-colors"
+                onClick={() => setShowSeasonSelector(false)}
+                className="p-2 text-slate-400 hover:text-white transition-colors"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </button>
             </div>
             
-            <div className="space-y-2">
-              {series.episodes?.map((episode) => (
+            <div className="space-y-3">
+              {seasons.map((season) => (
                 <button
-                  key={episode.episode}
-                  onClick={() => changeEpisode(episode)}
-                  className={`w-full p-3 rounded-lg text-left transition-colors ${
-                    selectedEpisode.episode === episode.episode
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-200'
+                  key={season}
+                  onClick={() => {
+                    setSelectedSeason(season);
+                    setShowSeasonSelector(false);
+                  }}
+                  className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
+                    selectedSeason === season
+                      ? 'bg-blue-600/20 border border-blue-500/50 text-blue-100'
+                      : 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 border border-transparent hover:border-slate-600/50'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">Episode {episode.episode}</p>
-                      <p className="text-sm opacity-80">{episode.title}</p>
+                      <p className="font-semibold text-lg">Season {season}</p>
+                      <p className="text-sm opacity-80">
+                        {getSeasonEpisodes(season).length} Episodes
+                      </p>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs bg-slate-600 px-2 py-1 rounded">
+                    {selectedSeason === season && (
+                      <CheckCircle className="h-6 w-6 text-blue-400" />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Episode Selector Panel */}
+        {showEpisodeSelector && (
+          <div className="absolute top-24 right-6 w-96 bg-gradient-to-br from-slate-800/95 via-slate-900/95 to-slate-800/95 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-xl p-6 max-h-[70vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <List className="h-6 w-6 text-green-400" />
+                <div>
+                  <h3 className="text-xl font-bold text-white">Season {selectedSeason}</h3>
+                  <p className="text-slate-400 text-sm">{currentSeasonEpisodes.length} Episodes</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEpisodeSelector(false)}
+                className="p-2 text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {currentSeasonEpisodes.map((episode) => (
+                <button
+                  key={episode.episode}
+                  onClick={() => changeEpisode(episode)}
+                  className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
+                    selectedEpisode.episode === episode.episode
+                      ? 'bg-green-600/20 border border-green-500/50 text-green-100'
+                      : 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 border border-transparent hover:border-slate-600/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <span className="bg-slate-600 text-white text-sm px-2 py-1 rounded-full font-medium">
+                          E{episode.episode}
+                        </span>
+                        <span className="text-sm text-slate-400">
+                          {episode.runtime || '45'} min
+                        </span>
+                      </div>
+                      <p className="font-semibold text-white mb-1">{episode.title}</p>
+                      {episode.overview && (
+                        <p className="text-sm text-slate-300 line-clamp-2">{episode.overview}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2 ml-4">
+                      <span className="text-xs bg-slate-600 px-2 py-1 rounded-full text-slate-300">
                         {episode.links.length} source{episode.links.length > 1 ? 's' : ''}
                       </span>
                       {selectedEpisode.episode === episode.episode && (
-                        <Play className="h-4 w-4" />
+                        <Play className="h-5 w-5 text-green-400" />
                       )}
                     </div>
                   </div>
@@ -462,25 +573,25 @@ export function SeriesPlayer({ series, isOpen, onClose }: SeriesPlayerProps) {
 
         {/* AI Insights Panel */}
         {showAIInsights && (
-          <div className="absolute top-20 right-4 w-80 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-xl p-6 max-h-96 overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <Crown className="h-5 w-5 text-yellow-400" />
-                <h3 className="text-lg font-semibold text-white">Bilel's Analysis</h3>
+          <div className="absolute top-24 right-6 w-96 bg-gradient-to-br from-slate-800/95 via-slate-900/95 to-slate-800/95 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-xl p-6 max-h-96 overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <Crown className="h-6 w-6 text-yellow-400" />
+                <h3 className="text-xl font-bold text-white">Bilel's Analysis</h3>
               </div>
               <button
                 onClick={() => setShowAIInsights(false)}
-                className="p-1 text-slate-400 hover:text-white transition-colors"
+                className="p-2 text-slate-400 hover:text-white transition-colors"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </button>
             </div>
             
             {isLoadingInsight ? (
-              <div className="flex items-center space-x-2 text-slate-300">
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div className="flex items-center space-x-3 text-slate-300">
+                <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce"></div>
+                <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 <span>AI is analyzing...</span>
               </div>
             ) : (
@@ -495,23 +606,23 @@ export function SeriesPlayer({ series, isOpen, onClose }: SeriesPlayerProps) {
 
         {/* Settings Panel */}
         {showSettings && (
-          <div className="absolute top-20 right-4 w-80 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <Settings className="h-5 w-5 text-blue-400" />
-                <h3 className="text-lg font-semibold text-white">Player Settings</h3>
+          <div className="absolute top-24 right-6 w-80 bg-gradient-to-br from-slate-800/95 via-slate-900/95 to-slate-800/95 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <Settings className="h-6 w-6 text-blue-400" />
+                <h3 className="text-xl font-bold text-white">Player Settings</h3>
               </div>
               <button
                 onClick={() => setShowSettings(false)}
-                className="p-1 text-slate-400 hover:text-white transition-colors"
+                className="p-2 text-slate-400 hover:text-white transition-colors"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </button>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Playback Speed</label>
+                <label className="block text-sm font-medium text-slate-300 mb-3">Playback Speed</label>
                 <select
                   value={playbackSpeed}
                   onChange={(e) => {
@@ -521,7 +632,7 @@ export function SeriesPlayer({ series, isOpen, onClose }: SeriesPlayerProps) {
                       videoRef.current.playbackRate = speed;
                     }
                   }}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full bg-slate-700 border border-slate-600 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
                   <option value={0.5}>0.5x</option>
                   <option value={0.75}>0.75x</option>
@@ -533,11 +644,11 @@ export function SeriesPlayer({ series, isOpen, onClose }: SeriesPlayerProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Quality</label>
+                <label className="block text-sm font-medium text-slate-300 mb-3">Quality</label>
                 <select
                   value={quality}
                   onChange={(e) => setQuality(e.target.value)}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full bg-slate-700 border border-slate-600 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
                   <option value="auto">Auto</option>
                   <option value="1080p">1080p</option>
@@ -550,12 +661,12 @@ export function SeriesPlayer({ series, isOpen, onClose }: SeriesPlayerProps) {
                 <span className="text-sm text-slate-300">Subtitles</span>
                 <button
                   onClick={() => setShowSubtitles(!showSubtitles)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
                     showSubtitles ? 'bg-purple-600' : 'bg-slate-600'
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
                       showSubtitles ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
