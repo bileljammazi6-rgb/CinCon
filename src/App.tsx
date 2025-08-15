@@ -9,7 +9,7 @@ import { MyList } from './pages/MyList';
 import { Search } from './pages/Search';
 import { MovieDetail } from './pages/MovieDetail';
 import { Gaming } from './pages/Gaming';
-import { AIChat } from './pages/AIChat';
+import AIChat from './pages/AIChat';
 import { AuthProvider } from './contexts/AuthContext';
 import { MovieProvider } from './contexts/MovieContext';
 import './styles/globals.css';

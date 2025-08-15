@@ -26,7 +26,7 @@ interface GameStats {
   averageScore: number;
 }
 
-const Gaming: React.FC = () => {
+export const Gaming = () => {
   const [activeGame, setActiveGame] = useState<GameState | null>(null);
   const [gameType, setGameType] = useState<'chess' | 'tictactoe' | 'quiz' | 'puzzle'>('tictactoe');
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
@@ -454,5 +454,3 @@ const Gaming: React.FC = () => {
     </div>
   );
 };
-
-export default Gaming;
