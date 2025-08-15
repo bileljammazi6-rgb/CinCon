@@ -1,4 +1,4 @@
-export const movieLinks: { [key: string]: string[] } = {
+export const movieLinks = {
   "mobland": [
     "https://pixeldrain.com/api/file/c1yALumo",
     "https://pixeldrain.com/api/file/5vByKXNB",
@@ -32,35 +32,6 @@ export const movieLinks: { [key: string]: string[] } = {
     "https://pixeldrain.com/api/file/TgA7Nf9p",
     "https://pixeldrain.com/api/file/5YNAWddf",
     "https://pixeldrain.com/api/file/4H5xGTt5"
-  ],
-  "the chestnut man": [
-    "https://pixeldrain.com/api/file/bwLgnrZg",
-    "https://pixeldrain.com/api/file/o9pSYTm1",
-    "https://pixeldrain.com/api/file/8X2zDuMj",
-    "https://pixeldrain.com/api/file/Duyo4u3J",
-    "https://pixeldrain.com/api/file/nwPFNU59",
-    "https://pixeldrain.com/api/file/E3TAe2Nz"
-  ],
-  "smurfs 2025": [
-    "https://pixeldrain.com/api/file/wn35moT2"
-  ],
-  "weapons 2025": [
-    "https://pixeldrain.com/api/file/ZEig7fSJ"
-  ],
-  "the pickup": [
-    "https://pixeldrain.com/api/file/nW2DCHMF"
-  ],
-  "jurassic world 2025": [
-    "https://pixeldrain.com/api/file/bSvpr6f9"
-  ],
-  "honest thief": [
-    "https://pixeldrain.com/api/file/9LrTQZJP"
-  ],
-  "luck": [
-    "https://pixeldrain.com/api/file/9Nz5wR53"
-  ],
-  "how to train your dragon": [
-    "https://pixeldrain.com/api/file/7hZHRPm8"
   ],
   "interstellar": ["https://pixeldrain.com/api/file/AeJScF7G"],
   "17 again": ["https://pixeldrain.com/api/file/DNGsiNcv"],
@@ -97,7 +68,7 @@ export const movieLinks: { [key: string]: string[] } = {
   "the dark knight": ["https://pixeldrain.com/api/file/2XxUnAiL"],
   "pulp fiction": ["https://pixeldrain.com/api/file/xhmTwHc5"],
   "arrival": ["https://pixeldrain.com/api/file/GSiZcGxu"],
-  "the exorcist": ["https://pixeldrain.com/api/file/Vqu2u1jZ"],
+  "the exorcist": ["https://pixeldrain.com/api/file/Vqu2u1Z"],
   "la la land": ["https://pixeldrain.com/api/file/9eMsbMaT"],
   "the big lebowski": ["https://pixeldrain.com/api/file/sk84MG4s"],
   "prisoners": ["https://pixeldrain.com/api/file/r4e4kqXZ"],
@@ -136,5 +107,58 @@ export const movieLinks: { [key: string]: string[] } = {
   "f9: the fast saga": ["https://pixeldrain.com/api/file/m2EdMHuv"],
   "your name": ["https://pixeldrain.com/api/file/i6QpqBUi"],
   "a silent voice": ["https://pixeldrain.com/api/file/SqALgvZU"],
-  "real steel": ["https://pixeldrain.com/api/file/EqUVUAoi"]
+  "real steel": ["https://pixeldrain.com/api/file/EqUVUAoi"],
+  "the chestnut man": [
+    "https://pixeldrain.com/api/file/bwLgnrZg",
+    "https://pixeldrain.com/api/file/o9pSYTm1",
+    "https://pixeldrain.com/api/file/8X2zDuMj",
+    "https://pixeldrain.com/api/file/Duyo4u3J",
+    "https://pixeldrain.com/api/file/nwPFNU59",
+    "https://pixeldrain.com/api/file/E3TAe2Nz"
+  ],
+  "smurfs 2025": [
+    "https://pixeldrain.com/api/file/wn35moT2"
+  ],
+  "weapons 2025": [
+    "https://pixeldrain.com/api/file/ZEig7fSJ"
+  ],
+  "the pickup": [
+    "https://pixeldrain.com/api/file/nW2DCHMF"
+  ],
+  "jurassic world 2025": [
+    "https://pixeldrain.com/api/file/bSvpr6f9"
+  ],
+  "honest thief": [
+    "https://pixeldrain.com/api/file/9LrTQZJP"
+  ],
+  "luck": [
+    "https://pixeldrain.com/api/file/9Nz5wR53"
+  ],
+  "how to train your dragon": [
+    "https://pixeldrain.com/api/file/7hZHRPm8"
+  ]
+};
+
+// Helper function to find movie links by title
+export const findMovieLinks = (title: string): string[] => {
+  const normalizedTitle = title.toLowerCase().trim();
+  
+  // Direct match
+  if (movieLinks[normalizedTitle]) {
+    return movieLinks[normalizedTitle];
+  }
+  
+  // Partial match
+  for (const [key, links] of Object.entries(movieLinks)) {
+    if (key.includes(normalizedTitle) || normalizedTitle.includes(key)) {
+      return links;
+    }
+  }
+  
+  return [];
+};
+
+// Get all available movie titles
+export const getAvailableMovies = (): string[] => {
+  return Object.keys(movieLinks);
 };
