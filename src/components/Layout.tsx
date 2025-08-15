@@ -46,11 +46,6 @@ export function Layout({ children }: LayoutProps) {
     { name: 'Search', href: '/search', icon: Search, badge: null },
   ];
 
-  const secondaryNavigation = [
-    { name: 'Profile', href: '/profile', icon: User },
-    { name: 'Settings', href: '/settings', icon: Settings },
-  ];
-
   const handleLogout = async () => {
     await logout();
     navigate('/auth');
@@ -127,7 +122,7 @@ export function Layout({ children }: LayoutProps) {
                         ? 'bg-green-100 text-green-800'
                         : item.badge === 'AI'
                         ? 'bg-purple-100 text-purple-800'
-                        : 'bg-red-100 text-red-800'
+                        : 'text-red-800'
                     }`}
                   >
                     {item.badge}
@@ -135,41 +130,6 @@ export function Layout({ children }: LayoutProps) {
                 )}
               </Link>
             ))}
-          </div>
-
-          {/* Secondary Navigation */}
-          <div className="pt-6 border-t border-slate-700">
-            <div className="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-              Account
-            </div>
-            <div className="space-y-1">
-              {secondaryNavigation.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                    isActive(item.href)
-                      ? 'bg-slate-700 text-white'
-                      : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
-                  }`}
-                >
-                  <item.icon
-                    className={`mr-3 h-4 w-4 flex-shrink-0 ${
-                      isActive(item.href) ? 'text-white' : 'text-slate-400 group-hover:text-white'
-                    }`}
-                  />
-                  {item.name}
-                </Link>
-              ))}
-              <button
-                onClick={handleLogout}
-                className="group flex w-full items-center px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-700/50 hover:text-white rounded-lg transition-all duration-200"
-              >
-                <LogOut className="mr-3 h-4 w-4 flex-shrink-0 text-slate-400 group-hover:text-white" />
-                Logout
-              </button>
-            </div>
           </div>
         </nav>
 
@@ -188,6 +148,13 @@ export function Layout({ children }: LayoutProps) {
                 </p>
                 <p className="text-xs text-slate-400">Premium Member</p>
               </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
             </div>
           </div>
         )}
