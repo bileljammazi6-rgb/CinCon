@@ -20,7 +20,34 @@ import {
   Crown,
   TrendingUp,
   Bookmark,
-  Star
+  Star,
+  Sun,
+  Moon,
+  Volume2,
+  VolumeX,
+  Wifi,
+  WifiOff,
+  Download,
+  Share2,
+  Clock,
+  Calendar,
+  Eye,
+  ThumbsUp,
+  Filter,
+  Grid,
+  List,
+  ChevronDown,
+  ChevronRight,
+  Zap,
+  Sparkles,
+  Target,
+  Users,
+  Award,
+  ArrowRight,
+  RefreshCw,
+  Info,
+  HelpCircle,
+  ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -30,25 +57,116 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notifications, setNotifications] = useState(3);
+  const [notifications, setNotifications] = useState(5);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [showQuickActions, setShowQuickActions] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showFilters, setShowFilters] = useState(false);
+  const [onlineStatus, setOnlineStatus] = useState(navigator.onLine);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
+  // Online status detection
+  useEffect(() => {
+    const handleOnline = () => setOnlineStatus(true);
+    const handleOffline = () => setOnlineStatus(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Theme management
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.classList.toggle('light', theme === 'light');
+  }, [theme]);
+
   const navigation = [
-    { name: 'Home', href: '/', icon: Home, badge: null },
-    { name: 'Movies', href: '/movies', icon: Film, badge: null },
-    { name: 'TV Shows', href: '/tv-shows', icon: Tv, badge: null },
-    { name: 'Gaming', href: '/gaming', icon: Gamepad2, badge: 'NEW' },
-    { name: 'AI Chat', href: '/ai-chat', icon: Brain, badge: 'AI' },
-    { name: 'Messages', href: '/messages', icon: MessageCircle, badge: notifications > 0 ? notifications : null },
-    { name: 'My List', href: '/my-list', icon: Heart, badge: null },
-    { name: 'Search', href: '/search', icon: Search, badge: null },
+    { 
+      name: 'Home', 
+      href: '/', 
+      icon: Home, 
+      badge: null,
+      description: 'Discover trending content'
+    },
+    { 
+      name: 'Movies', 
+      href: '/movies', 
+      icon: Film, 
+      badge: null,
+      description: 'Latest movies & downloads'
+    },
+    { 
+      name: 'TV Shows', 
+      href: '/tv-shows', 
+      icon: Tv, 
+      badge: null,
+      description: 'Binge-worthy series'
+    },
+    { 
+      name: 'Gaming', 
+      href: '/gaming', 
+      icon: Gamepad2, 
+      badge: 'NEW',
+      description: 'AI-powered games'
+    },
+    { 
+      name: 'AI Chat', 
+      href: '/ai-chat', 
+      icon: Brain, 
+      badge: 'AI',
+      description: 'Conversational AI'
+    },
+    { 
+      name: 'Messages', 
+      href: '/messages', 
+      icon: MessageCircle, 
+      badge: notifications > 0 ? notifications : null,
+      description: 'Community chat'
+    },
+    { 
+      name: 'My List', 
+      href: '/my-list', 
+      icon: Heart, 
+      badge: null,
+      description: 'Your favorites'
+    },
+    { 
+      name: 'Search', 
+      href: '/search', 
+      icon: Search, 
+      badge: null,
+      description: 'Find anything'
+    },
+  ];
+
+  const quickActions = [
+    { name: 'Random Movie', icon: Film, action: () => navigate('/movies') },
+    { name: 'AI Insight', icon: Brain, action: () => navigate('/ai-chat') },
+    { name: 'Quick Game', icon: Gamepad2, action: () => navigate('/gaming') },
+    { name: 'Trending', icon: TrendingUp, action: () => navigate('/') },
   ];
 
   const handleLogout = async () => {
     await logout();
     navigate('/auth');
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery('');
+      setSidebarOpen(false);
+    }
   };
 
   const isActive = (href: string) => {
@@ -58,96 +176,218 @@ export function Layout({ children }: LayoutProps) {
     return location.pathname.startsWith(href);
   };
 
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
+  const toggleSound = () => {
+    setSoundEnabled(prev => !prev);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      theme === 'dark' 
+        ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900' 
+        : 'bg-gradient-to-br from-slate-50 via-purple-50 to-slate-100'
+    }`}>
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-gradient-to-b from-slate-800 via-slate-900 to-slate-800 shadow-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } ${
+          theme === 'dark' 
+            ? 'bg-gradient-to-b from-slate-800/95 via-slate-900/95 to-slate-800/95' 
+            : 'bg-gradient-to-b from-white/95 via-slate-50/95 to-white/95'
+        } backdrop-blur-xl shadow-2xl border-r ${
+          theme === 'dark' ? 'border-slate-700/50' : 'border-slate-200/50'
         }`}
       >
-        {/* Logo */}
-        <div className="flex h-16 items-center justify-between px-6 border-b border-slate-700">
-          <Link to="/" className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-r from-purple-600 to-pink-600">
-              <Crown className="h-6 w-6 text-white" />
+        {/* Logo & Header */}
+        <div className={`flex h-20 items-center justify-between px-6 border-b ${
+          theme === 'dark' ? 'border-slate-700' : 'border-slate-200'
+        }`}>
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg group-hover:shadow-purple-500/25 transition-all duration-300">
+              <Crown className="h-7 w-7 text-white" />
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                 CineFlix AI
               </h1>
-              <p className="text-xs text-slate-400">Entertainment Hub</p>
+              <p className={`text-xs ${
+                theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
+              }`}>
+                Entertainment Hub
+              </p>
             </div>
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden rounded-lg p-2 text-slate-400 hover:bg-slate-700 hover:text-white"
+            className="lg:hidden rounded-lg p-2 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
+        {/* Search Bar */}
+        <div className="p-4 border-b border-slate-700/50">
+          <form onSubmit={handleSearch} className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search movies, shows, games..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`w-full pl-10 pr-4 py-3 rounded-xl border-0 ${
+                theme === 'dark' 
+                  ? 'bg-slate-700/50 text-white placeholder-slate-400 focus:ring-2 focus:ring-purple-500' 
+                  : 'bg-slate-100/50 text-slate-900 placeholder-slate-500 focus:ring-2 focus:ring-purple-500'
+              } transition-all duration-200`}
+            />
+          </form>
+        </div>
+
         {/* Navigation */}
-        <nav className="flex-1 space-y-1 px-3 py-4">
-          <div className="space-y-2">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={`group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-                  isActive(item.href)
-                    ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 text-purple-300 border border-purple-500/30'
-                    : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
+        <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto">
+          {navigation.map((item) => (
+            <Link
+              key={item.name}
+              to={item.href}
+              onClick={() => setSidebarOpen(false)}
+              className={`group relative flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                isActive(item.href)
+                  ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 text-purple-300 border border-purple-500/30 shadow-lg shadow-purple-500/10'
+                  : `text-slate-300 hover:bg-slate-700/50 hover:text-white ${
+                      theme === 'light' ? 'hover:bg-slate-100/50' : ''
+                    }`
+              }`}
+            >
+              <item.icon
+                className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                  isActive(item.href) ? 'text-purple-400' : 'text-slate-400 group-hover:text-white'
                 }`}
-              >
-                <item.icon
-                  className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                    isActive(item.href) ? 'text-purple-400' : 'text-slate-400 group-hover:text-white'
-                  }`}
-                />
-                <span className="flex-1">{item.name}</span>
-                {item.badge && (
-                  <span
-                    className={`ml-auto inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      item.badge === 'NEW'
-                        ? 'bg-green-100 text-green-800'
-                        : item.badge === 'AI'
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'text-red-800'
-                    }`}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            ))}
-          </div>
+              />
+              <div className="flex-1">
+                <span className="flex items-center">
+                  {item.name}
+                  {item.badge && (
+                    <span
+                      className={`ml-auto inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                        item.badge === 'NEW'
+                          ? 'bg-green-100 text-green-800'
+                          : item.badge === 'AI'
+                          ? 'bg-purple-100 text-purple-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </span>
+                <p className={`text-xs mt-1 ${
+                  isActive(item.href) ? 'text-purple-300/70' : 'text-slate-500 group-hover:text-slate-300'
+                }`}>
+                  {item.description}
+                </p>
+              </div>
+            </Link>
+          ))}
         </nav>
 
-        {/* User Info */}
+        {/* Quick Actions */}
+        <div className="p-4 border-t border-slate-700/50">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className={`text-sm font-semibold ${
+              theme === 'dark' ? 'text-slate-300' : 'text-slate-700'
+            }`}>
+              Quick Actions
+            </h3>
+            <button
+              onClick={() => setShowQuickActions(!showQuickActions)}
+              className="p-1 rounded-lg hover:bg-slate-700/50 transition-colors"
+            >
+              <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${
+                showQuickActions ? 'rotate-180' : ''
+              }`} />
+            </button>
+          </div>
+          
+          {showQuickActions && (
+            <div className="space-y-2">
+              {quickActions.map((action) => (
+                <button
+                  key={action.name}
+                  onClick={action.action}
+                  className="w-full flex items-center px-3 py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors"
+                >
+                  <action.icon className="h-4 w-4 mr-2" />
+                  {action.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* User Info & Controls */}
         {user && (
-          <div className="border-t border-slate-700 p-4">
-            <div className="flex items-center space-x-3">
+          <div className={`border-t ${
+            theme === 'dark' ? 'border-slate-700' : 'border-slate-200'
+          } p-4`}>
+            <div className="flex items-center space-x-3 mb-3">
               <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
                 <span className="text-sm font-bold text-white">
                   {user.email?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">
+                <p className={`text-sm font-medium ${
+                  theme === 'dark' ? 'text-white' : 'text-slate-900'
+                } truncate`}>
                   {user.email || 'User'}
                 </p>
-                <p className="text-xs text-slate-400">Premium Member</p>
+                <p className={`text-xs ${
+                  theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
+                }`}>
+                  Premium Member
+                </p>
               </div>
+            </div>
+            
+            {/* Control Buttons */}
+            <div className="flex items-center justify-between">
+              <div className="flex space-x-1">
+                <button
+                  onClick={toggleTheme}
+                  className={`p-2 rounded-lg transition-colors ${
+                    theme === 'dark' 
+                      ? 'text-yellow-400 hover:bg-slate-700' 
+                      : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                  title={theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'}
+                >
+                  {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </button>
+                <button
+                  onClick={toggleSound}
+                  className={`p-2 rounded-lg transition-colors ${
+                    soundEnabled 
+                      ? 'text-green-400 hover:bg-slate-700' 
+                      : 'text-red-400 hover:bg-slate-700'
+                  }`}
+                  title={soundEnabled ? 'Mute Sound' : 'Unmute Sound'}
+                >
+                  {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                </button>
+              </div>
+              
               <button
                 onClick={handleLogout}
                 className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
@@ -158,40 +398,99 @@ export function Layout({ children }: LayoutProps) {
             </div>
           </div>
         )}
+
+        {/* Status Bar */}
+        <div className={`p-3 border-t ${
+          theme === 'dark' ? 'border-slate-700' : 'border-slate-200'
+        }`}>
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center space-x-2">
+              <div className={`w-2 h-2 rounded-full ${
+                onlineStatus ? 'bg-green-400' : 'bg-red-400'
+              }`} />
+              <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>
+                {onlineStatus ? 'Online' : 'Offline'}
+              </span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Wifi className={`h-3 w-3 ${
+                onlineStatus ? 'text-green-400' : 'text-red-400'
+              }`} />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Main Content */}
-      <div className="lg:pl-64">
+      <div className="lg:pl-72">
         {/* Top Header */}
-        <div className="sticky top-0 z-40 bg-slate-800/80 backdrop-blur-md border-b border-slate-700">
+        <div className={`sticky top-0 z-40 backdrop-blur-md border-b transition-colors duration-300 ${
+          theme === 'dark' 
+            ? 'bg-slate-800/80 border-slate-700' 
+            : 'bg-white/80 border-slate-200'
+        }`}>
           <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             {/* Mobile menu button */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden rounded-lg p-2 text-slate-400 hover:bg-slate-700 hover:text-white"
+              className="lg:hidden rounded-lg p-2 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
             >
               <Menu className="h-6 w-6" />
             </button>
 
-            {/* Search Bar */}
-            <div className="flex-1 max-w-lg mx-4 lg:mx-8">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search movies, TV shows, games..."
-                  className="w-full rounded-lg border-0 bg-slate-700 py-2 pl-10 pr-4 text-white placeholder-slate-400 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-800"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      navigate('/search');
-                    }
-                  }}
-                />
-              </div>
+            {/* Page Title */}
+            <div className="flex-1 text-center lg:text-left">
+              <h2 className={`text-lg font-semibold ${
+                theme === 'dark' ? 'text-white' : 'text-slate-900'
+              }`}>
+                {location.pathname === '/' && 'Home'}
+                {location.pathname === '/movies' && 'Movies'}
+                {location.pathname === '/tv-shows' && 'TV Shows'}
+                {location.pathname === '/gaming' && 'Gaming'}
+                {location.pathname === '/ai-chat' && 'AI Chat'}
+                {location.pathname === '/messages' && 'Messages'}
+                {location.pathname === '/my-list' && 'My List'}
+                {location.pathname === '/search' && 'Search'}
+                {location.pathname.startsWith('/movie/') && 'Movie Details'}
+                {location.pathname.startsWith('/tv/') && 'TV Show Details'}
+              </h2>
             </div>
 
             {/* Right side actions */}
             <div className="flex items-center space-x-4">
+              {/* View Mode Toggle */}
+              <div className="hidden sm:flex items-center space-x-1 bg-slate-700/50 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'grid' 
+                      ? 'bg-purple-600 text-white' 
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Grid className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'list' 
+                      ? 'bg-purple-600 text-white' 
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <List className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Filters Toggle */}
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="hidden sm:flex items-center space-x-2 bg-slate-700/50 hover:bg-slate-600/50 text-white px-3 py-2 rounded-lg transition-colors"
+              >
+                <Filter className="h-4 w-4" />
+                <span className="text-sm">Filters</span>
+              </button>
+
               {/* Notifications */}
               <button className="relative rounded-lg p-2 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors">
                 <Bell className="h-5 w-5" />
@@ -204,11 +503,11 @@ export function Layout({ children }: LayoutProps) {
 
               {/* Quick Actions */}
               <div className="hidden sm:flex items-center space-x-2">
-                <button className="inline-flex items-center rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-medium text-white hover:from-purple-700 hover:to-pink-700 transition-all duration-200">
+                <button className="inline-flex items-center rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-medium py-2 px-4 transition-all duration-200 hover:scale-105">
                   <Play className="mr-2 h-4 w-4" />
                   Watch Now
                 </button>
-                <button className="inline-flex items-center rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-600 transition-colors">
+                <button className="inline-flex items-center rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium py-2 px-4 transition-colors">
                   <Plus className="mr-2 h-4 w-4" />
                   Add to List
                 </button>
