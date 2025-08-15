@@ -1,18 +1,16 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { tmdbService } from '../services/tmdbService';
 import { MovieData } from '../types';
 
 interface MovieContextType {
   movies: MovieData[];
-  trending: MovieData[];
-  popular: MovieData[];
   loading: boolean;
-  searchMovies: (query: string) => Promise<MovieData[]>;
-  getMovieById: (id: string) => Promise<MovieData | null>;
+  error: string | null;
   getPopularMovies: () => Promise<MovieData[]>;
   getTrendingMovies: () => Promise<MovieData[]>;
   getTopRatedMovies: () => Promise<MovieData[]>;
   getUpcomingMovies: () => Promise<MovieData[]>;
+  searchMovies: (query: string) => Promise<MovieData[]>;
   searchTVShows: (query: string) => Promise<MovieData[]>;
   getPopularTVShows: () => Promise<MovieData[]>;
   getTopRatedTVShows: () => Promise<MovieData[]>;
@@ -21,193 +19,152 @@ interface MovieContextType {
 
 const MovieContext = createContext<MovieContextType | undefined>(undefined);
 
-export function useMovies() {
+export const useMovies = () => {
   const context = useContext(MovieContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useMovies must be used within a MovieProvider');
   }
   return context;
-}
+};
 
-interface MovieProviderProps {
-  children: ReactNode;
-}
-
-export function MovieProvider({ children }: MovieProviderProps) {
+export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [movies, setMovies] = useState<MovieData[]>([]);
-  const [trending, setTrending] = useState<MovieData[]>([]);
-  const [popular, setPopular] = useState<MovieData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        setLoading(true);
-        const [trendingData, popularData] = await Promise.all([
-          tmdbService.getTrendingMovies(),
-          tmdbService.getPopularMovies()
-        ]);
-        
-        setTrending(trendingData);
-        setPopular(popularData);
-        setMovies([...trendingData, ...popularData]);
-      } catch (error) {
-        console.error('Error fetching initial movie data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInitialData();
-  }, []);
-
-  const searchMovies = async (query: string): Promise<MovieData[]> => {
-    if (!query.trim()) {
-      return [...trending, ...popular];
-    }
-
-    try {
-      const searchResults = await tmdbService.searchMovie(query);
-      if (searchResults) {
-        return [searchResults];
-      } else {
-        return [];
-      }
-    } catch (error) {
-      console.error('Error searching movies:', error);
-      return [];
-    }
-  };
-
-  const getMovieById = async (id: string): Promise<MovieData | null> => {
-    try {
-      // For now, we'll search through existing movies
-      // In a real app, you'd have a dedicated endpoint for this
-      const movie = movies.find(m => m.id.toString() === id);
-      if (movie) return movie;
-      
-      // If not found, try to search for it
-      const searchResult = await tmdbService.searchMovie(id);
-      return searchResult;
-    } catch (error) {
-      console.error('Error getting movie by ID:', error);
-      return null;
-    }
+  const handleError = (error: any, operation: string) => {
+    console.error(`Error in ${operation}:`, error);
+    setError(`Failed to ${operation}. Please try again.`);
+    // Return empty array instead of throwing
+    return [];
   };
 
   const getPopularMovies = async (): Promise<MovieData[]> => {
     try {
-      return await tmdbService.getPopularMovies();
+      setLoading(true);
+      setError(null);
+      const data = await tmdbService.getPopularMovies();
+      return data || [];
     } catch (error) {
-      console.error('Error getting popular movies:', error);
-      return [];
+      return handleError(error, 'fetch popular movies');
+    } finally {
+      setLoading(false);
     }
   };
 
   const getTrendingMovies = async (): Promise<MovieData[]> => {
     try {
-      return await tmdbService.getTrendingMovies();
+      setLoading(true);
+      setError(null);
+      const data = await tmdbService.getTrendingMovies();
+      return data || [];
     } catch (error) {
-      console.error('Error getting trending movies:', error);
-      return [];
+      return handleError(error, 'fetch trending movies');
+    } finally {
+      setLoading(false);
     }
   };
 
   const getTopRatedMovies = async (): Promise<MovieData[]> => {
     try {
-      const response = await fetch(
-        `https://api.themoviedb.org/3/movie/top_rated?api_key=${import.meta.env.VITE_TMDB_API_KEY || '0a7ef230ab60a26cca44c7d8a6d24c25'}&language=en-US&page=1`
-      );
-      if (!response.ok) throw new Error(`TMDB API Error: ${response.status}`);
-      const data = await response.json();
-      return data.results || [];
+      setLoading(true);
+      setError(null);
+      const data = await tmdbService.getTopRatedMovies();
+      return data || [];
     } catch (error) {
-      console.error('Error getting top rated movies:', error);
-      return [];
+      return handleError(error, 'fetch top rated movies');
+    } finally {
+      setLoading(false);
     }
   };
 
   const getUpcomingMovies = async (): Promise<MovieData[]> => {
     try {
-      const response = await fetch(
-        `https://api.themoviedb.org/3/movie/upcoming?api_key=${import.meta.env.VITE_TMDB_API_KEY || '0a7ef230ab60a26cca44c7d8a6d24c25'}&language=en-US&page=1`
-      );
-      if (!response.ok) throw new Error(`TMDB API Error: ${response.status}`);
-      const data = await response.json();
-      return data.results || [];
+      setLoading(true);
+      setError(null);
+      const data = await tmdbService.getUpcomingMovies();
+      return data || [];
     } catch (error) {
-      console.error('Error getting upcoming movies:', error);
-      return [];
+      return handleError(error, 'fetch upcoming movies');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const searchMovies = async (query: string): Promise<MovieData[]> => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await tmdbService.searchMovies(query);
+      return data || [];
+    } catch (error) {
+      return handleError(error, 'search movies');
+    } finally {
+      setLoading(false);
     }
   };
 
   const searchTVShows = async (query: string): Promise<MovieData[]> => {
     try {
-      const response = await fetch(
-        `https://api.themoviedb.org/3/search/tv?api_key=${import.meta.env.VITE_TMDB_API_KEY || '0a7ef230ab60a26cca44c7d8a6d24c25'}&query=${encodeURIComponent(query)}&language=en-US`
-      );
-      if (!response.ok) throw new Error(`TMDB API Error: ${response.status}`);
-      const data = await response.json();
-      return data.results || [];
+      setLoading(true);
+      setError(null);
+      const data = await tmdbService.searchTVShows(query);
+      return data || [];
     } catch (error) {
-      console.error('Error searching TV shows:', error);
-      return [];
+      return handleError(error, 'search TV shows');
+    } finally {
+      setLoading(false);
     }
   };
 
   const getPopularTVShows = async (): Promise<MovieData[]> => {
     try {
-      const response = await fetch(
-        `https://api.themoviedb.org/3/tv/popular?api_key=${import.meta.env.VITE_TMDB_API_KEY || '0a7ef230ab60a26cca44c7d8a6d24c25'}&language=en-US&page=1`
-      );
-      if (!response.ok) throw new Error(`TMDB API Error: ${response.status}`);
-      const data = await response.json();
-      return data.results || [];
+      setLoading(true);
+      setError(null);
+      const data = await tmdbService.getPopularTVShows();
+      return data || [];
     } catch (error) {
-      console.error('Error getting popular TV shows:', error);
-      return [];
+      return handleError(error, 'fetch popular TV shows');
+    } finally {
+      setLoading(false);
     }
   };
 
   const getTopRatedTVShows = async (): Promise<MovieData[]> => {
     try {
-      const response = await fetch(
-        `https://api.themoviedb.org/3/tv/top_rated?api_key=${import.meta.env.VITE_TMDB_API_KEY || '0a7ef230ab60a26cca44c7d8a6d24c25'}&language=en-US&page=1`
-      );
-      if (!response.ok) throw new Error(`TMDB API Error: ${response.status}`);
-      const data = await response.json();
-      return data.results || [];
+      setLoading(true);
+      setError(null);
+      const data = await tmdbService.getTopRatedTVShows();
+      return data || [];
     } catch (error) {
-      console.error('Error getting top rated TV shows:', error);
-      return [];
+      return handleError(error, 'fetch top rated TV shows');
+    } finally {
+      setLoading(false);
     }
   };
 
   const getOnTheAirTVShows = async (): Promise<MovieData[]> => {
     try {
-      const response = await fetch(
-        `https://api.themoviedb.org/3/tv/on_the_air?api_key=${import.meta.env.VITE_TMDB_API_KEY || '0a7ef230ab60a26cca44c7d8a6d24c25'}&language=en-US&page=1`
-      );
-      if (!response.ok) throw new Error(`TMDB API Error: ${response.status}`);
-      const data = await response.json();
-      return data.results || [];
+      setLoading(true);
+      setError(null);
+      const data = await tmdbService.getOnTheAirTVShows();
+      return data || [];
     } catch (error) {
-      console.error('Error getting on the air TV shows:', error);
-      return [];
+      return handleError(error, 'fetch on the air TV shows');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const value = {
+  const value: MovieContextType = {
     movies,
-    trending,
-    popular,
     loading,
-    searchMovies,
-    getMovieById,
+    error,
     getPopularMovies,
     getTrendingMovies,
     getTopRatedMovies,
     getUpcomingMovies,
+    searchMovies,
     searchTVShows,
     getPopularTVShows,
     getTopRatedTVShows,
@@ -219,4 +176,4 @@ export function MovieProvider({ children }: MovieProviderProps) {
       {children}
     </MovieContext.Provider>
   );
-}
+};
