@@ -159,6 +159,15 @@ export const findMovieLinks = (title: string): string[] => {
 };
 
 // Get all available movie titles
-export const getAvailableMovies = (): string[] => {
-  return Object.keys(movieLinks);
+export const getAvailableMovies = (): MovieData[] => {
+  return Object.keys(movieLinks).map(title => ({
+    id: Math.random(), // Generate a random ID since we don't have TMDB IDs
+    title: title,
+    overview: `Watch ${title} - Available for streaming with high quality download links.`,
+    poster_path: '', // We'll use a placeholder or try to find from TMDB
+    release_date: '2024', // Placeholder
+    vote_average: 8.5, // Placeholder rating
+    genre_ids: [],
+    downloadLinks: movieLinks[title]
+  }));
 };

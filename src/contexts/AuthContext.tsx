@@ -8,6 +8,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, username: string, fullName?: string) => Promise<{ data: any; error: any }>;
   signIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
   signOut: () => Promise<{ error: any }>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -89,12 +90,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return { error };
   };
 
+  const logout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   const value = {
     user,
     loading,
     signUp,
     signIn,
     signOut,
+    logout,
   };
 
   return (
