@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
@@ -13,11 +13,47 @@ import AIChat from './pages/AIChat';
 import { AuthProvider } from './contexts/AuthContext';
 import { MovieProvider } from './contexts/MovieContext';
 import { FloatingAIChat } from './components/FloatingAIChat';
+import { MoviePlayer } from './components/MoviePlayer';
 import './styles/globals.css';
 import { AuthForm } from './components/Auth/AuthForm';
 
 function App() {
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [moviePlayer, setMoviePlayer] = useState<{
+    isOpen: boolean;
+    movie: any;
+    downloadLinks: string[];
+  }>({
+    isOpen: false,
+    movie: null,
+    downloadLinks: []
+  });
+
+  useEffect(() => {
+    // Listen for custom event to open movie player
+    const handleOpenMoviePlayer = (event: CustomEvent) => {
+      const { movie, downloadLinks } = event.detail;
+      setMoviePlayer({
+        isOpen: true,
+        movie,
+        downloadLinks
+      });
+    };
+
+    window.addEventListener('openMoviePlayer', handleOpenMoviePlayer as EventListener);
+
+    return () => {
+      window.removeEventListener('openMoviePlayer', handleOpenMoviePlayer as EventListener);
+    };
+  }, []);
+
+  const closeMoviePlayer = () => {
+    setMoviePlayer({
+      isOpen: false,
+      movie: null,
+      downloadLinks: []
+    });
+  };
 
   return (
     <AuthProvider>
@@ -44,6 +80,13 @@ function App() {
             <FloatingAIChat 
               isOpen={isAIChatOpen} 
               onToggle={() => setIsAIChatOpen(!isAIChatOpen)} 
+            />
+
+            {/* Global Movie Player */}
+            <MoviePlayer
+              movie={moviePlayer.movie}
+              isOpen={moviePlayer.isOpen}
+              onClose={closeMoviePlayer}
             />
           </div>
         </Router>

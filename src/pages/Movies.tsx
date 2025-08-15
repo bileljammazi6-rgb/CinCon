@@ -234,19 +234,35 @@ export function Movies() {
                   </div>
                   {hasDownloads && (
                     <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                      Download
+                      Watch Available
                     </div>
                   )}
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                <Link
-                  to={`/movie/${movie.id}`}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center"
-                >
-                  <Play className="h-4 w-4 mr-2" />
-                  Watch
-                </Link>
+                {hasDownloads ? (
+                  <button
+                    onClick={() => {
+                      // Open MoviePlayer with this movie
+                      const event = new CustomEvent('openMoviePlayer', { 
+                        detail: { movie, downloadLinks } 
+                      });
+                      window.dispatchEvent(event);
+                    }}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center"
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    Watch Now
+                  </button>
+                ) : (
+                  <Link
+                    to={`/movie/${movie.id}`}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center"
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    View Details
+                  </Link>
+                )}
                 <button className="p-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white rounded-lg transition-colors">
                   <Heart className="h-4 w-4" />
                 </button>
@@ -281,7 +297,7 @@ export function Movies() {
           
           {hasDownloads && (
             <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-              Download
+              Watch Available
             </div>
           )}
           
@@ -304,13 +320,29 @@ export function Movies() {
           </div>
           
           <div className="flex items-center space-x-2">
-            <Link
-              to={`/movie/${movie.id}`}
-              className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-all duration-200 flex items-center justify-center"
-            >
-              <Play className="h-3 w-3 mr-1" />
-              Watch
-            </Link>
+            {hasDownloads ? (
+              <button
+                onClick={() => {
+                  // Open MoviePlayer with this movie
+                  const event = new CustomEvent('openMoviePlayer', { 
+                    detail: { movie, downloadLinks } 
+                  });
+                  window.dispatchEvent(event);
+                }}
+                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-all duration-200 flex items-center justify-center"
+              >
+                <Play className="h-3 w-3 mr-1" />
+                Watch Now
+              </button>
+            ) : (
+              <Link
+                to={`/movie/${movie.id}`}
+                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-all duration-200 flex items-center justify-center"
+              >
+                <Play className="h-3 w-3 mr-1" />
+                View Details
+              </Link>
+            )}
             <button className="p-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white rounded-lg transition-colors">
               <Heart className="h-4 w-4" />
             </button>
@@ -326,11 +358,13 @@ export function Movies() {
           </div>
         </div>
         
-        <Link
-          to={`/movie/${movie.id}`}
-          className="absolute inset-0 z-10"
-          aria-label={`View details for ${movie.title}`}
-        />
+        {!hasDownloads && (
+          <Link
+            to={`/movie/${movie.id}`}
+            className="absolute inset-0 z-10"
+            aria-label={`View details for ${movie.title}`}
+          />
+        )}
       </div>
     );
   };

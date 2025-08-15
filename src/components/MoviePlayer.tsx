@@ -1,32 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Play, 
-  Pause, 
-  SkipBack, 
-  SkipForward, 
-  Volume2, 
-  VolumeX, 
-  Maximize2, 
-  Minimize2, 
-  Settings, 
-  Download, 
-  Share2, 
-  Heart, 
-  Brain, 
-  Crown, 
-  Sparkles, 
-  MessageCircle, 
-  Info, 
-  Clock, 
-  Eye, 
-  Star,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  RotateCcw,
-  RotateCw,
-  Zap
-} from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, Minimize2, Settings, Download, Share2, Heart, Brain, Crown, Sparkles, MessageCircle, Info, Clock, Eye, Star, X, ChevronLeft, ChevronRight, RotateCcw, RotateCw, Zap } from 'lucide-react';
 import { geminiService } from '../services/geminiService';
 import { findMovieLinks } from '../data/movieLinks';
 
@@ -52,6 +25,7 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
   const [quality, setQuality] = useState('1080p');
   const [showSettings, setShowSettings] = useState(false);
   const [showDownloadOptions, setShowDownloadOptions] = useState(false);
+  const [selectedVideoSource, setSelectedVideoSource] = useState<string>('');
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -60,45 +34,67 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
   const downloadLinks = findMovieLinks(movie?.title || '');
   const hasDownloads = downloadLinks.length > 0;
 
+  // Set the first available video source when component opens
   useEffect(() => {
-    if (isOpen && movie) {
-      generateAIInsight();
+    if (isOpen && hasDownloads && downloadLinks.length > 0) {
+      setSelectedVideoSource(downloadLinks[0]);
     }
+  }, [isOpen, hasDownloads, downloadLinks]);
+
+  useEffect(() => { 
+    if (isOpen && movie) { 
+      generateAIInsight(); 
+    } 
   }, [isOpen, movie]);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleMouseMove = () => {
       setShowControls(true);
       if (controlsTimeoutRef.current) {
         clearTimeout(controlsTimeoutRef.current);
       }
-      controlsTimeoutRef.current = setTimeout(() => {
-        if (isPlaying) {
+      if (isPlaying) {
+        controlsTimeoutRef.current = setTimeout(() => {
           setShowControls(false);
-        }
-      }, 3000);
+        }, 3000);
+      }
     };
 
-    if (isOpen) {
-      document.addEventListener('mousemove', handleMouseMove);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        if (controlsTimeoutRef.current) {
-          clearTimeout(controlsTimeoutRef.current);
-        }
-      };
+    const handleMouseLeave = () => {
+      if (isPlaying) {
+        controlsTimeoutRef.current = setTimeout(() => {
+          setShowControls(false);
+        }, 1000);
+      }
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('mousemove', handleMouseMove);
+      container.addEventListener('mouseleave', handleMouseLeave);
     }
+
+    return () => {
+      if (container) {
+        container.removeEventListener('mousemove', handleMouseMove);
+        container.removeEventListener('mouseleave', handleMouseLeave);
+      }
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+    };
   }, [isOpen, isPlaying]);
 
   const generateAIInsight = async () => {
-    if (!movie?.title) return;
-    
     setIsLoadingInsight(true);
     try {
-      const insight = await geminiService.analyzeMovie(movie.title, movie);
+      const insight = await geminiService.analyzeMovie(movie.title, movie.overview || '');
       setAiInsight(insight);
     } catch (error) {
-      setAiInsight("🎬 Even the omnipotent Bilel needs a moment to analyze this masterpiece. Let me gather my thoughts about this cinematic gem...");
+      console.error('Failed to generate AI insight:', error);
+      setAiInsight("🎬 This movie looks absolutely fascinating! The plot, the cinematography, the performances - it's got everything that makes cinema magical. I'd love to dive deeper into what makes this film special!");
     } finally {
       setIsLoadingInsight(false);
     }
@@ -141,7 +137,6 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
     if (videoRef.current) {
       videoRef.current.volume = newVolume;
     }
-    setIsMuted(newVolume === 0);
   };
 
   const toggleMute = () => {
@@ -164,7 +159,6 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
   const skipTime = (seconds: number) => {
     if (videoRef.current) {
       videoRef.current.currentTime += seconds;
-      setCurrentTime(videoRef.current.currentTime);
     }
   };
 
@@ -176,7 +170,15 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
 
   const handleDownload = (url: string) => {
     window.open(url, '_blank');
-    setShowDownloadOptions(false);
+  };
+
+  const changeVideoSource = (url: string) => {
+    setSelectedVideoSource(url);
+    if (videoRef.current) {
+      videoRef.current.src = url;
+      videoRef.current.load();
+      setIsPlaying(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -185,7 +187,7 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
     <div className="fixed inset-0 z-50 bg-black">
       <div ref={containerRef} className="relative w-full h-full">
         {/* Video Element */}
-        <video
+        <video 
           ref={videoRef}
           className="w-full h-full object-contain"
           onTimeUpdate={handleTimeUpdate}
@@ -194,54 +196,53 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
           onPause={() => setIsPlaying(false)}
           onEnded={() => setIsPlaying(false)}
         >
-          <source src={movie?.videoUrl || '/sample-video.mp4'} type="video/mp4" />
+          {selectedVideoSource ? (
+            <source src={selectedVideoSource} type="video/mp4" />
+          ) : (
+            <source src="/sample-video.mp4" type="video/mp4" />
+          )}
           Your browser does not support the video tag.
         </video>
 
         {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+        <div className={`absolute inset-0 bg-black/20 transition-opacity duration-300 ${
+          showControls ? 'opacity-100' : 'opacity-0'
+        }`} />
 
         {/* Top Controls */}
-        <div className={`absolute top-0 left-0 right-0 p-4 transition-opacity duration-300 ${
-          showControls ? 'opacity-100' : 'opacity-0'
+        <div className={`absolute top-0 left-0 right-0 p-4 transition-transform duration-300 ${
+          showControls ? 'translate-y-0' : '-translate-y-full'
         }`}>
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={onClose}
-                className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-              <div className="text-white">
-                <h2 className="text-lg font-semibold">{movie?.title}</h2>
-                <p className="text-sm text-gray-300">{movie?.release_date?.split('-')[0]} • {Math.floor((movie?.vote_average || 0) * 10)} min</p>
-              </div>
-            </div>
+            <button
+              onClick={onClose}
+              className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
             
             <div className="flex items-center space-x-2">
+              <h2 className="text-white font-semibold text-lg">{movie?.title}</h2>
               <button
                 onClick={() => setShowAIInsights(!showAIInsights)}
-                className="p-2 bg-purple-600/80 hover:bg-purple-600 text-white rounded-lg transition-colors"
-                title="Bilel's AI Insights"
+                className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                title="AI Insights"
               >
-                <Brain className="h-5 w-5" />
+                <Brain className="h-4 w-4" />
               </button>
-              {hasDownloads && (
-                <button
-                  onClick={() => setShowDownloadOptions(!showDownloadOptions)}
-                  className="p-2 bg-green-600/80 hover:bg-green-600 text-white rounded-lg transition-colors"
-                  title="Download Options"
-                >
-                  <Download className="h-5 w-5" />
-                </button>
-              )}
+              <button
+                onClick={() => setShowDownloadOptions(!showDownloadOptions)}
+                className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                title="Download Options"
+              >
+                <Download className="h-4 w-4" />
+              </button>
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
+                className="p-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors"
                 title="Settings"
               >
-                <Settings className="h-5 w-5" />
+                <Settings className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -251,17 +252,17 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
         {!isPlaying && (
           <button
             onClick={togglePlay}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-6 bg-white/20 hover:bg-white/30 text-white rounded-full transition-colors backdrop-blur-sm"
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-4 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
           >
-            <Play className="h-16 w-16 fill-current" />
+            <Play className="h-12 w-12" />
           </button>
         )}
 
         {/* Bottom Controls */}
-        <div className={`absolute bottom-0 left-0 right-0 p-4 transition-opacity duration-300 ${
-          showControls ? 'opacity-100' : 'opacity-0'
+        <div className={`absolute bottom-0 left-0 right-0 p-4 transition-transform duration-300 ${
+          showControls ? 'translate-y-0' : 'translate-y-full'
         }`}>
-          {/* Progress Bar */}
+          {/* Seek Bar */}
           <div className="mb-4">
             <input
               type="range"
@@ -269,12 +270,9 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
               max={duration || 0}
               value={currentTime}
               onChange={handleSeek}
-              className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
-              style={{
-                background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${(currentTime / (duration || 1)) * 100}%, #4b5563 ${(currentTime / (duration || 1)) * 100}%, #4b5563 100%)`
-              }}
+              className="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer slider"
             />
-            <div className="flex justify-between text-white text-sm mt-1">
+            <div className="flex justify-between text-sm text-white mt-1">
               <span>{formatTime(currentTime)}</span>
               <span>{formatTime(duration)}</span>
             </div>
@@ -282,36 +280,34 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
 
           {/* Control Buttons */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
               <button
                 onClick={() => skipTime(-10)}
                 className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
-                title="Skip Back 10s"
               >
                 <SkipBack className="h-5 w-5" />
               </button>
               
               <button
                 onClick={togglePlay}
-                className="p-3 bg-white hover:bg-gray-200 text-black rounded-full transition-colors"
+                className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
               >
-                {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 fill-current" />}
+                {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
               </button>
               
               <button
                 onClick={() => skipTime(10)}
                 className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
-                title="Skip Forward 10s"
               >
                 <SkipForward className="h-5 w-5" />
               </button>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 ml-4">
                 <button
                   onClick={toggleMute}
                   className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
                 >
-                  {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                 </button>
                 <input
                   type="range"
@@ -320,7 +316,7 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
                   step="0.1"
                   value={volume}
                   onChange={handleVolumeChange}
-                  className="w-20 h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                  className="w-20 h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer slider"
                 />
               </div>
             </div>
@@ -329,19 +325,19 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
               <button
                 onClick={() => setShowSubtitles(!showSubtitles)}
                 className={`p-2 rounded-lg transition-colors ${
-                  showSubtitles ? 'bg-purple-600 text-white' : 'bg-black/50 hover:bg-black/70 text-white'
+                  showSubtitles 
+                    ? 'bg-purple-600 text-white' 
+                    : 'bg-black/50 hover:bg-black/70 text-white'
                 }`}
-                title="Subtitles"
               >
-                <Eye className="h-5 w-5" />
+                <MessageCircle className="h-4 w-4" />
               </button>
               
               <button
                 onClick={toggleFullscreen}
                 className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
-                title="Fullscreen"
               >
-                {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
               </button>
             </div>
           </div>
@@ -349,20 +345,15 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
 
         {/* AI Insights Panel */}
         {showAIInsights && (
-          <div className="absolute top-20 right-4 w-96 max-h-96 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl p-6 shadow-2xl border border-slate-700/50 backdrop-blur-xl overflow-y-auto">
+          <div className="absolute top-20 right-4 w-80 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-xl p-6 max-h-96 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
-                  <Crown className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-white font-semibold">Bilel's AI Insights</h3>
-                  <p className="text-xs text-slate-400">Your Entertainment Guru</p>
-                </div>
+              <div className="flex items-center space-x-2">
+                <Crown className="h-5 w-5 text-yellow-400" />
+                <h3 className="text-lg font-semibold text-white">Bilel's AI Analysis</h3>
               </div>
               <button
                 onClick={() => setShowAIInsights(false)}
-                className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                className="p-1 text-slate-400 hover:text-white transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -373,61 +364,86 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
                 <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                 <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                <span>Bilel is analyzing...</span>
+                <span>AI is analyzing...</span>
               </div>
             ) : (
-              <div className="text-slate-200 text-sm leading-relaxed">
-                <div className="mb-3 p-3 bg-slate-700/50 rounded-lg">
-                  <p className="text-xs text-slate-400 mb-2">🎬 Current Scene Analysis</p>
-                  <p>You're watching "{movie?.title}" at {formatTime(currentTime)}</p>
-                </div>
-                <div className="prose prose-sm prose-invert max-w-none">
-                  <p className="whitespace-pre-wrap">{aiInsight}</p>
-                </div>
+              <div className="prose prose-invert max-w-none">
+                <p className="text-slate-200 leading-relaxed text-sm">
+                  {aiInsight}
+                </p>
               </div>
             )}
           </div>
         )}
 
         {/* Download Options Panel */}
-        {showDownloadOptions && hasDownloads && (
-          <div className="absolute top-20 right-4 w-80 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl p-6 shadow-2xl border border-slate-700/50 backdrop-blur-xl">
+        {showDownloadOptions && (
+          <div className="absolute top-20 right-4 w-80 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-semibold">Download Options</h3>
+              <div className="flex items-center space-x-2">
+                <Download className="h-5 w-5 text-green-400" />
+                <h3 className="text-lg font-semibold text-white">Download Options</h3>
+              </div>
               <button
                 onClick={() => setShowDownloadOptions(false)}
-                className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                className="p-1 text-slate-400 hover:text-white transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
             
-            <div className="space-y-3">
-              {downloadLinks.map((link, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleDownload(link)}
-                  className="w-full flex items-center justify-between p-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <Download className="h-4 w-4" />
-                    <span className="text-sm">Download {index + 1}</span>
+            {hasDownloads ? (
+              <div className="space-y-3">
+                <p className="text-slate-300 text-sm mb-3">
+                  Choose a video source to watch or download:
+                </p>
+                {downloadLinks.map((link, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <span className="text-sm text-white">Source {index + 1}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => changeVideoSource(link)}
+                        className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                          selectedVideoSource === link
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-slate-600 hover:bg-slate-500 text-white'
+                        }`}
+                      >
+                        {selectedVideoSource === link ? 'Playing' : 'Watch'}
+                      </button>
+                      <button
+                        onClick={() => handleDownload(link)}
+                        className="px-3 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                      >
+                        Download
+                      </button>
+                    </div>
                   </div>
-                  <span className="text-xs text-slate-400">Click to download</span>
-                </button>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <Download className="h-8 w-8 text-slate-600 mx-auto mb-2" />
+                <p className="text-slate-400">No download links available</p>
+              </div>
+            )}
           </div>
         )}
 
         {/* Settings Panel */}
         {showSettings && (
-          <div className="absolute top-20 right-4 w-80 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl p-6 shadow-2xl border border-slate-700/50 backdrop-blur-xl">
+          <div className="absolute top-20 right-4 w-80 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-semibold">Player Settings</h3>
+              <div className="flex items-center space-x-2">
+                <Settings className="h-5 w-5 text-blue-400" />
+                <h3 className="text-lg font-semibold text-white">Player Settings</h3>
+              </div>
               <button
                 onClick={() => setShowSettings(false)}
-                className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                className="p-1 text-slate-400 hover:text-white transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -438,8 +454,14 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
                 <label className="block text-sm font-medium text-slate-300 mb-2">Playback Speed</label>
                 <select
                   value={playbackSpeed}
-                  onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500"
+                  onChange={(e) => {
+                    const speed = parseFloat(e.target.value);
+                    setPlaybackSpeed(speed);
+                    if (videoRef.current) {
+                      videoRef.current.playbackRate = speed;
+                    }
+                  }}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
                   <option value={0.5}>0.5x</option>
                   <option value={0.75}>0.75x</option>
@@ -449,21 +471,21 @@ export function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps) {
                   <option value={2}>2x</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">Quality</label>
                 <select
                   value={quality}
                   onChange={(e) => setQuality(e.target.value)}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500"
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
-                  <option value="480p">480p</option>
-                  <option value="720p">720p</option>
+                  <option value="auto">Auto</option>
                   <option value="1080p">1080p</option>
-                  <option value="4K">4K</option>
+                  <option value="720p">720p</option>
+                  <option value="480p">480p</option>
                 </select>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-300">Subtitles</span>
                 <button
