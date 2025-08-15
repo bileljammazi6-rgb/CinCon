@@ -19,6 +19,7 @@ import {
   Bot
 } from 'lucide-react';
 import { geminiService } from '../services/geminiService';
+import { supabaseService, ChatMessage as SupabaseMessage, ChatRoom } from '../services/supabaseService';
 import { VoiceRecorder } from '../components/VoiceRecorder';
 import { ImageUpload } from '../components/ImageUpload';
 
@@ -52,32 +53,68 @@ const AIChat: React.FC = () => {
   const [smartSuggestions, setSmartSuggestions] = useState<string[]>([]);
   const [aiPersonality, setAiPersonality] = useState<'bilel' | 'assistant' | 'creative'>('bilel');
   const [temperature, setTemperature] = useState(0.7);
+  const [currentRoom, setCurrentRoom] = useState<string>('ai');
+  const [username, setUsername] = useState<string>('Anonymous');
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    initializeChat();
     loadChatSessions();
-    createNewSession();
   }, []);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
+  const initializeChat = async () => {
+    try {
+      // Initialize database and create AI room
+      await supabaseService.initializeDatabase();
+      
+      // Load existing messages from AI room
+      const existingMessages = await supabaseService.getRoomMessages('ai', 50);
+      const formattedMessages: Message[] = existingMessages.map(msg => ({
+        id: msg.id.toString(),
+        content: msg.content,
+        sender: msg.sender === 'ai' ? 'ai' : 'user',
+        timestamp: new Date(msg.created_at),
+        type: 'text'
+      }));
+      
+      setMessages(formattedMessages);
+      
+      // Subscribe to real-time messages
+      const subscription = supabaseService.subscribeToMessages('ai', (newMessage) => {
+        const formattedMessage: Message = {
+          id: newMessage.id.toString(),
+          content: newMessage.content,
+          sender: newMessage.sender === 'ai' ? 'ai' : 'user',
+          timestamp: new Date(newMessage.created_at),
+          type: 'text'
+        };
+        
+        setMessages(prev => [...prev, formattedMessage]);
+      });
+      
+      return () => {
+        subscription.unsubscribe();
+      };
+    } catch (error) {
+      console.error('Failed to initialize chat:', error);
+    }
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const loadChatSessions = () => {
-    const saved = localStorage.getItem('aiChatSessions');
-    if (saved) {
-      const sessions = JSON.parse(saved);
-      setChatSessions(sessions);
-      if (sessions.length > 0) {
-        setCurrentSession(sessions[0]);
-        setMessages(sessions[0].messages);
-      }
+    // Load from localStorage or database
+    const stats = localStorage.getItem('aiChatSessions');
+    if (stats) {
+      setChatSessions(JSON.parse(stats));
     }
   };
 
@@ -119,6 +156,9 @@ const AIChat: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // Save user message to Supabase
+      await supabaseService.sendMessage(currentRoom, username, content || 'Image uploaded');
+
       let aiResponse: string;
       
       if (type === 'image' && imageData) {
@@ -136,6 +176,9 @@ const AIChat: React.FC = () => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
+
+      // Save AI message to Supabase
+      await supabaseService.sendMessage(currentRoom, 'ai', aiResponse);
 
       // Generate smart suggestions
       const suggestions = await geminiService.getSmartSuggestions(
@@ -298,6 +341,19 @@ const AIChat: React.FC = () => {
       <div className="w-80 bg-gray-800 border-r border-gray-700 flex flex-col">
         <div className="p-4 border-b border-gray-700">
           <h2 className="text-xl font-bold mb-4">AI Chat Sessions</h2>
+          
+          {/* Username Input */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">Your Name</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your name"
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+            />
+          </div>
+          
           <button
             onClick={createNewSession}
             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-200"
@@ -348,7 +404,7 @@ const AIChat: React.FC = () => {
               <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                 🤖 AI Chat Hub
               </h1>
-              <p className="text-gray-400">Powered by Google Gemini AI</p>
+              <p className="text-gray-400">Powered by Google Gemini AI + Supabase</p>
             </div>
             
             <div className="flex items-center space-x-4">

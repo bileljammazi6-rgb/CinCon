@@ -11,10 +11,12 @@ import {
   Zap,
   Star,
   TrendingUp,
-  Award
+  Award,
+  User
 } from 'lucide-react';
 import { gameService, GameState, QuizQuestion } from '../services/gameService';
 import { geminiService } from '../services/geminiService';
+import { supabaseService } from '../services/supabaseService';
 
 interface GameStats {
   totalGames: number;
@@ -42,6 +44,7 @@ const Gaming: React.FC = () => {
   });
   const [leaderboard, setLeaderboard] = useState<{ username: string; score: number; streak: number }[]>([]);
   const [aiScenario, setAiScenario] = useState<string>('');
+  const [username, setUsername] = useState<string>('Anonymous');
 
   useEffect(() => {
     loadGameStats();
@@ -57,8 +60,18 @@ const Gaming: React.FC = () => {
   };
 
   const loadLeaderboard = async () => {
-    const leaderboardData = await gameService.getLeaderboard('general');
-    setLeaderboard(leaderboardData);
+    try {
+      const leaderboardData = await gameService.getLeaderboard(quizCategory);
+      setLeaderboard(leaderboardData);
+    } catch (error) {
+      console.error('Failed to load leaderboard:', error);
+      // Fallback to mock data
+      setLeaderboard([
+        { username: 'Player1', score: 100, streak: 5 },
+        { username: 'Player2', score: 85, streak: 3 },
+        { username: 'Player3', score: 70, streak: 2 }
+      ]);
+    }
   };
 
   const startNewGame = async () => {
@@ -98,6 +111,8 @@ const Gaming: React.FC = () => {
       
       if (updatedGame.status === 'finished') {
         updateGameStats(updatedGame);
+        // Refresh leaderboard after game ends
+        loadLeaderboard();
       }
     } catch (error) {
       console.error('Failed to make move:', error);
@@ -219,6 +234,27 @@ const Gaming: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Game Selection & Stats */}
           <div className="lg:col-span-1 space-y-6">
+            {/* Username Input */}
+            <div className="bg-gray-800 rounded-xl p-6">
+              <h2 className="text-2xl font-bold mb-4 flex items-center">
+                <User className="mr-2" />
+                Player Info
+              </h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Your Name</label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your name"
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Game Selection */}
             <div className="bg-gray-800 rounded-xl p-6">
               <h2 className="text-2xl font-bold mb-4 flex items-center">
@@ -259,7 +295,10 @@ const Gaming: React.FC = () => {
                     <label className="block text-sm font-medium mb-2">Category</label>
                     <select
                       value={quizCategory}
-                      onChange={(e) => setQuizCategory(e.target.value)}
+                      onChange={(e) => {
+                        setQuizCategory(e.target.value);
+                        loadLeaderboard();
+                      }}
                       className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                     >
                       <option value="general">General Knowledge</option>

@@ -1,4 +1,5 @@
 import { geminiService } from './geminiService';
+import { supabaseService, QuizScore } from './supabaseService';
 
 export interface GameMove {
   id: string;
@@ -59,6 +60,14 @@ class GameService {
     };
 
     this.activeGames.set(roomId, gameState);
+    
+    // Save to Supabase
+    await supabaseService.saveGameMove(roomId, 'chess', {
+      type: 'game_start',
+      difficulty,
+      gameState: gameState.data
+    });
+    
     return gameState;
   }
 
@@ -81,6 +90,13 @@ class GameService {
     // Validate move logic here
     // Update game state
     game.data.moves.push(move);
+    
+    // Save move to Supabase
+    await supabaseService.saveGameMove(roomId, 'chess', {
+      type: 'move',
+      move,
+      gameState: game.data
+    });
     
     // AI move logic
     if (game.currentPlayer === 'ai') {
@@ -120,6 +136,14 @@ class GameService {
     };
 
     this.activeGames.set(roomId, gameState);
+    
+    // Save to Supabase
+    await supabaseService.saveGameMove(roomId, 'tictactoe', {
+      type: 'game_start',
+      difficulty,
+      gameState: gameState.data
+    });
+    
     return gameState;
   }
 
@@ -136,10 +160,25 @@ class GameService {
     // Player move
     game.data.board[position] = 'X';
     
+    // Save move to Supabase
+    await supabaseService.saveGameMove(roomId, 'tictactoe', {
+      type: 'player_move',
+      position,
+      board: game.data.board
+    });
+    
     // Check for win
     if (this.checkTicTacToeWin(game.data.board, 'X')) {
       game.status = 'finished';
       game.data.winner = 'player1';
+      
+      // Save final state
+      await supabaseService.saveGameMove(roomId, 'tictactoe', {
+        type: 'game_end',
+        winner: 'player1',
+        finalBoard: game.data.board
+      });
+      
       return game;
     }
 
@@ -147,6 +186,14 @@ class GameService {
     if (game.data.board.every(cell => cell !== null)) {
       game.status = 'finished';
       game.data.isDraw = true;
+      
+      // Save final state
+      await supabaseService.saveGameMove(roomId, 'tictactoe', {
+        type: 'game_end',
+        winner: 'draw',
+        finalBoard: game.data.board
+      });
+      
       return game;
     }
 
@@ -155,10 +202,24 @@ class GameService {
     if (aiPosition !== -1) {
       game.data.board[aiPosition] = 'O';
       
+      // Save AI move to Supabase
+      await supabaseService.saveGameMove(roomId, 'tictactoe', {
+        type: 'ai_move',
+        position: aiPosition,
+        board: game.data.board
+      });
+      
       // Check for AI win
       if (this.checkTicTacToeWin(game.data.board, 'O')) {
         game.status = 'finished';
         game.data.winner = 'ai';
+        
+        // Save final state
+        await supabaseService.saveGameMove(roomId, 'tictactoe', {
+          type: 'game_end',
+          winner: 'ai',
+          finalBoard: game.data.board
+        });
       }
     }
 
@@ -291,6 +352,15 @@ class GameService {
     };
 
     this.activeGames.set(roomId, gameState);
+    
+    // Save to Supabase
+    await supabaseService.saveGameMove(roomId, 'tictactoe', {
+      type: 'quiz_start',
+      category,
+      difficulty,
+      questions: questions.length
+    });
+    
     return gameState;
   }
 
@@ -324,7 +394,7 @@ class GameService {
     return questions;
   }
 
-  async submitQuizAnswer(roomId: string, questionId: string, answer: 'A' | 'B' | 'C' | 'D'): Promise<{ correct: boolean; score: number; nextQuestion?: QuizQuestion }> {
+  async submitQuizAnswer(roomId: string, questionId: string, answer: 'A' | 'B' | 'C' | 'D', username: string): Promise<{ correct: boolean; score: number; nextQuestion?: QuizQuestion }> {
     const game = this.activeGames.get(roomId);
     if (!game || game.status !== 'active') {
       throw new Error('Game not found or not active');
@@ -343,8 +413,27 @@ class GameService {
     game.data.answers.push({ questionId, answer, correct: isCorrect });
     game.data.currentQuestion += 1;
     
+    // Save answer to Supabase
+    await supabaseService.saveGameMove(roomId, 'tictactoe', {
+      type: 'quiz_answer',
+      questionId,
+      answer,
+      correct: isCorrect,
+      score: game.data.score,
+      streak: game.data.streak
+    });
+    
     if (game.data.currentQuestion >= game.data.questions.length) {
       game.status = 'finished';
+      
+      // Save final score to leaderboard
+      await supabaseService.saveQuizScore(
+        username,
+        game.data.category || 'general',
+        game.data.score,
+        game.data.streak
+      );
+      
       return { correct: isCorrect, score: game.data.score };
     }
     
@@ -372,15 +461,41 @@ class GameService {
     this.activeGames.delete(roomId);
   }
 
-  // Leaderboard
+  // Leaderboard - Now integrated with Supabase
   async getLeaderboard(category: string): Promise<{ username: string; score: number; streak: number }[]> {
-    // This would typically query a database
-    // For now, returning mock data
-    return [
-      { username: 'Player1', score: 100, streak: 5 },
-      { username: 'Player2', score: 85, streak: 3 },
-      { username: 'Player3', score: 70, streak: 2 }
-    ];
+    try {
+      const scores = await supabaseService.getQuizLeaderboard(category, 10);
+      return scores.map(score => ({
+        username: score.username,
+        score: score.score,
+        streak: score.streak
+      }));
+    } catch (error) {
+      console.error('Error getting leaderboard:', error);
+      // Fallback to mock data
+      return [
+        { username: 'Player1', score: 100, streak: 5 },
+        { username: 'Player2', score: 85, streak: 3 },
+        { username: 'Player3', score: 70, streak: 2 }
+      ];
+    }
+  }
+
+  // Load game history from Supabase
+  async loadGameHistory(roomId: string): Promise<GameMove[]> {
+    try {
+      const moves = await supabaseService.getGameMoves(roomId, 100);
+      return moves.map(move => ({
+        id: move.id.toString(),
+        roomId: move.room_id,
+        moveType: move.move_type,
+        data: move.data,
+        createdAt: new Date(move.created_at)
+      }));
+    } catch (error) {
+      console.error('Error loading game history:', error);
+      return [];
+    }
   }
 }
 
