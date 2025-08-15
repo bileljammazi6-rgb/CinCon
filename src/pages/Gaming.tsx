@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Gamepad2, 
-  Chess, 
+  Crown, 
   Brain, 
   Trophy, 
-  Settings, 
   Play, 
   Users, 
   Target,
   Zap,
   Star,
   TrendingUp,
-  Award,
   User
 } from 'lucide-react';
-import { gameService, GameState, QuizQuestion } from '../services/gameService';
+import { gameService, GameState } from '../services/gameService';
 import { geminiService } from '../services/geminiService';
 import { supabaseService } from '../services/supabaseService';
 
@@ -52,7 +50,6 @@ const Gaming: React.FC = () => {
   }, []);
 
   const loadGameStats = () => {
-    // Load from localStorage or database
     const stats = localStorage.getItem('gameStats');
     if (stats) {
       setGameStats(JSON.parse(stats));
@@ -65,7 +62,6 @@ const Gaming: React.FC = () => {
       setLeaderboard(leaderboardData);
     } catch (error) {
       console.error('Failed to load leaderboard:', error);
-      // Fallback to mock data
       setLeaderboard([
         { username: 'Player1', score: 100, streak: 5 },
         { username: 'Player2', score: 85, streak: 3 },
@@ -94,7 +90,6 @@ const Gaming: React.FC = () => {
       
       setActiveGame(game);
       
-      // Generate AI scenario for the game
       const scenario = await geminiService.generateGameScenario(gameType, difficulty);
       setAiScenario(scenario);
     } catch (error) {
@@ -111,7 +106,6 @@ const Gaming: React.FC = () => {
       
       if (updatedGame.status === 'finished') {
         updateGameStats(updatedGame);
-        // Refresh leaderboard after game ends
         loadLeaderboard();
       }
     } catch (error) {
@@ -151,7 +145,9 @@ const Gaming: React.FC = () => {
         {board.map((cell: string | null, index: number) => (
           <button
             key={index}
-            onClick={() => makeMove(index)}
+            onClick={() => {
+              makeMove(index).catch(console.error);
+            }}
             disabled={cell !== null || activeGame.status !== 'active'}
             className="w-20 h-20 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-600 rounded-lg flex items-center justify-center text-3xl font-bold transition-colors"
           >
@@ -221,7 +217,6 @@ const Gaming: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
             🎮 AI Gaming Hub
@@ -232,9 +227,7 @@ const Gaming: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Game Selection & Stats */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Username Input */}
             <div className="bg-gray-800 rounded-xl p-6">
               <h2 className="text-2xl font-bold mb-4 flex items-center">
                 <User className="mr-2" />
@@ -255,7 +248,6 @@ const Gaming: React.FC = () => {
               </div>
             </div>
 
-            {/* Game Selection */}
             <div className="bg-gray-800 rounded-xl p-6">
               <h2 className="text-2xl font-bold mb-4 flex items-center">
                 <Gamepad2 className="mr-2" />
@@ -320,7 +312,6 @@ const Gaming: React.FC = () => {
               </div>
             </div>
 
-            {/* Game Statistics */}
             <div className="bg-gray-800 rounded-xl p-6">
               <h2 className="text-2xl font-bold mb-4 flex items-center">
                 <Trophy className="mr-2" />
@@ -355,7 +346,6 @@ const Gaming: React.FC = () => {
               </div>
             </div>
 
-            {/* Leaderboard */}
             <div className="bg-gray-800 rounded-xl p-6">
               <h2 className="text-2xl font-bold mb-4 flex items-center">
                 <TrendingUp className="mr-2" />
@@ -381,13 +371,11 @@ const Gaming: React.FC = () => {
             </div>
           </div>
 
-          {/* Game Area */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Active Game */}
             {activeGame ? (
               <div className="bg-gray-800 rounded-xl p-8 text-center">
                 <h2 className="text-3xl font-bold mb-6">
-                  {gameType === 'chess' && <Chess className="inline mr-2" />}
+                  {gameType === 'chess' && <Crown className="inline mr-2" />}
                   {gameType === 'tictactoe' && <Gamepad2 className="inline mr-2" />}
                   {gameType === 'quiz' && <Brain className="inline mr-2" />}
                   {gameType === 'puzzle' && <Target className="inline mr-2" />}
@@ -417,7 +405,6 @@ const Gaming: React.FC = () => {
               </div>
             )}
 
-            {/* AI Scenario */}
             {aiScenario && (
               <div className="bg-gray-800 rounded-xl p-6">
                 <h3 className="text-xl font-bold mb-4 flex items-center">
@@ -430,7 +417,6 @@ const Gaming: React.FC = () => {
               </div>
             )}
 
-            {/* Game Features */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-gray-800 rounded-xl p-6">
                 <h3 className="text-xl font-bold mb-4 flex items-center">
