@@ -8,6 +8,8 @@ import { Messages } from './pages/Messages';
 import { MyList } from './pages/MyList';
 import { Search } from './pages/Search';
 import { MovieDetail } from './pages/MovieDetail';
+import { Gaming } from './pages/Gaming';
+import AIChat from './pages/AIChat';
 import { AuthProvider } from './contexts/AuthContext';
 import { MovieProvider } from './contexts/MovieContext';
 import './styles/globals.css';
@@ -28,6 +30,8 @@ function App() {
                 <Route path="/my-list" element={<MyList />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/movie/:id" element={<MovieDetail />} />
+                <Route path="/gaming" element={<Gaming />} />
+                <Route path="/ai-chat" element={<AIChat />} />
                 <Route path="/auth" element={<AuthForm />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

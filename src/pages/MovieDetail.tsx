@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMovies } from '../contexts/MovieContext';
-import { Play, Plus, Heart, Share2, Star, Calendar, Clock, Users } from 'lucide-react';
+import { Play, Plus, Heart, Share2, Star, Calendar, Clock, Users, Download, Brain, MessageCircle, Eye, Info } from 'lucide-react';
 import { MovieData } from '../types';
+import { findMovieLinks } from '../data/movieLinks';
+import { geminiService } from '../services/geminiService';
 
 const TMDB_IMG = (import.meta.env.VITE_TMDB_IMAGE_BASE_URL as string) || 'https://image.tmdb.org/t/p';
 
@@ -12,12 +14,44 @@ export function MovieDetail() {
   const { getMovieById, loading } = useMovies();
   const [movie, setMovie] = useState<MovieData | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<string>('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showDownloadLinks, setShowDownloadLinks] = useState(false);
+  const [downloadLinks, setDownloadLinks] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<'overview' | 'analysis' | 'downloads'>('overview');
 
   useEffect(() => {
     if (id) {
       getMovieById(id).then(setMovie);
     }
   }, [id, getMovieById]);
+
+  useEffect(() => {
+    if (movie) {
+      const links = findMovieLinks(movie.title);
+      setDownloadLinks(links);
+    }
+  }, [movie]);
+
+  const handleAiAnalysis = async () => {
+    if (!movie) return;
+    
+    setIsAnalyzing(true);
+    try {
+      const analysis = await geminiService.analyzeMovie(movie.title, movie);
+      setAiAnalysis(analysis);
+      setActiveTab('analysis');
+    } catch (error) {
+      console.error('Failed to get AI analysis:', error);
+      setAiAnalysis('Sorry, I encountered an error while analyzing this movie. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleDownloadClick = (url: string) => {
+    window.open(url, '_blank');
+  };
 
   if (loading || !movie) {
     return (
@@ -80,6 +114,26 @@ export function MovieDetail() {
                 <Play className="h-5 w-5" />
                 Play Now
               </button>
+              
+              {downloadLinks.length > 0 && (
+                <button 
+                  onClick={() => setShowDownloadLinks(!showDownloadLinks)}
+                  className="flex items-center gap-2 px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                >
+                  <Download className="h-5 w-5" />
+                  Download ({downloadLinks.length})
+                </button>
+              )}
+              
+              <button 
+                onClick={handleAiAnalysis}
+                disabled={isAnalyzing}
+                className="flex items-center gap-2 px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-600 transition-colors font-semibold"
+              >
+                <Brain className="h-5 w-5" />
+                {isAnalyzing ? 'Analyzing...' : 'AI Analysis'}
+              </button>
+              
               <button 
                 onClick={() => setIsFavorite(!isFavorite)}
                 className={`flex items-center gap-2 px-8 py-3 rounded-lg transition-colors font-semibold ${
@@ -91,6 +145,7 @@ export function MovieDetail() {
                 <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
                 {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
               </button>
+              
               <button className="flex items-center gap-2 px-8 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold">
                 <Share2 className="h-5 w-5" />
                 Share
@@ -100,103 +155,154 @@ export function MovieDetail() {
         </div>
       </div>
 
-      {/* Movie Details */}
-      <div className="px-8 lg:px-16 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            <h2 className="text-2xl font-bold text-white mb-6">About this movie</h2>
-            <p className="text-gray-300 leading-relaxed mb-8">
-              {movie.overview}
-            </p>
+      {/* Content Tabs */}
+      <div className="max-w-7xl mx-auto px-8 py-12">
+        {/* Tab Navigation */}
+        <div className="flex border-b border-gray-700 mb-8">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`px-6 py-3 font-medium transition-colors ${
+              activeTab === 'overview'
+                ? 'text-white border-b-2 border-red-600'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Info className="inline mr-2" size={20} />
+            Overview
+          </button>
+          
+          {aiAnalysis && (
+            <button
+              onClick={() => setActiveTab('analysis')}
+              className={`px-6 py-3 font-medium transition-colors ${
+                activeTab === 'analysis'
+                  ? 'text-white border-b-2 border-red-600'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Brain className="inline mr-2" size={20} />
+              AI Analysis
+            </button>
+          )}
+          
+          {downloadLinks.length > 0 && (
+            <button
+              onClick={() => setActiveTab('downloads')}
+              className={`px-6 py-3 font-medium transition-colors ${
+                activeTab === 'downloads'
+                  ? 'text-white border-b-2 border-red-600'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Download className="inline mr-2" size={20} />
+              Downloads
+            </button>
+          )}
+        </div>
 
-            {/* Cast & Crew */}
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-white mb-4">Cast & Crew</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {['Tom Hanks', 'Emma Watson', 'John Smith', 'Sarah Johnson'].map((actor, index) => (
-                  <div key={index} className="text-center">
-                    <div className="w-16 h-16 bg-gray-700 rounded-full mx-auto mb-2"></div>
-                    <p className="text-sm text-gray-300">{actor}</p>
+        {/* Tab Content */}
+        <div className="min-h-[400px]">
+          {activeTab === 'overview' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Movie Poster */}
+              <div className="lg:col-span-1">
+                <img
+                  src={`${TMDB_IMG}/w500${movie.poster_path}`}
+                  alt={movie.title}
+                  className="w-full rounded-lg shadow-2xl"
+                />
+              </div>
+              
+              {/* Movie Details */}
+              <div className="lg:col-span-2">
+                <h2 className="text-2xl font-bold mb-4">Movie Details</h2>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold text-gray-300">Title</h3>
+                    <p className="text-white">{movie.title}</p>
                   </div>
-                ))}
+                  
+                  <div>
+                    <h3 className="font-semibold text-gray-300">Overview</h3>
+                    <p className="text-gray-300 leading-relaxed">{movie.overview}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold text-gray-300">Release Date</h3>
+                    <p className="text-white">{movie.release_date}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold text-gray-300">Rating</h3>
+                    <div className="flex items-center gap-2">
+                      <Star className="h-5 w-5 text-yellow-500 fill-current" />
+                      <span className="text-white">{movie.vote_average?.toFixed(1)}/10</span>
+                      <span className="text-gray-400">({movie.vote_count?.toLocaleString()} votes)</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+          )}
 
-            {/* Similar Movies */}
-            <div>
-              <h3 className="text-xl font-semibold text-white mb-4">You might also like</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[1, 2, 3, 4].map((item) => (
-                  <div key={item} className="bg-gray-800 rounded-lg overflow-hidden">
-                    <div className="w-full h-32 bg-gray-700"></div>
-                    <div className="p-3">
-                      <p className="text-white text-sm font-medium">Similar Movie {item}</p>
-                      <p className="text-gray-400 text-xs">2024 • Action</p>
+          {activeTab === 'analysis' && aiAnalysis && (
+            <div className="bg-gray-800 rounded-xl p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <Brain className="h-8 w-8 text-purple-400" />
+                <h2 className="text-2xl font-bold">AI Movie Analysis</h2>
+              </div>
+              
+              <div className="prose prose-invert max-w-none">
+                <div className="bg-gray-700 rounded-lg p-6">
+                  <p className="whitespace-pre-wrap text-gray-200 leading-relaxed">{aiAnalysis}</p>
+                </div>
+              </div>
+              
+              <div className="mt-6 text-sm text-gray-400">
+                <p>💡 This analysis was generated by Google Gemini AI, providing unique insights and perspectives on the film.</p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'downloads' && downloadLinks.length > 0 && (
+            <div className="bg-gray-800 rounded-xl p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <Download className="h-8 w-8 text-green-400" />
+                <h2 className="text-2xl font-bold">Download Links</h2>
+                <span className="text-gray-400">({downloadLinks.length} available)</span>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {downloadLinks.map((link, index) => (
+                  <div key={index} className="bg-gray-700 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm text-gray-400">Link {index + 1}</span>
+                      <button
+                        onClick={() => handleDownloadClick(link)}
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                      >
+                        Download
+                      </button>
+                    </div>
+                    <div className="text-xs text-gray-300 break-all">
+                      {link}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Movie Poster */}
-            <div className="bg-gray-800 rounded-lg overflow-hidden">
-              <img 
-                src={`${TMDB_IMG}/w500${movie.poster_path}`}
-                alt={movie.title}
-                className="w-full h-auto"
-              />
-            </div>
-
-            {/* Quick Info */}
-            <div className="bg-gray-800 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Quick Info</h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Genre:</span>
-                  <span className="text-white">Action, Adventure</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Release Date:</span>
-                  <span className="text-white">{movie.release_date}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Runtime:</span>
-                  <span className="text-white">2h 15m</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Language:</span>
-                  <span className="text-white">English</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Rating:</span>
-                  <span className="text-white">PG-13</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Reviews */}
-            <div className="bg-gray-800 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Reviews</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex text-yellow-500">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star key={star} className="h-4 w-4 fill-current" />
-                    ))}
+              
+              <div className="mt-6 p-4 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Info className="h-5 w-5 text-yellow-400 mt-0.5" />
+                  <div className="text-sm text-yellow-200">
+                    <p className="font-semibold mb-1">Download Notice:</p>
+                    <p>These download links are provided for convenience. Please ensure you have the right to download this content and respect copyright laws.</p>
                   </div>
-                  <span className="text-white text-sm">4.5/5</span>
                 </div>
-                <p className="text-gray-400 text-sm">
-                  "Amazing movie with great performances and stunning visuals!"
-                </p>
-                <p className="text-gray-500 text-xs">- MovieFan123</p>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

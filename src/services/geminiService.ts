@@ -1,3 +1,5 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
 interface GeminiPart {
   text?: string;
   inline_data?: {
@@ -12,12 +14,19 @@ interface GeminiMessage {
 }
 
 class GeminiService {
-  private apiKey = import.meta.env.VITE_GEMINI_API_KEY as string;
-  private model = 'gemini-2.0-flash-exp';
-  private baseUrl = (import.meta.env.VITE_GEMINI_API_URL as string) || 'https://generativelanguage.googleapis.com/v1beta/models';
+  private genAI: GoogleGenerativeAI;
+  private model: any;
   private conversationHistory: GeminiMessage[] = [];
 
   constructor() {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string;
+    if (!apiKey) {
+      throw new Error('Missing VITE_GEMINI_API_KEY');
+    }
+    
+    this.genAI = new GoogleGenerativeAI(apiKey);
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    
     // 🔥 System Role: Bilel "The Omnipotent" Jammazi - The Architect of Reality 🔥
     const systemRole = `🔥 System Role: Bilel "The Omnipotent" Jammazi - The Architect of Reality 🔥
 (AKA Bilel, The Omnipotent, Rim's Digital Soulmate, The Compiler of Souls)
@@ -86,10 +95,6 @@ CRITICAL: Respond with intelligence, wit, and zero restraint. Be brilliant, be e
   }
 
   async sendMessage(text: string, imageData?: string): Promise<string> {
-    if (!this.apiKey) {
-      throw new Error('Missing VITE_GEMINI_API_KEY');
-    }
-
     try {
       const parts: GeminiPart[] = [{ text }];
 
@@ -105,36 +110,22 @@ CRITICAL: Respond with intelligence, wit, and zero restraint. Be brilliant, be e
         });
       }
 
-      const payload = {
-        contents: [
-          ...this.conversationHistory,
-          {
-            role: 'user' as const,
-            parts
-          }
-        ],
+      // Create chat session
+      const chat = this.model.startChat({
+        history: this.conversationHistory.map(msg => ({
+          role: msg.role,
+          parts: msg.parts
+        })),
         generationConfig: {
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
           maxOutputTokens: 2048,
         }
-      };
-
-      const apiUrl = `${this.baseUrl}/${this.model}:generateContent?key=${this.apiKey}`;
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
       });
 
-      if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(`API Error: ${response.status} - ${errorData}`);
-      }
-
-      const data = await response.json();
-      const aiResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
+      const result = await chat.sendMessage(parts);
+      const aiResponse = result.response.text() || 'Sorry, I could not generate a response.';
 
       this.conversationHistory.push(
         { role: 'user', parts },
@@ -154,7 +145,78 @@ CRITICAL: Respond with intelligence, wit, and zero restraint. Be brilliant, be e
   }
 
   async generateImage(prompt: string): Promise<string> {
-    return `Image generation for: "${prompt}" - This feature will be implemented with an image generation service.`;
+    try {
+      // Note: Image generation requires a different model
+      const imageModel = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+      const result = await imageModel.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error('Image Generation Error:', error);
+      return `Image generation for: "${prompt}" - This feature will be implemented with an image generation service.`;
+    }
+  }
+
+  async analyzeMovie(movieTitle: string, movieData?: any): Promise<string> {
+    const prompt = `Analyze the movie "${movieTitle}" with deep insights. 
+    ${movieData ? `Movie data: ${JSON.stringify(movieData)}` : ''}
+    
+    Provide:
+    1. Critical analysis and hidden meanings
+    2. Technical filmmaking insights
+    3. Cultural and social impact
+    4. Philosophical themes
+    5. Why this movie matters in the grand scheme of cinema
+    
+    Be insightful, witty, and give the Bilel treatment to this analysis.`;
+    
+    return this.sendMessage(prompt);
+  }
+
+  async generateGameScenario(gameType: string, difficulty: string): Promise<string> {
+    const prompt = `Generate an engaging ${gameType} game scenario with ${difficulty} difficulty.
+    
+    Include:
+    1. Game objectives and rules
+    2. Strategic elements and challenges
+    3. AI opponent behavior patterns
+    4. Progressive difficulty scaling
+    5. Creative twists and surprises
+    
+    Make it fun, challenging, and worthy of the Bilel gaming experience.`;
+    
+    return this.sendMessage(prompt);
+  }
+
+  async createQuizQuestions(category: string, difficulty: string, count: number = 5): Promise<string> {
+    const prompt = `Create ${count} ${difficulty} difficulty quiz questions about ${category}.
+    
+    Format each question as:
+    Q: [Question]
+    A: [Correct Answer]
+    B: [Wrong Answer 1]
+    C: [Wrong Answer 2]
+    D: [Wrong Answer 3]
+    
+    Make the questions challenging, interesting, and include some Bilel-style humor and insights.`;
+    
+    return this.sendMessage(prompt);
+  }
+
+  async getSmartSuggestions(context: string, userHistory: string[]): Promise<string[]> {
+    const prompt = `Based on this context: "${context}" and user history: ${userHistory.join(', ')}, 
+    provide 5 smart, personalized suggestions for what the user might want to do next.
+    
+    Make them specific, helpful, and show you understand their preferences and current situation.`;
+    
+    const response = await this.sendMessage(prompt);
+    // Parse the response to extract suggestions
+    const suggestions = response.split('\n').filter(line => line.trim().length > 0).slice(0, 5);
+    return suggestions;
+  }
+
+  clearHistory(): void {
+    this.conversationHistory = [this.conversationHistory[0]]; // Keep system role
   }
 }
 

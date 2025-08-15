@@ -14,7 +14,9 @@ import {
   X,
   Play,
   Plus,
-  MessageCircle
+  MessageCircle,
+  Gamepad2,
+  Brain
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
@@ -42,6 +44,8 @@ export function Layout({ children }: LayoutProps) {
     { name: 'Home', href: '/', icon: Home },
     { name: 'Movies', href: '/movies', icon: Film },
     { name: 'TV Shows', href: '/tv-shows', icon: Tv },
+    { name: 'Gaming', href: '/gaming', icon: Gamepad2 },
+    { name: 'AI Chat', href: '/ai-chat', icon: Brain },
     { name: 'Messages', href: '/messages', icon: MessageCircle },
     { name: 'My List', href: '/my-list', icon: Heart },
     { name: 'Search', href: '/search', icon: Search },

@@ -1,233 +1,225 @@
-# 🚀 CinCon AI - Environment Configuration Guide
+# 🌟 **Environment Setup Guide**
 
-## 📋 Overview
-This guide will help you set up all the necessary environment variables for your CinCon AI project to work properly.
+> **Complete setup guide for CineFlix AI platform**
 
-## 🔧 Setup Instructions
+## 🚀 **Quick Start**
 
-### 1. Create Environment File
-Create a `.env.local` file in your project root:
-
+1. **Copy the template**
 ```bash
-# Windows
-copy .env.example .env.local
-
-# Mac/Linux
 cp .env.example .env.local
 ```
 
-### 2. Required Environment Variables
+2. **Fill in your API keys**
+3. **Start the development server**
 
-#### 🌟 **Essential for Basic Functionality**
+## 🔑 **Required API Keys**
 
-```bash
-# Google Gemini AI API (Required for AI chat)
-VITE_GEMINI_API_KEY=your_actual_gemini_api_key_here
-VITE_GEMINI_API_URL=https://generativelanguage.googleapis.com/v1beta/models
+### **1. Google Gemini AI** ⭐ **REQUIRED**
+- **Purpose**: AI chat, movie analysis, game scenarios, smart suggestions
+- **Get Key**: [Google AI Studio](https://makersuite.google.com/app/apikey)
+- **Cost**: Free tier available (generous limits)
+- **Setup**: 
+  1. Visit Google AI Studio
+  2. Sign in with Google account
+  3. Create new API key
+  4. Copy the key to your `.env.local`
 
-# Supabase Database (Required for user management & community)
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+```env
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+```
 
-# TMDB API (Required for movie search)
+### **2. TMDB API** ⭐ **REQUIRED**
+- **Purpose**: Movie data, posters, ratings, search
+- **Get Key**: [TMDB Settings](https://www.themoviedb.org/settings/api)
+- **Cost**: Free
+- **Setup**:
+  1. Create TMDB account
+  2. Go to Settings > API
+  3. Request API key
+  4. Wait for approval (usually instant)
+  5. Copy the key to your `.env.local`
+
+```env
 VITE_TMDB_API_KEY=your_tmdb_api_key_here
-VITE_TMDB_API_URL=https://api.themoviedb.org/3
-VITE_TMDB_IMAGE_BASE_URL=https://image.tmdb.org/t/p
 ```
 
-#### 🔐 **Security & Authentication**
+### **3. Supabase** ⭐ **OPTIONAL** (for advanced features)
+- **Purpose**: User authentication, real-time chat, database
+- **Get Key**: [Supabase](https://supabase.com)
+- **Cost**: Free tier available
+- **Setup**:
+  1. Create Supabase account
+  2. Create new project
+  3. Go to Settings > API
+  4. Copy URL and anon key
 
-```bash
-# JWT & Session Security
-VITE_JWT_SECRET=your_super_secret_jwt_key_here
-VITE_SESSION_SECRET=your_session_secret_here
-VITE_SESSION_MAX_AGE=86400000
-
-# CORS Settings
-VITE_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:5174
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-#### 📁 **File Upload & Storage**
+## 📁 **Environment File Structure**
 
-```bash
-# File Upload Configuration
-VITE_MAX_FILE_SIZE=10485760
-VITE_ALLOWED_FILE_TYPES=image/jpeg,image/png,image/gif,image/webp
+Create a `.env.local` file in your project root:
 
-# Pixeldrain for file hosting (optional)
-VITE_PIXELDRAIN_API_KEY=your_pixeldrain_api_key_here
-VITE_PIXELDRAIN_API_URL=https://pixeldrain.com/api
-```
+```env
+# ========================================
+# 🌟 CINEFLIX AI - ENVIRONMENT VARIABLES
+# ========================================
 
-#### ⚙️ **Application Settings**
+# 🔑 REQUIRED API KEYS
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+VITE_TMDB_API_KEY=your_tmdb_api_key_here
 
-```bash
-# App Configuration
-VITE_APP_NAME=CinCon AI
-VITE_APP_VERSION=1.0.0
+# 🗄️ OPTIONAL - SUPABASE (for advanced features)
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# ⚙️ APP CONFIGURATION (optional)
+VITE_APP_NAME=CineFlix AI
 VITE_APP_ENVIRONMENT=development
+VITE_APP_VERSION=1.0.0
 
-# Feature Flags
-VITE_ENABLE_VOICE_RECORDING=true
-VITE_ENABLE_IMAGE_UPLOAD=true
-VITE_ENABLE_COMMUNITY_CHAT=true
-VITE_ENABLE_GAMING=true
-VITE_ENABLE_MOVIE_SEARCH=true
+# 🎬 TMDB CONFIGURATION (optional)
+VITE_TMDB_IMAGE_BASE_URL=https://image.tmdb.org/t/p
+VITE_TMDB_API_URL=https://api.themoviedb.org/3
 
-# Performance Limits
-VITE_MAX_MESSAGE_LENGTH=5000
-VITE_MAX_MESSAGES_PER_CONVERSATION=100
-VITE_RATE_LIMIT_REQUESTS_PER_MINUTE=60
-```
-
-#### 🛠️ **Development & Debug**
-
-```bash
-# Debug Configuration
-VITE_DEBUG_MODE=true
-VITE_LOG_LEVEL=debug
-VITE_ENABLE_HOT_RELOAD=true
-VITE_ENABLE_DEV_TOOLS=true
-```
-
-#### 📊 **Analytics & Monitoring**
-
-```bash
-# Google Analytics
-VITE_GA_TRACKING_ID=G-XXXXXXXXXX
-
-# Sentry Error Tracking
-VITE_SENTRY_DSN=https://your-sentry-dsn-here
-VITE_SENTRY_ENVIRONMENT=development
-```
-
-## 🔑 How to Get API Keys
-
-### 1. **Google Gemini AI API**
-1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Sign in with your Google account
-3. Click "Create API Key"
-4. Copy the generated key
-
-### 2. **Supabase Database**
-1. Go to [Supabase](https://supabase.com)
-2. Create a new project
-3. Go to Settings → API
-4. Copy the Project URL and anon key
-
-### 3. **TMDB API**
-1. Go to [The Movie Database](https://www.themoviedb.org/settings/api)
-2. Create an account
-3. Request an API key
-4. Wait for approval (usually instant)
-
-### 4. **Pixeldrain API** (Optional)
-1. Go to [Pixeldrain](https://pixeldrain.com)
-2. Create an account
-3. Go to API settings
-4. Generate an API key
-
-## 📝 Complete .env.local Example
-
-```bash
-# =============================================================================
-# CinCon AI - Environment Configuration
-# =============================================================================
-
-# AI & API Keys
-VITE_GEMINI_API_KEY=AIzaSyC_YourActualKeyHere123456789
+# 🤖 GEMINI CONFIGURATION (optional)
 VITE_GEMINI_API_URL=https://generativelanguage.googleapis.com/v1beta/models
-
-# Supabase Configuration
-VITE_SUPABASE_URL=https://abcdefghijklmnop.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.YourActualKeyHere
-
-# TMDB API
-VITE_TMDB_API_KEY=1234567890abcdef1234567890abcdef
-VITE_TMDB_API_URL=https://api.themoviedb.org/3
-VITE_TMDB_IMAGE_BASE_URL=https://image.tmdb.org/t/p
-
-# Security
-VITE_JWT_SECRET=your_super_secret_jwt_key_here_make_it_long_and_random
-VITE_SESSION_SECRET=another_secret_key_for_sessions
-VITE_SESSION_MAX_AGE=86400000
-
-# CORS
-VITE_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:5174
-
-# File Upload
-VITE_MAX_FILE_SIZE=10485760
-VITE_ALLOWED_FILE_TYPES=image/jpeg,image/png,image/gif,image/webp
-
-# App Settings
-VITE_APP_NAME=CinCon AI
-VITE_APP_VERSION=1.0.0
-VITE_APP_ENVIRONMENT=development
-
-# Feature Flags
-VITE_ENABLE_VOICE_RECORDING=true
-VITE_ENABLE_IMAGE_UPLOAD=true
-VITE_ENABLE_COMMUNITY_CHAT=true
-VITE_ENABLE_GAMING=true
-VITE_ENABLE_MOVIE_SEARCH=true
-
-# Development
-VITE_DEBUG_MODE=true
-VITE_LOG_LEVEL=debug
-VITE_ENABLE_HOT_RELOAD=true
-VITE_ENABLE_DEV_TOOLS=true
-
-# Performance
-VITE_MAX_MESSAGE_LENGTH=5000
-VITE_MAX_MESSAGES_PER_CONVERSATION=100
-VITE_RATE_LIMIT_REQUESTS_PER_MINUTE=60
 ```
 
-## ⚠️ Important Security Notes
+## 🔧 **Setup by Feature**
 
-1. **Never commit `.env.local` to version control**
-2. **Keep your API keys secure and private**
-3. **Rotate API keys regularly**
-4. **Use different keys for development, staging, and production**
-5. **Monitor API usage to avoid unexpected charges**
+### **🎮 Gaming Features**
+- **Required**: Google Gemini AI
+- **Features**: AI game scenarios, adaptive difficulty, quiz generation
+- **Setup**: Just add `VITE_GEMINI_API_KEY`
 
-## 🚀 Quick Start
+### **🤖 AI Chat**
+- **Required**: Google Gemini AI
+- **Features**: Conversational AI, image analysis, voice recording
+- **Setup**: Just add `VITE_GEMINI_API_KEY`
 
-1. Copy the example above to `.env.local`
-2. Replace all placeholder values with your actual API keys
-3. Restart your development server
-4. Test the application
+### **🎬 Movie Features**
+- **Required**: TMDB API
+- **Features**: Movie search, posters, ratings, metadata
+- **Setup**: Just add `VITE_TMDB_API_KEY`
 
-## 🔍 Troubleshooting
+### **👥 Community Features**
+- **Required**: Supabase
+- **Features**: User accounts, real-time chat, leaderboards
+- **Setup**: Add Supabase URL and anon key
 
-### Common Issues:
+## 🚨 **Troubleshooting**
 
-1. **"API key not found" errors**
-   - Check that your `.env.local` file exists
-   - Verify API keys are correct
-   - Restart the development server
+### **"Missing VITE_GEMINI_API_KEY" Error**
+```bash
+# Check if .env.local exists
+ls -la .env.local
 
-2. **CORS errors**
-   - Update `VITE_ALLOWED_ORIGINS` with your domain
-   - Check Supabase CORS settings
+# Verify the key is set
+cat .env.local | grep GEMINI
 
-3. **Database connection issues**
-   - Verify Supabase URL and keys
-   - Check if your Supabase project is active
+# Restart the dev server
+npm run dev
+```
 
-4. **File upload not working**
-   - Check file size limits
-   - Verify allowed file types
-   - Check Pixeldrain API key if using
+### **"TMDB API Error"**
+```bash
+# Verify TMDB key
+curl "https://api.themoviedb.org/3/movie/popular?api_key=YOUR_KEY"
 
-## 📞 Support
+# Check rate limits
+# TMDB allows 1000 requests per day for free
+```
 
-If you encounter issues:
-1. Check the browser console for errors
-2. Verify all environment variables are set
-3. Check API key permissions and quotas
-4. Review the troubleshooting section above
+### **"Supabase Connection Failed"**
+```bash
+# Verify Supabase URL format
+# Should be: https://yourproject.supabase.co
+
+# Check if project is active
+# Go to Supabase dashboard
+```
+
+## 🔒 **Security Best Practices**
+
+### **Never Commit API Keys**
+```bash
+# Add to .gitignore
+echo ".env.local" >> .gitignore
+echo ".env" >> .gitignore
+
+# Verify it's ignored
+git status
+```
+
+### **Use Environment Variables**
+```typescript
+// ✅ Good
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+// ❌ Bad - Never hardcode
+const apiKey = "sk-1234567890abcdef";
+```
+
+### **API Key Rotation**
+- Rotate keys regularly
+- Use different keys for development/production
+- Monitor API usage
+
+## 🌍 **Production Deployment**
+
+### **Netlify**
+1. Add environment variables in Netlify dashboard
+2. Deploy with `npm run build`
+3. Environment variables are automatically available
+
+### **Vercel**
+1. Add environment variables in Vercel dashboard
+2. Deploy with `npm run build`
+3. Variables are prefixed with `VITE_`
+
+### **Docker**
+```dockerfile
+# Build with environment variables
+docker build --build-arg VITE_GEMINI_API_KEY=$GEMINI_KEY .
+
+# Or use docker-compose
+environment:
+  - VITE_GEMINI_API_KEY=${GEMINI_KEY}
+```
+
+## 📊 **API Usage Monitoring**
+
+### **Google Gemini AI**
+- **Free Tier**: 15 requests per minute
+- **Paid**: $0.0005 per 1K characters input, $0.0015 per 1K characters output
+- **Monitor**: [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+### **TMDB API**
+- **Free Tier**: 1,000 requests per day
+- **Monitor**: [TMDB Account](https://www.themoviedb.org/settings/api)
+
+### **Supabase**
+- **Free Tier**: 50,000 monthly active users, 500MB database
+- **Monitor**: [Supabase Dashboard](https://supabase.com/dashboard)
+
+## 🆘 **Need Help?**
+
+### **Common Issues**
+1. **API key not working**: Check if key is copied correctly
+2. **Rate limit exceeded**: Wait or upgrade plan
+3. **CORS errors**: Check API configuration
+4. **Build errors**: Verify environment variable names
+
+### **Support Resources**
+- **GitHub Issues**: [Report bugs here](https://github.com/your-repo/issues)
+- **Discussions**: [Get help here](https://github.com/your-repo/discussions)
+- **Documentation**: [Read the docs](https://your-docs-url.com)
 
 ---
 
-**Happy coding with CinCon AI! 🎉**
+**🎯 Pro Tip**: Start with just the Gemini AI key to test basic features, then add others as needed!
+
+**Happy coding! 🚀**
