@@ -118,189 +118,122 @@ export function Home() {
     }
   };
 
-  const renderMovieCard = (movie: MovieData, index: number = 0) => {
-    const downloadLinks = findMovieLinks(movie.title);
-    const hasDownloads = downloadLinks.length > 0;
+  const renderMovieCard = (movie: MovieData, index: number) => {
+    const isSeries = movie.isSeries;
+    const hasDownloads = isSeries ? (movie.episodes && movie.episodes.length > 0) : (movie.downloadLinks && movie.downloadLinks.length > 0);
     
-    if (viewMode === 'list') {
-      return (
-        <div key={movie.id} className="group bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-xl p-4 hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-2xl border border-slate-700/30 hover:border-purple-500/50">
-          <div className="flex space-x-4">
-            <div className="flex-shrink-0">
-              <img
-                src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
-                alt={movie.title}
-                className="w-24 h-36 object-cover rounded-lg shadow-lg"
-                onError={(e) => {
-                  e.currentTarget.src = '/placeholder-movie.jpg';
-                }}
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-white group-hover:text-purple-300 transition-colors mb-2">
-                    {movie.title}
-                  </h3>
-                  <p className="text-slate-300 text-sm line-clamp-3 mb-3">
-                    {movie.overview || 'No description available'}
-                  </p>
-                  <div className="flex items-center space-x-4 text-sm text-slate-400 mb-3">
-                    <span className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      {movie.release_date?.split('-')[0] || 'N/A'}
-                    </span>
-                    <span className="flex items-center">
-                      <Clock className="h-4 w-4 mr-1" />
-                      {Math.floor((movie.vote_average || 0) * 10)} min
-                    </span>
-                    <span className="flex items-center">
-                      <Users className="h-4 w-4 mr-1" />
-                      {Math.floor((movie.vote_average || 0) * 100)}K views
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="bg-yellow-500 text-black text-sm px-2 py-1 rounded-full font-medium flex items-center">
-                    <Star className="h-3 w-3 mr-1 fill-current" />
-                    {movie.vote_average?.toFixed(1) || 'N/A'}
-                  </div>
-                  {hasDownloads && (
-                    <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium flex items-center">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Watch
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                {hasDownloads ? (
-                  <button
-                    onClick={() => {
-                      const event = new CustomEvent('openMoviePlayer', { 
-                        detail: { movie, downloadLinks } 
-                      });
-                      window.dispatchEvent(event);
-                    }}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center hover:scale-105"
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    Watch Now
-                  </button>
-                ) : (
-                  <Link
-                    to={`/movie/${movie.id}`}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center hover:scale-105"
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    View Details
-                  </Link>
-                )}
-                <button className="p-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white rounded-lg transition-colors hover:scale-110">
-                  <Heart className="h-4 w-4" />
-                </button>
-                {hasDownloads && (
-                  <button 
-                    onClick={() => window.open(downloadLinks[0], '_blank')}
-                    className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors hover:scale-110"
-                    title="Download"
-                  >
-                    <Download className="h-4 w-4" />
-                  </button>
-                )}
-                <button className="p-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white rounded-lg transition-colors hover:scale-110">
-                  <Share2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
     return (
-      <div key={movie.id} className="group relative bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-xl overflow-hidden hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl border border-slate-700/30 hover:border-purple-500/50">
-        <div className="aspect-[2/3] relative overflow-hidden">
-          <img
-            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-            alt={movie.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-            onError={(e) => {
-              e.currentTarget.src = '/placeholder-movie.jpg';
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          
-          {hasDownloads && (
-            <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium flex items-center shadow-lg">
-              <CheckCircle className="h-3 w-3 mr-1" />
-              Watch
+      <div key={index} className="group relative bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-slate-700/50">
+        {/* Poster */}
+        <div className="relative aspect-[2/3] overflow-hidden">
+          {movie.poster_path ? (
+            <img
+              src={movie.poster_path}
+              alt={movie.title}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = 'https://via.placeholder.com/300x450/1f2937/ffffff?text=' + encodeURIComponent(movie.title);
+              }}
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+              <div className="text-center p-4">
+                <Film className="h-12 w-12 text-slate-500 mx-auto mb-2" />
+                <p className="text-slate-400 text-sm font-medium">{movie.title}</p>
+              </div>
             </div>
           )}
           
-          <div className="absolute top-2 left-2 bg-yellow-500 text-black text-xs px-2 py-1 rounded-full font-medium flex items-center shadow-lg">
-            <Star className="h-3 w-3 mr-1 fill-current" />
-            {movie.vote_average?.toFixed(1) || 'N/A'}
-          </div>
-        </div>
-        
-        <div className="p-4">
-          <h3 className="font-semibold text-white mb-2 line-clamp-2 group-hover:text-purple-300 transition-colors">
-            {movie.title}
-          </h3>
-          <div className="flex items-center justify-between text-sm text-slate-400 mb-3">
-            <span>{movie.release_date?.split('-')[0] || 'N/A'}</span>
-            <span className="flex items-center">
-              <Eye className="h-3 w-3 mr-1" />
-              {Math.floor((movie.vote_average || 0) * 100)}K
-            </span>
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          
+          {/* Action Buttons */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="flex space-x-2">
+              {hasDownloads && (
+                <button
+                  onClick={() => {
+                    if (isSeries) {
+                      // Dispatch series player event
+                      window.dispatchEvent(new CustomEvent('openSeriesPlayer', {
+                        detail: { series: movie }
+                      }));
+                    } else {
+                      // Dispatch movie player event
+                      window.dispatchEvent(new CustomEvent('openMoviePlayer', {
+                        detail: { 
+                          movie, 
+                          downloadLinks: movie.downloadLinks || [] 
+                        }
+                      }));
+                    }
+                  }}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors hover:scale-105 flex items-center space-x-2"
+                >
+                  <Play className="h-4 w-4" />
+                  <span>Watch {isSeries ? 'Series' : 'Now'}</span>
+                </button>
+              )}
+              
+              <button className="bg-slate-700/80 hover:bg-slate-600/80 text-white px-3 py-2 rounded-lg transition-colors hover:scale-105">
+                <Heart className="h-4 w-4" />
+              </button>
+            </div>
           </div>
           
-          <div className="flex items-center space-x-2">
-            {hasDownloads ? (
-              <button
-                onClick={() => {
-                  const event = new CustomEvent('openMoviePlayer', { 
-                    detail: { movie, downloadLinks } 
-                  });
-                  window.dispatchEvent(event);
-                }}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-all duration-200 flex items-center justify-center hover:scale-105"
-              >
-                <Play className="h-3 w-3 mr-1" />
-                Watch Now
-              </button>
-            ) : (
-              <Link
-                to={`/movie/${movie.id}`}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-all duration-200 flex items-center justify-center hover:scale-105"
-              >
-                <Play className="h-3 w-3 mr-1" />
-                View Details
-              </Link>
-            )}
-            <button className="p-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white rounded-lg transition-colors hover:scale-110">
-              <Heart className="h-4 w-4" />
-            </button>
-            {hasDownloads && (
-              <button 
-                onClick={() => window.open(downloadLinks[0], '_blank')}
-                className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors hover:scale-110"
-                title="Download"
-              >
-                <Download className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+          {/* Badge */}
+          {hasDownloads && (
+            <div className="absolute top-2 left-2">
+              <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-medium flex items-center space-x-1">
+                <CheckCircle className="h-3 w-3" />
+                <span>Watch Available</span>
+              </span>
+            </div>
+          )}
+          
+          {/* Series Badge */}
+          {isSeries && (
+            <div className="absolute top-2 right-2">
+              <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full font-medium flex items-center space-x-1">
+                <Tv className="h-3 w-3" />
+                <span>Series</span>
+              </span>
+            </div>
+          )}
         </div>
         
-        {!hasDownloads && (
-          <Link
-            to={`/movie/${movie.id}`}
-            className="absolute inset-0 z-10"
-            aria-label={`View details for ${movie.title}`}
-          />
-        )}
+        {/* Content */}
+        <div className="p-4">
+          <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2 group-hover:text-purple-400 transition-colors">
+            {movie.title}
+          </h3>
+          
+          <p className="text-slate-300 text-sm mb-3 line-clamp-2">
+            {movie.overview}
+          </p>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Star className="h-4 w-4 text-yellow-400 fill-current" />
+              <span className="text-slate-300 text-sm">{movie.vote_average?.toFixed(1) || 'N/A'}</span>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              {movie.release_date && (
+                <span className="text-slate-400 text-xs">
+                  {new Date(movie.release_date).getFullYear()}
+                </span>
+              )}
+              
+              {isSeries && movie.episodes && (
+                <span className="text-slate-400 text-xs bg-slate-700 px-2 py-1 rounded">
+                  {movie.episodes.length} Episodes
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     );
   };

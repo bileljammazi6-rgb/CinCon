@@ -1,142 +1,366 @@
-export const movieLinks = {
-  "mobland": [
-    "https://pixeldrain.com/api/file/c1yALumo",
-    "https://pixeldrain.com/api/file/5vByKXNB",
-    "https://pixeldrain.com/api/file/qwZSeP5c",
-    "https://download2391.mediafire.com/…/Mobland+S01+004+720p.mp4",
-    "https://pixeldrain.com/api/file/9F3gFRvF",
-    "https://pixeldrain.com/api/file/2untTLEh",
-    "https://pixeldrain.com/api/file/4JuMeWG8",
-    "https://pixeldrain.com/api/file/ykgLmxs9",
-    "https://pixeldrain.com/api/file/FKPTCSaQ",
-    "https://pixeldrain.com/api/file/aAcYYP26"
-  ],
-  "all of us are dead": [
-    "https://pixeldrain.com/api/file/WG3NJoAK",
-    "https://pixeldrain.com/api/file/xv1y74MP",
-    "https://pixeldrain.com/api/file/TKkpUnwJ",
-    "https://pixeldrain.com/api/file/2GDstPyV",
-    "https://pixeldrain.com/api/file/EokWU4JK"
-  ],
-  "the queen's gambit": [
-    "https://pixeldrain.com/api/file/452dw9vK",
-    "https://pixeldrain.com/api/file/EE4Sx96w",
-    "https://pixeldrain.com/api/file/v96e4qxD",
-    "https://pixeldrain.com/api/file/YYa121XQ",
-    "https://pixeldrain.com/api/file/22icFfDJ"
-  ],
-  "attack on titan": [
-    "https://pixeldrain.com/api/file/jiAm7kxg",
-    "https://pixeldrain.com/api/file/SBVUfsvw",
-    "https://pixeldrain.com/api/file/RnKc3j6j",
-    "https://pixeldrain.com/api/file/TgA7Nf9p",
-    "https://pixeldrain.com/api/file/5YNAWddf",
-    "https://pixeldrain.com/api/file/4H5xGTt5"
-  ],
-  "interstellar": ["https://pixeldrain.com/api/file/AeJScF7G"],
-  "17 again": ["https://pixeldrain.com/api/file/DNGsiNcv"],
-  "mission impossible final reckoning": ["https://pixeldrain.com/api/file/ByucVF3t"],
-  "stranger when we meet": ["https://pixeldrain.com/api/file/r4cB6Aj5"],
-  "vini jr": ["https://pixeldrain.com/api/file/kBkZSXe4"],
-  "sonic 3": ["https://pixeldrain.com/api/file/GyzsmZsU"],
-  "death of the unicorn": ["https://pixeldrain.com/api/file/UtcYURtk"],
-  "memento": ["https://pixeldrain.com/api/file/vZeEZ7WM"],
-  "mirage": ["https://pixeldrain.com/api/file/x5LY56c9"],
-  "garfield": ["https://pixeldrain.com/api/file/ZbnWak2C"],
-  "elemental": ["https://pixeldrain.com/api/file/X1cAtnCo"],
-  "moana": ["https://pixeldrain.com/api/file/tg6RPcZj"],
-  "moana 2": ["https://pixeldrain.com/api/file/PvcFhorc"],
-  "big hero 6": ["https://pixeldrain.com/api/file/Z3usXvQR"],
-  "frozen": ["https://pixeldrain.com/api/file/nhGyUEWE"],
-  "the match": ["https://pixeldrain.com/api/file/cCbj6zmF"],
-  "inception": ["https://pixeldrain.com/api/file/gknricf2"],
-  "shutter island": ["https://pixeldrain.com/api/file/mohEYXXw"],
-  "the conjuring": ["https://pixeldrain.com/api/file/A2F5GF4n"],
-  "gone girl": ["https://pixeldrain.com/api/file/SEUBGe5E"],
-  "the shawshank redemption": ["https://pixeldrain.com/api/file/1BDdAyo9"],
-  "deadpool": ["https://pixeldrain.com/api/file/7q5fNMVX"],
-  "hereditary": ["https://pixeldrain.com/api/file/TcoXyNTd"],
-  "blade runner 2049": ["https://pixeldrain.com/api/file/3WE1FrNn"],
-  "se7en": ["https://pixeldrain.com/api/file/5WCTREq7"],
-  "oldboy": ["https://pixeldrain.com/api/file/mJHcZype"],
-  "a quiet place": ["https://pixeldrain.com/api/file/ZFHXra4f"],
-  "parasite": ["https://pixeldrain.com/api/file/z3x7ufGR"],
-  "the matrix": ["https://pixeldrain.com/api/file/wh3iPhbw"],
-  "get out": ["https://pixeldrain.com/api/file/tRMxPrEh"],
-  "fight club": ["https://pixeldrain.com/api/file/1GSreeCN"],
-  "zombieland": ["https://pixeldrain.com/api/file/31erh9yM"],
-  "the dark knight": ["https://pixeldrain.com/api/file/2XxUnAiL"],
-  "pulp fiction": ["https://pixeldrain.com/api/file/xhmTwHc5"],
-  "arrival": ["https://pixeldrain.com/api/file/GSiZcGxu"],
-  "the exorcist": ["https://pixeldrain.com/api/file/Vqu2u1Z"],
-  "la la land": ["https://pixeldrain.com/api/file/9eMsbMaT"],
-  "the big lebowski": ["https://pixeldrain.com/api/file/sk84MG4s"],
-  "prisoners": ["https://pixeldrain.com/api/file/r4e4kqXZ"],
-  "mad max: fury road": ["https://pixeldrain.com/api/file/enEkogsJ"],
-  "whiplash": ["https://pixeldrain.com/api/file/bduADEUE"],
-  "django unchained": ["https://pixeldrain.com/api/file/bduADEU"],
-  "her": ["https://pixeldrain.com/api/file/mBpGfW5k"],
-  "the sixth sense": ["https://pixeldrain.com/api/file/N7BqqAcR"],
-  "guardians of the galaxy": ["https://pixeldrain.com/api/file/Ay2n7tbE"],
-  "it": ["https://pixeldrain.com/api/file/pvMFBERU"],
-  "knives out": ["https://pixeldrain.com/api/file/vbz3UouH"],
-  "the wolf of wall street": ["https://pixeldrain.com/api/file/NRYezmAR"],
-  "ex machina": ["https://pixeldrain.com/api/file/MsnSAGph"],
-  "amelie": ["https://pixeldrain.com/api/file/okivRoKv"],
-  "drive": ["https://pixeldrain.com/api/file/Ynk1UBSZ"],
-  "spirited away": ["https://pixeldrain.com/api/file/SwBc7Xmn"],
-  "the departed": ["https://pixeldrain.com/api/file/k2Jwycuc"],
-  "train to busan": ["https://pixeldrain.com/api/file/HFzG4HAp"],
-  "edge of tomorrow": ["https://pixeldrain.com/api/file/5jeA4biy"],
-  "black swan": ["https://pixeldrain.com/api/file/RqNxZDhr"],
-  "good will hunting": ["https://pixeldrain.com/api/file/yeHG7CJY"],
-  "sicario": ["https://pixeldrain.com/api/file/iJ5Rrvab"],
-  "the truman show": ["https://pixeldrain.com/api/file/Zs1t2nZe"],
-  "annihilation": ["https://pixeldrain.com/api/file/9ihL6zh5"],
-  "there will be blood": ["https://pixeldrain.com/api/file/3yp82uMk"],
-  "inglourious basterds": ["https://pixeldrain.com/api/file/QDFGSrwX"],
-  "the social network": ["https://pixeldrain.com/api/file/33VZYPQV"],
-  "the fast and the furious": ["https://pixeldrain.com/api/file/Fg2hjBDz"],
-  "2 fast 2 furious": ["https://pixeldrain.com/api/file/hjjiiJNu"],
-  "the fast and the furious: tokyo drift": ["https://pixeldrain.com/api/file/Sbf3majB"],
-  "fast & furious": ["https://pixeldrain.com/api/file/FnBffMgK"],
-  "fast & furious 6": ["https://pixeldrain.com/api/file/NYExaXxu"],
-  "furious 7": ["https://pixeldrain.com/api/file/ffbrzfyK"],
-  "the fate of the furious": ["https://pixeldrain.com/api/file/KkemW2Ez"],
-  "fast & furious presents: hobbs & shaw": ["https://pixeldrain.com/api/file/kCBtproH"],
-  "f9: the fast saga": ["https://pixeldrain.com/api/file/m2EdMHuv"],
-  "your name": ["https://pixeldrain.com/api/file/i6QpqBUi"],
-  "a silent voice": ["https://pixeldrain.com/api/file/SqALgvZU"],
-  "real steel": ["https://pixeldrain.com/api/file/EqUVUAoi"],
-  "the chestnut man": [
-    "https://pixeldrain.com/api/file/bwLgnrZg",
-    "https://pixeldrain.com/api/file/o9pSYTm1",
-    "https://pixeldrain.com/api/file/8X2zDuMj",
-    "https://pixeldrain.com/api/file/Duyo4u3J",
-    "https://pixeldrain.com/api/file/nwPFNU59",
-    "https://pixeldrain.com/api/file/E3TAe2Nz"
-  ],
-  "smurfs 2025": [
-    "https://pixeldrain.com/api/file/wn35moT2"
-  ],
-  "weapons 2025": [
-    "https://pixeldrain.com/api/file/ZEig7fSJ"
-  ],
-  "the pickup": [
-    "https://pixeldrain.com/api/file/nW2DCHMF"
-  ],
-  "jurassic world 2025": [
-    "https://pixeldrain.com/api/file/bSvpr6f9"
-  ],
-  "honest thief": [
-    "https://pixeldrain.com/api/file/9LrTQZJP"
-  ],
-  "luck": [
-    "https://pixeldrain.com/api/file/9Nz5wR53"
-  ],
-  "how to train your dragon": [
-    "https://pixeldrain.com/api/file/7hZHRPm8"
-  ]
+export interface SeriesEpisode {
+  episode: number;
+  season?: number;
+  title: string;
+  links: string[];
+}
+
+export interface MovieData {
+  id?: number;
+  title: string;
+  overview: string;
+  poster_path?: string;
+  release_date?: string;
+  vote_average?: number;
+  genre_ids?: number[];
+  downloadLinks?: string[];
+  isSeries?: boolean;
+  episodes?: SeriesEpisode[];
+  tmdbId?: number; // TMDB ID for fetching images
+}
+
+export const movieLinks: Record<string, MovieData> = {
+  "mobland": {
+    title: "Mobland",
+    overview: "A gripping crime drama series following the rise and fall of organized crime families.",
+    poster_path: "/mobland-poster.jpg",
+    release_date: "2024",
+    vote_average: 8.7,
+    genre_ids: [18, 80, 9648],
+    isSeries: true,
+    tmdbId: 123456, // Placeholder TMDB ID
+    episodes: [
+      {
+        episode: 1,
+        season: 1,
+        title: "Episode 1",
+        links: ["https://pixeldrain.com/api/file/c1yALumo"]
+      },
+      {
+        episode: 2,
+        season: 1,
+        title: "Episode 2", 
+        links: ["https://pixeldrain.com/api/file/5vByKXNB"]
+      },
+      {
+        episode: 3,
+        season: 1,
+        title: "Episode 3",
+        links: ["https://pixeldrain.com/api/file/qwZSeP5c"]
+      },
+      {
+        episode: 4,
+        season: 1,
+        title: "Episode 4",
+        links: ["https://pixeldrain.com/api/file/9F3gFRvF"]
+      },
+      {
+        episode: 5,
+        season: 1,
+        title: "Episode 5",
+        links: ["https://pixeldrain.com/api/file/2untTLEh"]
+      },
+      {
+        episode: 6,
+        season: 1,
+        title: "Episode 6",
+        links: ["https://pixeldrain.com/api/file/4JuMeWG8"]
+      },
+      {
+        episode: 7,
+        season: 1,
+        title: "Episode 7",
+        links: ["https://pixeldrain.com/api/file/ykgLmxs9"]
+      },
+      {
+        episode: 8,
+        season: 1,
+        title: "Episode 8",
+        links: ["https://pixeldrain.com/api/file/FKPTCSaQ"]
+      },
+      {
+        episode: 9,
+        season: 1,
+        title: "Episode 9",
+        links: ["https://pixeldrain.com/api/file/yAcYYP26"]
+      }
+    ]
+  },
+  "all of us are dead": {
+    title: "All of Us Are Dead",
+    overview: "A Korean zombie apocalypse series where students must fight to survive.",
+    poster_path: "/all-of-us-are-dead-poster.jpg",
+    release_date: "2022",
+    vote_average: 8.3,
+    genre_ids: [27, 18, 10759],
+    isSeries: true,
+    tmdbId: 123457,
+    episodes: [
+      {
+        episode: 1,
+        season: 1,
+        title: "Episode 1",
+        links: ["https://pixeldrain.com/api/file/WG3NJoAK"]
+      },
+      {
+        episode: 2,
+        season: 1,
+        title: "Episode 2",
+        links: ["https://pixeldrain.com/api/file/xv1y74MP"]
+      },
+      {
+        episode: 3,
+        season: 1,
+        title: "Episode 3",
+        links: ["https://pixeldrain.com/api/file/TKkpUnwJ"]
+      },
+      {
+        episode: 4,
+        season: 1,
+        title: "Episode 4",
+        links: ["https://pixeldrain.com/api/file/2GDstPyV"]
+      },
+      {
+        episode: 5,
+        season: 1,
+        title: "Episode 5",
+        links: ["https://pixeldrain.com/api/file/EokWU4JK"]
+      }
+    ]
+  },
+  "the queen's gambit": {
+    title: "The Queen's Gambit",
+    overview: "A chess prodigy's rise to fame while battling addiction.",
+    poster_path: "/queens-gambit-poster.jpg",
+    release_date: "2020",
+    vote_average: 8.6,
+    genre_ids: [18, 10759],
+    isSeries: true,
+    tmdbId: 123458,
+    episodes: [
+      {
+        episode: 1,
+        season: 1,
+        title: "Episode 1",
+        links: ["https://pixeldrain.com/api/file/452dw9vK"]
+      },
+      {
+        episode: 2,
+        season: 1,
+        title: "Episode 2",
+        links: ["https://pixeldrain.com/api/file/EE4Sx96w"]
+      },
+      {
+        episode: 3,
+        season: 1,
+        title: "Episode 3",
+        links: ["https://pixeldrain.com/api/file/v96e4qxD"]
+      },
+      {
+        episode: 4,
+        season: 1,
+        title: "Episode 4",
+        links: ["https://pixeldrain.com/api/file/YYa121XQ"]
+      },
+      {
+        episode: 5,
+        season: 1,
+        title: "Episode 5",
+        links: ["https://pixeldrain.com/api/file/22icFfDJ"]
+      }
+    ]
+  },
+  "attack on titan": {
+    title: "Attack on Titan",
+    overview: "Humanity's last stand against giant Titans in this epic anime series.",
+    poster_path: "/attack-on-titan-poster.jpg",
+    release_date: "2013",
+    vote_average: 9.0,
+    genre_ids: [16, 10759, 10765],
+    isSeries: true,
+    tmdbId: 123459,
+    episodes: [
+      {
+        episode: 1,
+        season: 1,
+        title: "Episode 1",
+        links: ["https://pixeldrain.com/api/file/jiAm7kxg"]
+      },
+      {
+        episode: 2,
+        season: 1,
+        title: "Episode 2",
+        links: ["https://pixeldrain.com/api/file/SBVUfsvw"]
+      },
+      {
+        episode: 3,
+        season: 1,
+        title: "Episode 3",
+        links: ["https://pixeldrain.com/api/file/RnKc3j6j"]
+      },
+      {
+        episode: 4,
+        season: 1,
+        title: "Episode 4",
+        links: ["https://pixeldrain.com/api/file/TgA7Nf9p"]
+      },
+      {
+        episode: 5,
+        season: 1,
+        title: "Episode 5",
+        links: ["https://pixeldrain.com/api/file/5YNAWddf"]
+      },
+      {
+        episode: 6,
+        season: 1,
+        title: "Episode 6",
+        links: ["https://pixeldrain.com/api/file/4H5xGTt5"]
+      }
+    ]
+  },
+  "interstellar": {
+    title: "Interstellar",
+    overview: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
+    poster_path: "/interstellar-poster.jpg",
+    release_date: "2014",
+    vote_average: 8.6,
+    genre_ids: [12, 18, 878],
+    isSeries: false,
+    tmdbId: 157336,
+    downloadLinks: ["https://pixeldrain.com/api/file/AeJScF7G"]
+  },
+  "17 again": {
+    title: "17 Again",
+    overview: "A man gets a chance to relive his high school days and correct the mistakes he made.",
+    poster_path: "/17-again-poster.jpg",
+    release_date: "2009",
+    vote_average: 6.4,
+    genre_ids: [35, 14, 10749],
+    isSeries: false,
+    tmdbId: 12445,
+    downloadLinks: ["https://pixeldrain.com/api/file/DNGsiNcv"]
+  },
+  "mission impossible final reckoning": {
+    title: "Mission: Impossible - Dead Reckoning Part One",
+    overview: "Ethan Hunt and his IMF team must track down a terrifying new weapon that threatens all of humanity.",
+    poster_path: "/mission-impossible-poster.jpg",
+    release_date: "2023",
+    vote_average: 7.7,
+    genre_ids: [28, 12, 53],
+    isSeries: false,
+    tmdbId: 575264,
+    downloadLinks: ["https://pixeldrain.com/api/file/ByucVF3t"]
+  },
+  "inception": {
+    title: "Inception",
+    overview: "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.",
+    poster_path: "/inception-poster.jpg",
+    release_date: "2010",
+    vote_average: 8.8,
+    genre_ids: [28, 18, 878],
+    isSeries: false,
+    tmdbId: 27205,
+    downloadLinks: ["https://pixeldrain.com/api/file/gknricf2"]
+  },
+  "the dark knight": {
+    title: "The Dark Knight",
+    overview: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
+    poster_path: "/dark-knight-poster.jpg",
+    release_date: "2008",
+    vote_average: 9.0,
+    genre_ids: [28, 18, 80],
+    isSeries: false,
+    tmdbId: 155,
+    downloadLinks: ["https://pixeldrain.com/api/file/2XxUnAiL"]
+  },
+  "pulp fiction": {
+    title: "Pulp Fiction",
+    overview: "The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption.",
+    poster_path: "/pulp-fiction-poster.jpg",
+    release_date: "1994",
+    vote_average: 8.9,
+    genre_ids: [53, 80],
+    isSeries: false,
+    tmdbId: 680,
+    downloadLinks: ["https://pixeldrain.com/api/file/xhmTwHc5"]
+  },
+  "the matrix": {
+    title: "The Matrix",
+    overview: "A computer programmer discovers that reality as he knows it is a simulation created by machines, and joins a rebellion to break free.",
+    poster_path: "/matrix-poster.jpg",
+    release_date: "1999",
+    vote_average: 8.7,
+    genre_ids: [28, 878],
+    isSeries: false,
+    tmdbId: 603,
+    downloadLinks: ["https://pixeldrain.com/api/file/wh3iPhbw"]
+  },
+  "fight club": {
+    title: "Fight Club",
+    overview: "An insomniac office worker and a devil-may-care soapmaker form an underground fight club that evolves into something much, much more.",
+    poster_path: "/fight-club-poster.jpg",
+    release_date: "1999",
+    vote_average: 8.8,
+    genre_ids: [18],
+    isSeries: false,
+    tmdbId: 550,
+    downloadLinks: ["https://pixeldrain.com/api/file/1GSreeCN"]
+  },
+  "parasite": {
+    title: "Parasite",
+    overview: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.",
+    poster_path: "/parasite-poster.jpg",
+    release_date: "2019",
+    vote_average: 8.6,
+    genre_ids: [18, 53],
+    isSeries: false,
+    tmdbId: 496243,
+    downloadLinks: ["https://pixeldrain.com/api/file/z3x7ufGR"]
+  },
+  "la la land": {
+    title: "La La Land",
+    overview: "A jazz pianist falls for an aspiring actress in Los Angeles.",
+    poster_path: "/la-la-land-poster.jpg",
+    release_date: "2016",
+    vote_average: 8.0,
+    genre_ids: [35, 18, 10402, 10749],
+    isSeries: false,
+    tmdbId: 313369,
+    downloadLinks: ["https://pixeldrain.com/api/file/9eMsbMaT"]
+  },
+  "spirited away": {
+    title: "Spirited Away",
+    overview: "During her family's move to the suburbs, a sullen 10-year-old girl wanders into a world ruled by gods, witches, and spirits, where humans are changed into beasts.",
+    poster_path: "/spirited-away-poster.jpg",
+    release_date: "2001",
+    vote_average: 8.6,
+    genre_ids: [16, 12, 14, 10751],
+    isSeries: false,
+    tmdbId: 129,
+    downloadLinks: ["https://pixeldrain.com/api/file/SwBc7Xmn"]
+  },
+  "your name": {
+    title: "Your Name",
+    overview: "Two strangers find themselves linked in a bizarre way. When a connection forms, will distance be the only thing to keep them apart?",
+    poster_path: "/your-name-poster.jpg",
+    release_date: "2016",
+    vote_average: 8.4,
+    genre_ids: [16, 18, 10749, 14],
+    isSeries: false,
+    tmdbId: 372058,
+    downloadLinks: ["https://pixeldrain.com/api/file/i6QpqBUi"]
+  },
+  "how to train your dragon": {
+    title: "How to Train Your Dragon",
+    overview: "A hapless young Viking who aspires to hunt dragons becomes the unlikely friend of a young dragon himself, and learns there may be more to the creatures than he initially assumed.",
+    poster_path: "/how-to-train-dragon-poster.jpg",
+    release_date: "2010",
+    vote_average: 8.1,
+    genre_ids: [16, 12, 10751],
+    isSeries: false,
+    tmdbId: 10191,
+    downloadLinks: ["https://pixeldrain.com/api/file/7hZHRPm8"]
+  }
 };
 
 // Helper function to find movie links by title
@@ -145,29 +369,40 @@ export const findMovieLinks = (title: string): string[] => {
   
   // Direct match
   if (movieLinks[normalizedTitle]) {
-    return movieLinks[normalizedTitle];
+    const movie = movieLinks[normalizedTitle];
+    if (movie.isSeries && movie.episodes) {
+      // For series, return all episode links
+      return movie.episodes.flatMap(ep => ep.links);
+    } else if (movie.downloadLinks) {
+      return movie.downloadLinks;
+    }
   }
   
   // Partial match
-  for (const [key, links] of Object.entries(movieLinks)) {
+  for (const [key, movie] of Object.entries(movieLinks)) {
     if (key.includes(normalizedTitle) || normalizedTitle.includes(key)) {
-      return links;
+      if (movie.isSeries && movie.episodes) {
+        return movie.episodes.flatMap(ep => ep.links);
+      } else if (movie.downloadLinks) {
+        return movie.downloadLinks;
+      }
     }
   }
   
   return [];
 };
 
-// Get all available movie titles
+// Get all available movies and series
 export const getAvailableMovies = (): MovieData[] => {
-  return Object.keys(movieLinks).map(title => ({
-    id: Math.random(), // Generate a random ID since we don't have TMDB IDs
-    title: title,
-    overview: `Watch ${title} - Available for streaming with high quality download links.`,
-    poster_path: '', // We'll use a placeholder or try to find from TMDB
-    release_date: '2024', // Placeholder
-    vote_average: 8.5, // Placeholder rating
-    genre_ids: [],
-    downloadLinks: movieLinks[title]
-  }));
+  return Object.values(movieLinks);
+};
+
+// Get only series
+export const getAvailableSeries = (): MovieData[] => {
+  return Object.values(movieLinks).filter(movie => movie.isSeries);
+};
+
+// Get only movies (not series)
+export const getAvailableMoviesOnly = (): MovieData[] => {
+  return Object.values(movieLinks).filter(movie => !movie.isSeries);
 };

@@ -14,6 +14,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { MovieProvider } from './contexts/MovieContext';
 import { FloatingAIChat } from './components/FloatingAIChat';
 import { MoviePlayer } from './components/MoviePlayer';
+import { SeriesPlayer } from './components/SeriesPlayer';
 import './styles/globals.css';
 import { AuthForm } from './components/Auth/AuthForm';
 
@@ -28,6 +29,13 @@ function App() {
     movie: null,
     downloadLinks: []
   });
+  const [seriesPlayer, setSeriesPlayer] = useState<{
+    isOpen: boolean;
+    series: any;
+  }>({
+    isOpen: false,
+    series: null
+  });
 
   useEffect(() => {
     // Listen for custom event to open movie player
@@ -40,10 +48,21 @@ function App() {
       });
     };
 
+    // Listen for custom event to open series player
+    const handleOpenSeriesPlayer = (event: CustomEvent) => {
+      const { series } = event.detail;
+      setSeriesPlayer({
+        isOpen: true,
+        series
+      });
+    };
+
     window.addEventListener('openMoviePlayer', handleOpenMoviePlayer as EventListener);
+    window.addEventListener('openSeriesPlayer', handleOpenSeriesPlayer as EventListener);
 
     return () => {
       window.removeEventListener('openMoviePlayer', handleOpenMoviePlayer as EventListener);
+      window.removeEventListener('openSeriesPlayer', handleOpenSeriesPlayer as EventListener);
     };
   }, []);
 
@@ -52,6 +71,13 @@ function App() {
       isOpen: false,
       movie: null,
       downloadLinks: []
+    });
+  };
+
+  const closeSeriesPlayer = () => {
+    setSeriesPlayer({
+      isOpen: false,
+      series: null
     });
   };
 
@@ -87,6 +113,13 @@ function App() {
               movie={moviePlayer.movie}
               isOpen={moviePlayer.isOpen}
               onClose={closeMoviePlayer}
+            />
+
+            {/* Global Series Player */}
+            <SeriesPlayer
+              series={seriesPlayer.series}
+              isOpen={seriesPlayer.isOpen}
+              onClose={closeSeriesPlayer}
             />
           </div>
         </Router>
