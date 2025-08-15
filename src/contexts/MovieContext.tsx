@@ -7,8 +7,16 @@ interface MovieContextType {
   trending: MovieData[];
   popular: MovieData[];
   loading: boolean;
-  searchMovies: (query: string) => Promise<void>;
+  searchMovies: (query: string) => Promise<MovieData[]>;
   getMovieById: (id: string) => Promise<MovieData | null>;
+  getPopularMovies: () => Promise<MovieData[]>;
+  getTrendingMovies: () => Promise<MovieData[]>;
+  getTopRatedMovies: () => Promise<MovieData[]>;
+  getUpcomingMovies: () => Promise<MovieData[]>;
+  searchTVShows: (query: string) => Promise<MovieData[]>;
+  getPopularTVShows: () => Promise<MovieData[]>;
+  getTopRatedTVShows: () => Promise<MovieData[]>;
+  getOnTheAirTVShows: () => Promise<MovieData[]>;
 }
 
 const MovieContext = createContext<MovieContextType | undefined>(undefined);
@@ -53,25 +61,21 @@ export function MovieProvider({ children }: MovieProviderProps) {
     fetchInitialData();
   }, []);
 
-  const searchMovies = async (query: string) => {
+  const searchMovies = async (query: string): Promise<MovieData[]> => {
     if (!query.trim()) {
-      setMovies([...trending, ...popular]);
-      return;
+      return [...trending, ...popular];
     }
 
     try {
-      setLoading(true);
       const searchResults = await tmdbService.searchMovie(query);
       if (searchResults) {
-        setMovies([searchResults]);
+        return [searchResults];
       } else {
-        setMovies([]);
+        return [];
       }
     } catch (error) {
       console.error('Error searching movies:', error);
-      setMovies([]);
-    } finally {
-      setLoading(false);
+      return [];
     }
   };
 
@@ -91,6 +95,108 @@ export function MovieProvider({ children }: MovieProviderProps) {
     }
   };
 
+  const getPopularMovies = async (): Promise<MovieData[]> => {
+    try {
+      return await tmdbService.getPopularMovies();
+    } catch (error) {
+      console.error('Error getting popular movies:', error);
+      return [];
+    }
+  };
+
+  const getTrendingMovies = async (): Promise<MovieData[]> => {
+    try {
+      return await tmdbService.getTrendingMovies();
+    } catch (error) {
+      console.error('Error getting trending movies:', error);
+      return [];
+    }
+  };
+
+  const getTopRatedMovies = async (): Promise<MovieData[]> => {
+    try {
+      const response = await fetch(
+        `https://api.themoviedb.org/3/movie/top_rated?api_key=${import.meta.env.VITE_TMDB_API_KEY || '0a7ef230ab60a26cca44c7d8a6d24c25'}&language=en-US&page=1`
+      );
+      if (!response.ok) throw new Error(`TMDB API Error: ${response.status}`);
+      const data = await response.json();
+      return data.results || [];
+    } catch (error) {
+      console.error('Error getting top rated movies:', error);
+      return [];
+    }
+  };
+
+  const getUpcomingMovies = async (): Promise<MovieData[]> => {
+    try {
+      const response = await fetch(
+        `https://api.themoviedb.org/3/movie/upcoming?api_key=${import.meta.env.VITE_TMDB_API_KEY || '0a7ef230ab60a26cca44c7d8a6d24c25'}&language=en-US&page=1`
+      );
+      if (!response.ok) throw new Error(`TMDB API Error: ${response.status}`);
+      const data = await response.json();
+      return data.results || [];
+    } catch (error) {
+      console.error('Error getting upcoming movies:', error);
+      return [];
+    }
+  };
+
+  const searchTVShows = async (query: string): Promise<MovieData[]> => {
+    try {
+      const response = await fetch(
+        `https://api.themoviedb.org/3/search/tv?api_key=${import.meta.env.VITE_TMDB_API_KEY || '0a7ef230ab60a26cca44c7d8a6d24c25'}&query=${encodeURIComponent(query)}&language=en-US`
+      );
+      if (!response.ok) throw new Error(`TMDB API Error: ${response.status}`);
+      const data = await response.json();
+      return data.results || [];
+    } catch (error) {
+      console.error('Error searching TV shows:', error);
+      return [];
+    }
+  };
+
+  const getPopularTVShows = async (): Promise<MovieData[]> => {
+    try {
+      const response = await fetch(
+        `https://api.themoviedb.org/3/tv/popular?api_key=${import.meta.env.VITE_TMDB_API_KEY || '0a7ef230ab60a26cca44c7d8a6d24c25'}&language=en-US&page=1`
+      );
+      if (!response.ok) throw new Error(`TMDB API Error: ${response.status}`);
+      const data = await response.json();
+      return data.results || [];
+    } catch (error) {
+      console.error('Error getting popular TV shows:', error);
+      return [];
+    }
+  };
+
+  const getTopRatedTVShows = async (): Promise<MovieData[]> => {
+    try {
+      const response = await fetch(
+        `https://api.themoviedb.org/3/tv/top_rated?api_key=${import.meta.env.VITE_TMDB_API_KEY || '0a7ef230ab60a26cca44c7d8a6d24c25'}&language=en-US&page=1`
+      );
+      if (!response.ok) throw new Error(`TMDB API Error: ${response.status}`);
+      const data = await response.json();
+      return data.results || [];
+    } catch (error) {
+      console.error('Error getting top rated TV shows:', error);
+      return [];
+    }
+  };
+
+  const getOnTheAirTVShows = async (): Promise<MovieData[]> => {
+    try {
+      const response = await fetch(
+        `https://api.themoviedb.org/3/tv/on_the_air?api_key=${import.meta.env.VITE_TMDB_API_KEY || '0a7ef230ab60a26cca44c7d8a6d24c25'}&language=en-US&page=1`
+      );
+      if (!response.ok) throw new Error(`TMDB API Error: ${response.status}`);
+      const data = await response.json();
+      return data.results || [];
+    } catch (error) {
+      console.error('Error getting on the air TV shows:', error);
+      return [];
+    }
+  };
+
   const value = {
     movies,
     trending,
@@ -98,6 +204,14 @@ export function MovieProvider({ children }: MovieProviderProps) {
     loading,
     searchMovies,
     getMovieById,
+    getPopularMovies,
+    getTrendingMovies,
+    getTopRatedMovies,
+    getUpcomingMovies,
+    searchTVShows,
+    getPopularTVShows,
+    getTopRatedTVShows,
+    getOnTheAirTVShows,
   };
 
   return (
