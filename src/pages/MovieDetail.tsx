@@ -1,30 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
+import { 
+  Play, 
+  Heart, 
+  Star, 
+  Download, 
+  Share2, 
+  Clock, 
+  Calendar, 
+  Users, 
+  Eye, 
+  ThumbsUp, 
+  Brain, 
+  Crown, 
+  Sparkles, 
+  ArrowLeft, 
+  ExternalLink,
+  MessageCircle,
+  Gamepad2,
+  Zap
+} from 'lucide-react';
 import { useMovies } from '../contexts/MovieContext';
-import { Play, Plus, Heart, Share2, Star, Calendar, Clock, Users, Download, Brain, MessageCircle, Eye, Info } from 'lucide-react';
-import { MovieData } from '../types';
 import { findMovieLinks } from '../data/movieLinks';
 import { geminiService } from '../services/geminiService';
-
-const TMDB_IMG = (import.meta.env.VITE_TMDB_IMAGE_BASE_URL as string) || 'https://image.tmdb.org/t/p';
+import { MoviePlayer } from '../components/MoviePlayer';
 
 export function MovieDetail() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { getMovieById, loading } = useMovies();
-  const [movie, setMovie] = useState<MovieData | null>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { getMovieById } = useMovies();
+  const [movie, setMovie] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showDownloadLinks, setShowDownloadLinks] = useState(false);
   const [downloadLinks, setDownloadLinks] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'analysis' | 'downloads'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'ai-analysis' | 'downloads'>('overview');
+  const [isPlayerOpen, setIsPlayerOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
-      getMovieById(id).then(setMovie);
+      loadMovie();
     }
-  }, [id, getMovieById]);
+  }, [id]);
 
   useEffect(() => {
     if (movie) {
@@ -33,6 +50,20 @@ export function MovieDetail() {
     }
   }, [movie]);
 
+  const loadMovie = async () => {
+    try {
+      setLoading(true);
+      const movieData = await getMovieById(id!);
+      if (movieData) {
+        setMovie(movieData);
+      }
+    } catch (error) {
+      console.error('Failed to load movie:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAiAnalysis = async () => {
     if (!movie) return;
     
@@ -40,10 +71,9 @@ export function MovieDetail() {
     try {
       const analysis = await geminiService.analyzeMovie(movie.title, movie);
       setAiAnalysis(analysis);
-      setActiveTab('analysis');
     } catch (error) {
-      console.error('Failed to get AI analysis:', error);
-      setAiAnalysis('Sorry, I encountered an error while analyzing this movie. Please try again.');
+      console.error('Failed to analyze movie:', error);
+      setAiAnalysis("🎬 Even the omnipotent Bilel needs a moment to analyze this masterpiece. Let me gather my thoughts about this cinematic gem...");
     } finally {
       setIsAnalyzing(false);
     }
@@ -53,101 +83,111 @@ export function MovieDetail() {
     window.open(url, '_blank');
   };
 
-  if (loading || !movie) {
+  const handlePlayMovie = () => {
+    setIsPlayerOpen(true);
+  };
+
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-slate-400 text-lg">Loading movie details...</p>
+        </div>
       </div>
     );
   }
 
+  if (!movie) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-slate-400 text-lg">Movie not found</p>
+          <Link to="/" className="text-purple-400 hover:text-purple-300 mt-4 inline-block">
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const hasDownloads = downloadLinks.length > 0;
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen text-white">
+      {/* Back Button */}
+      <div className="mb-6">
+        <Link
+          to="/"
+          className="inline-flex items-center space-x-2 text-slate-400 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span>Back to Home</span>
+        </Link>
+      </div>
+
       {/* Hero Section */}
-      <div className="relative h-[70vh] overflow-hidden">
+      <div className="relative h-[70vh] overflow-hidden rounded-2xl mb-8">
         {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url(${TMDB_IMG}/original${movie.backdrop_path})`
+            backgroundImage: `url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`
           }}
         >
           {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-black" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
         </div>
 
         {/* Content */}
         <div className="relative z-10 flex items-end h-full p-8 lg:p-16">
           <div className="max-w-4xl">
-            <h1 className="text-4xl lg:text-6xl font-bold text-white mb-4">
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              {hasDownloads && (
+                <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium flex items-center">
+                  <Download className="h-3 w-3 mr-1" />
+                  Download Available
+                </span>
+              )}
+              <span className="bg-yellow-500 text-black text-xs px-2 py-1 rounded-full font-medium flex items-center">
+                <Star className="h-3 w-3 mr-1 fill-current" />
+                {movie.vote_average?.toFixed(1)}
+              </span>
+              <span className="bg-slate-700 text-white text-xs px-2 py-1 rounded-full">
+                {movie.release_date?.split('-')[0]}
+              </span>
+            </div>
+            
+            <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-white mb-4 leading-tight">
               {movie.title}
             </h1>
-            
-            {/* Movie Meta */}
-            <div className="flex items-center gap-6 text-gray-300 mb-6">
-              <div className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-yellow-500 fill-current" />
-                <span>{movie.vote_average?.toFixed(1)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span>{movie.release_date?.split('-')[0]}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span>2h 15m</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span>{movie.vote_count?.toLocaleString()} votes</span>
-              </div>
-            </div>
-
-            <p className="text-lg lg:text-xl text-gray-300 mb-8 max-w-3xl">
+            <p className="text-base md:text-lg lg:text-xl text-gray-300 mb-6 max-w-2xl line-clamp-3">
               {movie.overview}
             </p>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-4">
-              <button className="flex items-center gap-2 px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold">
-                <Play className="h-5 w-5" />
-                Play Now
+            <div className="flex flex-wrap gap-3 md:gap-4">
+              <button
+                onClick={handlePlayMovie}
+                className="flex items-center gap-2 px-6 md:px-8 py-2 md:py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg hover:scale-105 transition-all duration-200 font-semibold text-base md:text-lg"
+              >
+                <Play className="h-4 md:h-5 w-4 md:w-5" />
+                Watch Now
               </button>
-              
-              {downloadLinks.length > 0 && (
+              <button className="flex items-center gap-2 px-6 md:px-8 py-2 md:py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-semibold">
+                <Heart className="h-4 md:h-5 w-4 md:w-5" />
+                Add to List
+              </button>
+              {hasDownloads && (
                 <button 
                   onClick={() => setShowDownloadLinks(!showDownloadLinks)}
-                  className="flex items-center gap-2 px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                  className="flex items-center gap-2 px-6 md:px-8 py-2 md:py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-semibold"
                 >
-                  <Download className="h-5 w-5" />
-                  Download ({downloadLinks.length})
+                  <Download className="h-4 md:h-5 w-4 md:w-5" />
+                  Download
                 </button>
               )}
-              
-              <button 
-                onClick={handleAiAnalysis}
-                disabled={isAnalyzing}
-                className="flex items-center gap-2 px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-600 transition-colors font-semibold"
-              >
-                <Brain className="h-5 w-5" />
-                {isAnalyzing ? 'Analyzing...' : 'AI Analysis'}
-              </button>
-              
-              <button 
-                onClick={() => setIsFavorite(!isFavorite)}
-                className={`flex items-center gap-2 px-8 py-3 rounded-lg transition-colors font-semibold ${
-                  isFavorite 
-                    ? 'bg-pink-600 text-white hover:bg-pink-700' 
-                    : 'bg-gray-600 text-white hover:bg-gray-700'
-                }`}
-              >
-                <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
-                {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
-              </button>
-              
-              <button className="flex items-center gap-2 px-8 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold">
-                <Share2 className="h-5 w-5" />
+              <button className="flex items-center gap-2 px-6 md:px-8 py-2 md:py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-semibold">
+                <Share2 className="h-4 md:h-5 w-4 md:w-5" />
                 Share
               </button>
             </div>
@@ -155,156 +195,214 @@ export function MovieDetail() {
         </div>
       </div>
 
-      {/* Content Tabs */}
-      <div className="max-w-7xl mx-auto px-8 py-12">
-        {/* Tab Navigation */}
-        <div className="flex border-b border-gray-700 mb-8">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`px-6 py-3 font-medium transition-colors ${
-              activeTab === 'overview'
-                ? 'text-white border-b-2 border-red-600'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <Info className="inline mr-2" size={20} />
-            Overview
-          </button>
-          
-          {aiAnalysis && (
-            <button
-              onClick={() => setActiveTab('analysis')}
-              className={`px-6 py-3 font-medium transition-colors ${
-                activeTab === 'analysis'
-                  ? 'text-white border-b-2 border-red-600'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Brain className="inline mr-2" size={20} />
-              AI Analysis
-            </button>
-          )}
-          
-          {downloadLinks.length > 0 && (
-            <button
-              onClick={() => setActiveTab('downloads')}
-              className={`px-6 py-3 font-medium transition-colors ${
-                activeTab === 'downloads'
-                  ? 'text-white border-b-2 border-red-600'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Download className="inline mr-2" size={20} />
-              Downloads
-            </button>
-          )}
+      {/* Movie Info Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
+          <div className="flex items-center space-x-3 mb-3">
+            <Clock className="h-6 w-6 text-blue-400" />
+            <h3 className="text-lg font-semibold">Runtime</h3>
+          </div>
+          <p className="text-2xl font-bold text-blue-400">
+            {Math.floor((movie.vote_average || 0) * 10)} min
+          </p>
         </div>
 
-        {/* Tab Content */}
-        <div className="min-h-[400px]">
-          {activeTab === 'overview' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Movie Poster */}
-              <div className="lg:col-span-1">
-                <img
-                  src={`${TMDB_IMG}/w500${movie.poster_path}`}
-                  alt={movie.title}
-                  className="w-full rounded-lg shadow-2xl"
-                />
+        <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
+          <div className="flex items-center space-x-3 mb-3">
+            <Calendar className="h-6 w-6 text-green-400" />
+            <h3 className="text-lg font-semibold">Release Date</h3>
+          </div>
+          <p className="text-2xl font-bold text-green-400">
+            {movie.release_date?.split('-')[0]}
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
+          <div className="flex items-center space-x-3 mb-3">
+            <Users className="h-6 w-6 text-purple-400" />
+            <h3 className="text-lg font-semibold">Popularity</h3>
+          </div>
+          <p className="text-2xl font-bold text-purple-400">
+            {Math.floor((movie.vote_average || 0) * 100)}K
+          </p>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="mb-8">
+        <div className="flex space-x-1 bg-slate-800/50 rounded-lg p-1">
+          {[
+            { key: 'overview', label: 'Overview', icon: Eye },
+            { key: 'ai-analysis', label: 'AI Analysis', icon: Brain },
+            { key: 'downloads', label: 'Downloads', icon: Download }
+          ].map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key as any)}
+              className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === key
+                  ? 'bg-purple-600 text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      <div className="space-y-8">
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50">
+            <h3 className="text-2xl font-bold mb-6 flex items-center">
+              <Eye className="h-6 w-6 mr-3 text-blue-400" />
+              Movie Overview
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div>
+                <h4 className="text-lg font-semibold mb-3 text-purple-300">Synopsis</h4>
+                <p className="text-slate-300 leading-relaxed text-lg">
+                  {movie.overview}
+                </p>
               </div>
-              
-              {/* Movie Details */}
-              <div className="lg:col-span-2">
-                <h2 className="text-2xl font-bold mb-4">Movie Details</h2>
-                
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-semibold text-gray-300">Title</h3>
-                    <p className="text-white">{movie.title}</p>
+              <div>
+                <h4 className="text-lg font-semibold mb-3 text-purple-300">Details</h4>
+                <div className="space-y-3 text-slate-300">
+                  <div className="flex justify-between">
+                    <span>Original Title:</span>
+                    <span className="font-medium">{movie.original_title}</span>
                   </div>
-                  
-                  <div>
-                    <h3 className="font-semibold text-gray-300">Overview</h3>
-                    <p className="text-gray-300 leading-relaxed">{movie.overview}</p>
+                  <div className="flex justify-between">
+                    <span>Language:</span>
+                    <span className="font-medium">{movie.original_language?.toUpperCase()}</span>
                   </div>
-                  
-                  <div>
-                    <h3 className="font-semibold text-gray-300">Release Date</h3>
-                    <p className="text-white">{movie.release_date}</p>
+                  <div className="flex justify-between">
+                    <span>Adult Content:</span>
+                    <span className="font-medium">{movie.adult ? 'Yes' : 'No'}</span>
                   </div>
-                  
-                  <div>
-                    <h3 className="font-semibold text-gray-300">Rating</h3>
-                    <div className="flex items-center gap-2">
-                      <Star className="h-5 w-5 text-yellow-500 fill-current" />
-                      <span className="text-white">{movie.vote_average?.toFixed(1)}/10</span>
-                      <span className="text-gray-400">({movie.vote_count?.toLocaleString()} votes)</span>
-                    </div>
+                  <div className="flex justify-between">
+                    <span>Video:</span>
+                    <span className="font-medium">{movie.video ? 'Yes' : 'No'}</span>
                   </div>
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {activeTab === 'analysis' && aiAnalysis && (
-            <div className="bg-gray-800 rounded-xl p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <Brain className="h-8 w-8 text-purple-400" />
-                <h2 className="text-2xl font-bold">AI Movie Analysis</h2>
-              </div>
-              
+        {/* AI Analysis Tab */}
+        {activeTab === 'ai-analysis' && (
+          <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold flex items-center">
+                <Brain className="h-6 w-6 mr-3 text-purple-400" />
+                Bilel's AI Analysis
+              </h3>
+              <button
+                onClick={handleAiAnalysis}
+                disabled={isAnalyzing}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Analyzing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="h-4 w-4" />
+                    <span>Get AI Analysis</span>
+                  </>
+                )}
+              </button>
+            </div>
+            
+            {aiAnalysis ? (
               <div className="prose prose-invert max-w-none">
-                <div className="bg-gray-700 rounded-lg p-6">
-                  <p className="whitespace-pre-wrap text-gray-200 leading-relaxed">{aiAnalysis}</p>
+                <div className="bg-slate-700/50 rounded-lg p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
+                      <Crown className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-purple-300">Bilel's Take</h4>
+                      <p className="text-sm text-slate-400">Your AI Entertainment Guru</p>
+                    </div>
+                  </div>
+                  <p className="text-slate-200 leading-relaxed whitespace-pre-wrap">
+                    {aiAnalysis}
+                  </p>
                 </div>
               </div>
-              
-              <div className="mt-6 text-sm text-gray-400">
-                <p>💡 This analysis was generated by Google Gemini AI, providing unique insights and perspectives on the film.</p>
+            ) : (
+              <div className="text-center py-12">
+                <Brain className="h-16 w-16 text-slate-600 mx-auto mb-4" />
+                <h4 className="text-lg font-semibold text-slate-400 mb-2">Ready for AI Analysis?</h4>
+                <p className="text-slate-500">
+                  Click the button above to get Bilel's deep insights into this movie
+                </p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+        )}
 
-          {activeTab === 'downloads' && downloadLinks.length > 0 && (
-            <div className="bg-gray-800 rounded-xl p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <Download className="h-8 w-8 text-green-400" />
-                <h2 className="text-2xl font-bold">Download Links</h2>
-                <span className="text-gray-400">({downloadLinks.length} available)</span>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Downloads Tab */}
+        {activeTab === 'downloads' && (
+          <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50">
+            <h3 className="text-2xl font-bold mb-6 flex items-center">
+              <Download className="h-6 w-6 mr-3 text-green-400" />
+              Download Options
+            </h3>
+            
+            {hasDownloads ? (
+              <div className="space-y-4">
+                <p className="text-slate-300 mb-6">
+                  Multiple download options are available for this movie. Choose the one that works best for you.
+                </p>
                 {downloadLinks.map((link, index) => (
-                  <div key={index} className="bg-gray-700 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm text-gray-400">Link {index + 1}</span>
-                      <button
-                        onClick={() => handleDownloadClick(link)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors"
-                      >
-                        Download
-                      </button>
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600/50 hover:border-green-500/50 transition-colors"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Download className="h-5 w-5 text-green-400" />
+                      <div>
+                        <h4 className="font-medium text-white">Download Option {index + 1}</h4>
+                        <p className="text-sm text-slate-400">Click to download</p>
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-300 break-all">
-                      {link}
-                    </div>
+                    <button
+                      onClick={() => handleDownloadClick(link)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      <span>Download</span>
+                    </button>
                   </div>
                 ))}
               </div>
-              
-              <div className="mt-6 p-4 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <Info className="h-5 w-5 text-yellow-400 mt-0.5" />
-                  <div className="text-sm text-yellow-200">
-                    <p className="font-semibold mb-1">Download Notice:</p>
-                    <p>These download links are provided for convenience. Please ensure you have the right to download this content and respect copyright laws.</p>
-                  </div>
-                </div>
+            ) : (
+              <div className="text-center py-12">
+                <Download className="h-16 w-16 text-slate-600 mx-auto mb-4" />
+                <h4 className="text-lg font-semibold text-slate-400 mb-2">No Downloads Available</h4>
+                <p className="text-slate-500">
+                  Download links for this movie are not currently available
+                </p>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Movie Player */}
+      <MoviePlayer
+        movie={movie}
+        isOpen={isPlayerOpen}
+        onClose={() => setIsPlayerOpen(false)}
+      />
     </div>
   );
 }

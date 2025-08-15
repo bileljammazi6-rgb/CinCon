@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
@@ -12,10 +12,13 @@ import { Gaming } from './pages/Gaming';
 import AIChat from './pages/AIChat';
 import { AuthProvider } from './contexts/AuthContext';
 import { MovieProvider } from './contexts/MovieContext';
+import { FloatingAIChat } from './components/FloatingAIChat';
 import './styles/globals.css';
 import { AuthForm } from './components/Auth/AuthForm';
 
 function App() {
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+
   return (
     <AuthProvider>
       <MovieProvider>
@@ -36,6 +39,12 @@ function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>
+            
+            {/* Floating AI Chat - Always Accessible */}
+            <FloatingAIChat 
+              isOpen={isAIChatOpen} 
+              onToggle={() => setIsAIChatOpen(!isAIChatOpen)} 
+            />
           </div>
         </Router>
       </MovieProvider>
