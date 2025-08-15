@@ -65,9 +65,19 @@ export function Layout({ children }: LayoutProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [onlineStatus, setOnlineStatus] = useState(navigator.onLine);
+  const [showNotifications, setShowNotifications] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+
+  // Sample notifications - in a real app, these would come from the database
+  const sampleNotifications = [
+    { id: 1, type: 'movie', message: 'New movie "Inception" available for download', time: '2 min ago', read: false },
+    { id: 2, type: 'ai', message: 'Bilel AI has new movie recommendations for you', time: '5 min ago', read: false },
+    { id: 3, type: 'game', message: 'New AI quiz available in Gaming section', time: '10 min ago', read: false },
+    { id: 4, type: 'chat', message: 'New message from Community Chat', time: '15 min ago', read: false },
+    { id: 5, type: 'system', message: 'Welcome to CineFlix AI! Explore our features', time: '1 hour ago', read: true }
+  ];
 
   // Online status detection
   useEffect(() => {
@@ -88,6 +98,26 @@ export function Layout({ children }: LayoutProps) {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     document.documentElement.classList.toggle('light', theme === 'light');
   }, [theme]);
+
+  // Update notification count
+  useEffect(() => {
+    const unreadCount = sampleNotifications.filter(n => !n.read).length;
+    setNotifications(unreadCount);
+  }, []);
+
+  const markNotificationAsRead = (id: number) => {
+    // In a real app, this would update the database
+    const updatedNotifications = sampleNotifications.map(n => 
+      n.id === id ? { ...n, read: true } : n
+    );
+    const unreadCount = updatedNotifications.filter(n => !n.read).length;
+    setNotifications(unreadCount);
+  };
+
+  const markAllAsRead = () => {
+    // In a real app, this would update the database
+    setNotifications(0);
+  };
 
   const navigation = [
     { 
@@ -492,14 +522,91 @@ export function Layout({ children }: LayoutProps) {
               </button>
 
               {/* Notifications */}
-              <button className="relative rounded-lg p-2 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors">
-                <Bell className="h-5 w-5" />
-                {notifications > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs font-medium text-white flex items-center justify-center">
-                    {notifications}
-                  </span>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative rounded-lg p-2 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
+                >
+                  <Bell className="h-5 w-5" />
+                  {notifications > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs font-medium text-white flex items-center justify-center">
+                      {notifications}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notifications Dropdown */}
+                {showNotifications && (
+                  <div className="absolute right-0 top-12 w-80 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-xl z-50">
+                    <div className="p-4 border-b border-slate-700/50">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-white font-semibold">Notifications</h3>
+                        {notifications > 0 && (
+                          <button
+                            onClick={markAllAsRead}
+                            className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
+                          >
+                            Mark all as read
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="max-h-96 overflow-y-auto">
+                      {sampleNotifications.length > 0 ? (
+                        <div className="space-y-1">
+                          {sampleNotifications.map((notification) => (
+                            <div
+                              key={notification.id}
+                              className={`p-4 hover:bg-slate-700/50 transition-colors cursor-pointer ${
+                                !notification.read ? 'bg-slate-700/30' : ''
+                              }`}
+                              onClick={() => markNotificationAsRead(notification.id)}
+                            >
+                              <div className="flex items-start space-x-3">
+                                <div className={`w-2 h-2 rounded-full mt-2 ${
+                                  notification.type === 'movie' ? 'bg-green-400' :
+                                  notification.type === 'ai' ? 'bg-purple-400' :
+                                  notification.type === 'game' ? 'bg-blue-400' :
+                                  notification.type === 'chat' ? 'bg-yellow-400' :
+                                  'bg-slate-400'
+                                }`} />
+                                <div className="flex-1 min-w-0">
+                                  <p className={`text-sm ${
+                                    !notification.read ? 'text-white font-medium' : 'text-slate-300'
+                                  }`}>
+                                    {notification.message}
+                                  </p>
+                                  <p className="text-xs text-slate-500 mt-1">
+                                    {notification.time}
+                                  </p>
+                                </div>
+                                {!notification.read && (
+                                  <div className="w-2 h-2 bg-red-400 rounded-full flex-shrink-0 mt-2" />
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-4 text-center text-slate-400">
+                          <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>No notifications</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="p-4 border-t border-slate-700/50">
+                      <button
+                        onClick={() => navigate('/messages')}
+                        className="w-full text-center text-purple-400 hover:text-purple-300 transition-colors text-sm"
+                      >
+                        View all notifications
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </button>
+              </div>
 
               {/* Quick Actions */}
               <div className="hidden sm:flex items-center space-x-2">

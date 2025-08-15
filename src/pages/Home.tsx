@@ -20,22 +20,44 @@ import {
   Clock,
   Eye,
   ThumbsUp,
-  Share2
+  Share2,
+  Download,
+  Calendar,
+  Filter,
+  Grid,
+  List,
+  RefreshCw,
+  Info,
+  Bookmark,
+  ExternalLink,
+  Volume2,
+  VolumeX,
+  Wifi,
+  WifiOff,
+  Search,
+  Film,
+  Tv
 } from 'lucide-react';
 import { useMovies } from '../contexts/MovieContext';
 import { MovieData } from '../types';
 import { geminiService } from '../services/geminiService';
-import { findMovieLinks } from '../data/movieLinks';
+import { findMovieLinks, getAvailableMovies } from '../data/movieLinks';
 
 export function Home() {
-  const { getPopularMovies, getTrendingMovies, getTopRatedMovies } = useMovies();
-  const [popularMovies, setPopularMovies] = useState<MovieData[]>([]);
-  const [trendingMovies, setTrendingMovies] = useState<MovieData[]>([]);
-  const [topRatedMovies, setTopRatedMovies] = useState<MovieData[]>([]);
+  const { getPopularMovies, getTrendingMovies, getTopRatedMovies, getUpcomingMovies } = useMovies();
+  const [downloadableMovies, setDownloadableMovies] = useState<MovieData[]>([]);
+  const [tmdbMovies, setTmdbMovies] = useState<MovieData[]>([]);
   const [aiInsight, setAiInsight] = useState<string>('');
   const [isLoadingInsight, setIsLoadingInsight] = useState(false);
   const [featuredMovie, setFeaturedMovie] = useState<MovieData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedGenre, setSelectedGenre] = useState('all');
+  const [selectedYear, setSelectedYear] = useState('all');
+
+  const genres = ['all', 'action', 'adventure', 'comedy', 'drama', 'horror', 'sci-fi', 'romance', 'thriller'];
+  const years = ['all', '2024', '2023', '2022', '2021', '2020'];
 
   useEffect(() => {
     loadMovies();
@@ -45,19 +67,31 @@ export function Home() {
   const loadMovies = async () => {
     try {
       setLoading(true);
-      const [popular, trending, topRated] = await Promise.all([
+      
+      // Get movies with download links (pixeldrain)
+      const availableMovies = getAvailableMovies();
+      setDownloadableMovies(availableMovies);
+      
+      if (availableMovies.length > 0) {
+        setFeaturedMovie(availableMovies[0]);
+      }
+      
+      // Get TMDB movies for discovery section
+      const [popular, trending, topRated, upcoming] = await Promise.all([
         getPopularMovies(),
         getTrendingMovies(),
-        getTopRatedMovies()
+        getTopRatedMovies(),
+        getUpcomingMovies()
       ]);
       
-      setPopularMovies(popular.slice(0, 8));
-      setTrendingMovies(trending.slice(0, 8));
-      setTopRatedMovies(topRated.slice(0, 8));
+      // Combine and deduplicate TMDB movies
+      const allTmdbMovies = [...popular, ...trending, ...topRated, ...upcoming];
+      const uniqueTmdbMovies = allTmdbMovies.filter((movie, index, self) => 
+        index === self.findIndex(m => m.id === movie.id)
+      );
       
-      if (trending.length > 0) {
-        setFeaturedMovie(trending[0]);
-      }
+      setTmdbMovies(uniqueTmdbMovies.slice(0, 20));
+      
     } catch (error) {
       console.error('Failed to load movies:', error);
     } finally {
@@ -84,8 +118,85 @@ export function Home() {
     const downloadLinks = findMovieLinks(movie.title);
     const hasDownloads = downloadLinks.length > 0;
     
+    if (viewMode === 'list') {
+      return (
+        <div key={movie.id} className="group bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-xl p-4 hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-2xl border border-slate-700/30">
+          <div className="flex space-x-4">
+            <div className="flex-shrink-0">
+              <img
+                src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
+                alt={movie.title}
+                className="w-24 h-36 object-cover rounded-lg"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-white group-hover:text-purple-300 transition-colors mb-2">
+                    {movie.title}
+                  </h3>
+                  <p className="text-slate-300 text-sm line-clamp-3 mb-3">
+                    {movie.overview}
+                  </p>
+                  <div className="flex items-center space-x-4 text-sm text-slate-400 mb-3">
+                    <span className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      {movie.release_date?.split('-')[0]}
+                    </span>
+                    <span className="flex items-center">
+                      <Clock className="h-4 w-4 mr-1" />
+                      {Math.floor((movie.vote_average || 0) * 10)} min
+                    </span>
+                    <span className="flex items-center">
+                      <Users className="h-4 w-4 mr-1" />
+                      {Math.floor((movie.vote_average || 0) * 100)}K views
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="bg-yellow-500 text-black text-sm px-2 py-1 rounded-full font-medium flex items-center">
+                    <Star className="h-3 w-3 mr-1 fill-current" />
+                    {movie.vote_average?.toFixed(1)}
+                  </div>
+                  {hasDownloads && (
+                    <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                      Download
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Link
+                  to={`/movie/${movie.id}`}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center"
+                >
+                  <Play className="h-4 w-4 mr-2" />
+                  Watch
+                </Link>
+                <button className="p-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white rounded-lg transition-colors">
+                  <Heart className="h-4 w-4" />
+                </button>
+                {hasDownloads && (
+                  <button 
+                    onClick={() => window.open(downloadLinks[0], '_blank')}
+                    className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                    title="Download"
+                  >
+                    <Download className="h-4 w-4" />
+                  </button>
+                )}
+                <button className="p-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white rounded-lg transition-colors">
+                  <Share2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <div key={movie.id} className="group relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl overflow-hidden hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl">
+      <div key={movie.id} className="group relative bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-xl overflow-hidden hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl border border-slate-700/30">
         <div className="aspect-[2/3] relative overflow-hidden">
           <img
             src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
@@ -94,14 +205,12 @@ export function Home() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
-          {/* Download Badge */}
           {hasDownloads && (
             <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
               Download
             </div>
           )}
           
-          {/* Rating */}
           <div className="absolute top-2 left-2 bg-yellow-500 text-black text-xs px-2 py-1 rounded-full font-medium flex items-center">
             <Star className="h-3 w-3 mr-1 fill-current" />
             {movie.vote_average?.toFixed(1)}
@@ -137,7 +246,7 @@ export function Home() {
                 className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                 title="Download"
               >
-                <ArrowRight className="h-4 w-4" />
+                <Download className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -159,7 +268,8 @@ export function Home() {
       description: "Conversational AI powered by Google Gemini with personality, image analysis, and voice recording.",
       link: "/ai-chat",
       color: "from-purple-600 to-pink-600",
-      gradient: "from-purple-500/20 to-pink-500/20"
+      gradient: "from-purple-500/20 to-pink-500/20",
+      features: ["Voice Recording", "Image Analysis", "Smart Suggestions"]
     },
     {
       icon: <Gamepad2 className="h-8 w-8 text-blue-400" />,
@@ -167,7 +277,8 @@ export function Home() {
       description: "AI-powered games with adaptive difficulty, quiz generation, and persistent leaderboards.",
       link: "/gaming",
       color: "from-blue-600 to-cyan-600",
-      gradient: "from-blue-500/20 to-cyan-500/20"
+      gradient: "from-blue-500/20 to-cyan-500/20",
+      features: ["Tic-Tac-Toe", "Chess", "AI Quizzes"]
     },
     {
       icon: <Crown className="h-8 w-8 text-yellow-400" />,
@@ -175,7 +286,8 @@ export function Home() {
       description: "Deep AI insights into films, directors, and cinematic techniques with download links.",
       link: "/movies",
       color: "from-yellow-600 to-orange-600",
-      gradient: "from-yellow-500/20 to-orange-500/20"
+      gradient: "from-yellow-500/20 to-orange-500/20",
+      features: ["AI Reviews", "Download Links", "Deep Analysis"]
     },
     {
       icon: <Users className="h-8 w-8 text-green-400" />,
@@ -183,7 +295,8 @@ export function Home() {
       description: "Real-time messaging with AI assistance, reactions, and threaded conversations.",
       link: "/messages",
       color: "from-green-600 to-emerald-600",
-      gradient: "from-green-500/20 to-emerald-500/20"
+      gradient: "from-green-500/20 to-emerald-500/20",
+      features: ["Real-time Chat", "AI Assistance", "Reactions"]
     }
   ];
 
@@ -202,7 +315,7 @@ export function Home() {
     <div className="min-h-screen text-white">
       {/* Hero Section */}
       {featuredMovie && (
-        <div className="relative h-[80vh] overflow-hidden rounded-2xl mb-12">
+        <div className="relative h-[70vh] md:h-[80vh] overflow-hidden rounded-2xl mb-8 md:mb-12">
           {/* Background Image */}
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -216,9 +329,13 @@ export function Home() {
           </div>
 
           {/* Content */}
-          <div className="relative z-10 flex items-end h-full p-8 lg:p-16">
+          <div className="relative z-10 flex items-end h-full p-4 md:p-8 lg:p-16">
             <div className="max-w-4xl">
-              <div className="flex items-center space-x-2 mb-4">
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium flex items-center">
+                  <Download className="h-3 w-3 mr-1" />
+                  Download Available
+                </span>
                 <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">Featured</span>
                 <span className="bg-yellow-500 text-black text-xs px-2 py-1 rounded-full font-medium flex items-center">
                   <Star className="h-3 w-3 mr-1 fill-current" />
@@ -229,26 +346,26 @@ export function Home() {
                 </span>
               </div>
               
-              <h1 className="text-4xl lg:text-6xl font-bold text-white mb-4 leading-tight">
+              <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-white mb-4 leading-tight">
                 {featuredMovie.title}
               </h1>
-              <p className="text-lg lg:text-xl text-gray-300 mb-6 max-w-2xl line-clamp-3">
+              <p className="text-base md:text-lg lg:text-xl text-gray-300 mb-6 max-w-2xl line-clamp-3">
                 {featuredMovie.overview}
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-3 md:gap-4">
                 <Link
                   to={`/movie/${featuredMovie.id}`}
-                  className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg hover:scale-105 transition-all duration-200 font-semibold text-lg"
+                  className="flex items-center gap-2 px-6 md:px-8 py-2 md:py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg hover:scale-105 transition-all duration-200 font-semibold text-base md:text-lg"
                 >
-                  <Play className="h-5 w-5" />
+                  <Play className="h-4 md:h-5 w-4 md:w-5" />
                   Watch Now
                 </Link>
-                <button className="flex items-center gap-2 px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-semibold">
-                  <Heart className="h-5 w-5" />
+                <button className="flex items-center gap-2 px-6 md:px-8 py-2 md:py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-semibold">
+                  <Heart className="h-4 md:h-5 w-4 md:w-5" />
                   Add to List
                 </button>
-                <button className="flex items-center gap-2 px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-semibold">
-                  <Share2 className="h-5 w-5" />
+                <button className="flex items-center gap-2 px-6 md:px-8 py-2 md:py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-semibold">
+                  <Share2 className="h-4 md:h-5 w-4 md:w-5" />
                   Share
                 </button>
               </div>
@@ -258,10 +375,10 @@ export function Home() {
       )}
 
       {/* AI Insight */}
-      <div className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-8 mb-12 border border-slate-700/50">
+      <div className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-6 md:p-8 mb-8 md:mb-12 border border-slate-700/50">
         <div className="flex items-center gap-3 mb-4">
           <Sparkles className="h-6 w-6 text-yellow-400" />
-          <h3 className="text-xl font-semibold text-yellow-400">AI Insight of the Day</h3>
+          <h3 className="text-lg md:text-xl font-semibold text-yellow-400">AI Insight of the Day</h3>
         </div>
         {isLoadingInsight ? (
           <div className="flex items-center gap-2 text-slate-300">
@@ -271,25 +388,25 @@ export function Home() {
             <span>AI is thinking...</span>
           </div>
         ) : (
-          <p className="text-slate-200 text-lg leading-relaxed">"{aiInsight}"</p>
+          <p className="text-slate-200 text-base md:text-lg leading-relaxed">"{aiInsight}"</p>
         )}
       </div>
 
       {/* Features Section */}
       <div className="mb-16">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+        <div className="text-center mb-8 md:mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
             🌟 Revolutionary Features
           </h2>
-          <p className="text-xl text-slate-400">Experience the power of AI-driven entertainment</p>
+          <p className="text-lg md:text-xl text-slate-400">Experience the power of AI-driven entertainment</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {featureCards.map((feature, index) => (
             <Link
               key={index}
               to={feature.link}
-              className="group relative overflow-hidden rounded-2xl p-6 hover:scale-105 transition-all duration-300"
+              className="group relative overflow-hidden rounded-2xl p-6 hover:scale-105 transition-all duration-300 border border-slate-700/30"
             >
               <div className={`absolute inset-0 bg-gradient-to-r ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
               <div className="relative z-10">
@@ -297,9 +414,17 @@ export function Home() {
                 <h3 className="text-xl font-bold mb-3 text-white group-hover:text-white">
                   {feature.title}
                 </h3>
-                <p className="text-slate-300 mb-4 leading-relaxed">
+                <p className="text-slate-300 mb-4 leading-relaxed text-sm">
                   {feature.description}
                 </p>
+                <ul className="text-xs text-slate-400 space-y-1 mb-4">
+                  {feature.features.map((feat, idx) => (
+                    <li key={idx} className="flex items-center">
+                      <div className="w-1 h-1 bg-purple-400 rounded-full mr-2"></div>
+                      {feat}
+                    </li>
+                  ))}
+                </ul>
                 <div className={`inline-flex items-center gap-2 text-sm font-medium bg-gradient-to-r ${feature.color} bg-clip-text text-transparent`}>
                   Explore <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -309,92 +434,170 @@ export function Home() {
         </div>
       </div>
 
-      {/* Trending Movies */}
+      {/* Downloadable Movies Section */}
       <div className="mb-16">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold flex items-center gap-3">
-            <TrendingUp className="h-8 w-8 text-red-400" />
+          <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
+            <Download className="h-6 md:h-8 w-6 md:w-8 text-green-400" />
+            Available for Download
+          </h2>
+          <Link
+            to="/movies"
+            className="text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-2 font-medium"
+          >
+            View All <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+        
+        {downloadableMovies.length > 0 ? (
+          <div className={`grid gap-4 md:gap-6 ${
+            viewMode === 'grid' 
+              ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6' 
+              : 'grid-cols-1'
+          }`}>
+            {downloadableMovies.slice(0, 12).map(renderMovieCard)}
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-slate-800/50 rounded-2xl">
+            <Download className="h-16 w-16 text-slate-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-400 mb-2">No Downloads Available</h3>
+            <p className="text-slate-500">Check back later for downloadable content</p>
+          </div>
+        )}
+      </div>
+
+      {/* TMDB Discovery Section */}
+      <div className="mb-16">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
+            <Search className="h-6 md:h-8 w-6 md:w-8 text-blue-400" />
+            Discover More Movies
+          </h2>
+          <Link
+            to="/search"
+            className="text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-2 font-medium"
+          >
+            Search All <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+        
+        <div className={`grid gap-4 md:gap-6 ${
+          viewMode === 'grid' 
+            ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6' 
+            : 'grid-cols-1'
+        }`}>
+          {tmdbMovies.slice(0, 12).map(renderMovieCard)}
+        </div>
+      </div>
+
+      {/* Controls Bar */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
+            <TrendingUp className="h-6 md:h-8 w-6 md:w-8 text-red-400" />
             Trending Now
           </h2>
-          <Link
-            to="/movies"
-            className="text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-2 font-medium"
-          >
-            View All <ArrowRight className="h-4 w-4" />
-          </Link>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4">
-          {trendingMovies.map(renderMovieCard)}
-        </div>
-      </div>
-
-      {/* Popular Movies */}
-      <div className="mb-16">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold flex items-center gap-3">
-            <Star className="h-8 w-8 text-yellow-400" />
-            Popular Movies
-          </h2>
-          <Link
-            to="/movies"
-            className="text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-2 font-medium"
-          >
-            View All <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4">
-          {popularMovies.map(renderMovieCard)}
-        </div>
-      </div>
-
-      {/* Top Rated Movies */}
-      <div className="mb-16">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold flex items-center gap-3">
-            <Award className="h-8 w-8 text-green-400" />
-            Top Rated
-          </h2>
-          <Link
-            to="/movies"
-            className="text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-2 font-medium"
-          >
-            View All <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4">
-          {topRatedMovies.map(renderMovieCard)}
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="text-center py-16">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Ready to Experience the Future?
-          </h2>
-          <p className="text-xl text-slate-400 mb-8">
-            Join thousands of users already enjoying AI-powered entertainment
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/ai-chat"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-8 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-lg hover:scale-105"
+        <div className="flex items-center gap-2">
+          {/* View Mode Toggle */}
+          <div className="flex items-center space-x-1 bg-slate-700/50 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-md transition-colors ${
+                viewMode === 'grid' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
             >
-              <Brain className="h-5 w-5" />
-              Start AI Chat
-            </Link>
-            <Link
-              to="/gaming"
-              className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold py-4 px-8 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-lg hover:scale-105"
+              <Grid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-md transition-colors ${
+                viewMode === 'list' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
             >
-              <Gamepad2 className="h-5 w-5" />
-              Play Games
-            </Link>
+              <List className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Filters Toggle */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center space-x-2 bg-slate-700/50 hover:bg-slate-600/50 text-white px-3 py-2 rounded-lg transition-colors"
+          >
+            <Filter className="h-4 w-4" />
+            <span className="hidden sm:inline">Filters</span>
+          </button>
+
+          {/* Refresh Button */}
+          <button
+            onClick={loadMovies}
+            className="p-2 bg-slate-700/50 hover:bg-slate-600/50 text-white rounded-lg transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <div className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-slate-700/50">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Genre</label>
+              <select
+                value={selectedGenre}
+                onChange={(e) => setSelectedGenre(e.target.value)}
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                {genres.map(genre => (
+                  <option key={genre} value={genre}>
+                    {genre === 'all' ? 'All Genres' : genre.charAt(0).toUpperCase() + genre.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Year</label>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                {years.map(year => (
+                  <option key={year} value={year}>
+                    {year === 'all' ? 'All Years' : year}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setSelectedGenre('all');
+                  setSelectedYear('all');
+                }}
+                className="w-full bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                Clear Filters
+              </button>
+            </div>
           </div>
         </div>
+      )}
+
+      {/* Load More */}
+      <div className="text-center mt-12">
+        <button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 hover:scale-105">
+          Load More Movies
+        </button>
       </div>
     </div>
   );

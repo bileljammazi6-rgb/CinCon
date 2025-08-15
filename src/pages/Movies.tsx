@@ -16,15 +16,22 @@ import {
   Users,
   ArrowRight,
   ChevronDown,
-  X
+  X,
+  Brain,
+  Crown,
+  Sparkles,
+  Zap,
+  Film
 } from 'lucide-react';
 import { useMovies } from '../contexts/MovieContext';
 import { MovieData } from '../types';
-import { findMovieLinks } from '../data/movieLinks';
+import { findMovieLinks, getAvailableMovies } from '../data/movieLinks';
+import { geminiService } from '../services/geminiService';
 
 export function Movies() {
   const { getPopularMovies, getTopRatedMovies, getUpcomingMovies, searchMovies } = useMovies();
-  const [movies, setMovies] = useState<MovieData[]>([]);
+  const [downloadableMovies, setDownloadableMovies] = useState<MovieData[]>([]);
+  const [tmdbMovies, setTmdbMovies] = useState<MovieData[]>([]);
   const [filteredMovies, setFilteredMovies] = useState<MovieData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,6 +40,9 @@ export function Movies() {
   const [genreFilter, setGenreFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [activeTab, setActiveTab] = useState<'downloadable' | 'discovery'>('downloadable');
+  const [aiRecommendation, setAiRecommendation] = useState<string>('');
+  const [isLoadingRecommendation, setIsLoadingRecommendation] = useState(false);
 
   const genres = [
     'all', 'action', 'adventure', 'animation', 'comedy', 'crime', 'documentary',
@@ -47,25 +57,33 @@ export function Movies() {
   }, []);
 
   useEffect(() => {
-    filterAndSortMovies();
-  }, [movies, searchQuery, sortBy, genreFilter, yearFilter]);
+    if (activeTab === 'downloadable') {
+      filterAndSortMovies();
+    }
+  }, [downloadableMovies, searchQuery, sortBy, genreFilter, yearFilter, activeTab]);
 
   const loadMovies = async () => {
     try {
       setLoading(true);
+      
+      // Get movies with download links (pixeldrain)
+      const availableMovies = getAvailableMovies();
+      setDownloadableMovies(availableMovies);
+      
+      // Get TMDB movies for discovery
       const [popular, topRated, upcoming] = await Promise.all([
         getPopularMovies(),
         getTopRatedMovies(),
         getUpcomingMovies()
       ]);
       
-      // Combine and deduplicate movies
-      const allMovies = [...popular, ...topRated, ...upcoming];
-      const uniqueMovies = allMovies.filter((movie, index, self) => 
+      // Combine and deduplicate TMDB movies
+      const allTmdbMovies = [...popular, ...topRated, ...upcoming];
+      const uniqueTmdbMovies = allTmdbMovies.filter((movie, index, self) => 
         index === self.findIndex(m => m.id === movie.id)
       );
       
-      setMovies(uniqueMovies);
+      setTmdbMovies(uniqueTmdbMovies);
     } catch (error) {
       console.error('Failed to load movies:', error);
     } finally {
@@ -74,7 +92,7 @@ export function Movies() {
   };
 
   const filterAndSortMovies = () => {
-    let filtered = [...movies];
+    let filtered = [...downloadableMovies];
 
     // Search filter
     if (searchQuery) {
@@ -119,25 +137,54 @@ export function Movies() {
 
   const getGenreId = (genreName: string): number => {
     const genreMap: { [key: string]: number } = {
-      'action': 28, 'adventure': 12, 'animation': 16, 'comedy': 35, 'crime': 80,
-      'documentary': 99, 'drama': 18, 'family': 10751, 'fantasy': 14, 'history': 36,
-      'horror': 27, 'music': 10402, 'mystery': 9648, 'romance': 10749, 'science fiction': 878,
-      'thriller': 53, 'war': 10752, 'western': 37
+      'action': 28,
+      'adventure': 12,
+      'animation': 16,
+      'comedy': 35,
+      'crime': 80,
+      'documentary': 99,
+      'drama': 18,
+      'family': 10751,
+      'fantasy': 14,
+      'history': 36,
+      'horror': 27,
+      'music': 10402,
+      'mystery': 9648,
+      'romance': 10749,
+      'science fiction': 878,
+      'thriller': 53,
+      'war': 10752,
+      'western': 37
     };
     return genreMap[genreName] || 0;
   };
 
   const handleSearch = async () => {
-    if (searchQuery.trim()) {
-      try {
-        setLoading(true);
-        const results = await searchMovies(searchQuery);
-        setMovies(results);
-      } catch (error) {
-        console.error('Search failed:', error);
-      } finally {
-        setLoading(false);
-      }
+    if (!searchQuery.trim()) return;
+    
+    try {
+      const results = await searchMovies(searchQuery);
+      setTmdbMovies(results);
+      setActiveTab('discovery');
+    } catch (error) {
+      console.error('Search failed:', error);
+    }
+  };
+
+  const generateAIRecommendation = async () => {
+    setIsLoadingRecommendation(true);
+    try {
+      const recommendation = await geminiService.sendMessage(
+        `As Bilel, the movie expert, recommend 5 amazing movies that users should watch next. 
+        Mix different genres and explain why each one is special. 
+        Be witty and show your passion for cinema!`
+      );
+      setAiRecommendation(recommendation);
+    } catch (error) {
+      console.error('Failed to generate recommendation:', error);
+      setAiRecommendation("🎬 Even the omnipotent Bilel needs a moment to think of the perfect recommendations. Let me gather my thoughts about these cinematic gems...");
+    } finally {
+      setIsLoadingRecommendation(false);
     }
   };
 
@@ -147,7 +194,7 @@ export function Movies() {
     
     if (viewMode === 'list') {
       return (
-        <div key={movie.id} className="group bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-4 hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-2xl">
+        <div key={movie.id} className="group bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-xl p-4 hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-2xl border border-slate-700/30">
           <div className="flex space-x-4">
             <div className="flex-shrink-0">
               <img
@@ -223,7 +270,7 @@ export function Movies() {
     }
 
     return (
-      <div key={movie.id} className="group relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl overflow-hidden hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl">
+      <div key={movie.id} className="group relative bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-xl overflow-hidden hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl border border-slate-700/30">
         <div className="aspect-[2/3] relative overflow-hidden">
           <img
             src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
@@ -303,78 +350,146 @@ export function Movies() {
     <div className="min-h-screen text-white">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-          🎬 Movies
+        <h1 className="text-3xl md:text-4xl font-bold mb-4 flex items-center gap-3">
+          <Film className="h-8 md:h-10 w-8 md:w-10 text-purple-400" />
+          Movies
         </h1>
-        <p className="text-xl text-slate-400">
-          Discover the latest and greatest films with AI-powered insights
+        <p className="text-lg text-slate-400">
+          Discover amazing movies available for download and streaming
         </p>
       </div>
 
-      {/* Search and Filters */}
+      {/* AI Recommendation */}
       <div className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-slate-700/50">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Brain className="h-6 w-6 text-purple-400" />
+            <h3 className="text-lg font-semibold text-purple-400">Bilel's Movie Recommendations</h3>
+          </div>
+          <button
+            onClick={generateAIRecommendation}
+            disabled={isLoadingRecommendation}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+          >
+            {isLoadingRecommendation ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Thinking...</span>
+              </>
+            ) : (
+              <>
+                <Zap className="h-4 w-4" />
+                <span>Get Recommendations</span>
+              </>
+            )}
+          </button>
+        </div>
+        
+        {aiRecommendation ? (
+          <div className="prose prose-invert max-w-none">
+            <div className="bg-slate-700/50 rounded-lg p-4">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="h-6 w-6 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
+                  <Crown className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-sm text-slate-400">Bilel's Take</span>
+              </div>
+              <p className="text-slate-200 leading-relaxed whitespace-pre-wrap text-sm">
+                {aiRecommendation}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-4">
+            <p className="text-slate-400">
+              Click the button above to get Bilel's personalized movie recommendations
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="mb-8">
+        <div className="flex space-x-1 bg-slate-800/50 rounded-lg p-1">
+          {[
+            { key: 'downloadable', label: 'Downloadable Movies', icon: Download, count: downloadableMovies.length },
+            { key: 'discovery', label: 'TMDB Discovery', icon: Search, count: tmdbMovies.length }
+          ].map(({ key, label, icon: Icon, count }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key as any)}
+              className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === key
+                  ? 'bg-purple-600 text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{label}</span>
+              <span className="bg-slate-700 text-slate-300 text-xs px-2 py-1 rounded-full">
+                {count}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search movies by title, genre, or description..."
+                placeholder="Search movies..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-3 rounded-lg transition-colors"
+            >
+              <Filter className="h-5 w-5" />
+              <span>Filters</span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
+            
+            <div className="flex items-center space-x-1 bg-slate-700 rounded-lg p-1">
               <button
-                onClick={handleSearch}
-                className="absolute right-3 top-1/2 -translate-y-1/2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'grid' 
+                    ? 'bg-purple-600 text-white' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
               >
-                Search
+                <Grid className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'list' 
+                    ? 'bg-purple-600 text-white' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <List className="h-4 w-4" />
               </button>
             </div>
           </div>
-
-          {/* View Mode */}
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition-colors ${
-                viewMode === 'grid' 
-                  ? 'bg-purple-600 text-white' 
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              <Grid className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg transition-colors ${
-                viewMode === 'list' 
-                  ? 'bg-purple-600 text-white' 
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              <List className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* Filters Toggle */}
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-3 rounded-lg transition-colors"
-          >
-            <Filter className="h-5 w-5" />
-            <span>Filters</span>
-            <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-          </button>
         </div>
 
         {/* Filters Panel */}
         {showFilters && (
-          <div className="mt-6 pt-6 border-t border-slate-700">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Sort By */}
+          <div className="mt-4 bg-slate-800/50 rounded-lg p-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">Sort By</label>
                 <select
@@ -389,7 +504,6 @@ export function Movies() {
                 </select>
               </div>
 
-              {/* Genre Filter */}
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">Genre</label>
                 <select
@@ -405,7 +519,6 @@ export function Movies() {
                 </select>
               </div>
 
-              {/* Year Filter */}
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">Year</label>
                 <select
@@ -420,22 +533,19 @@ export function Movies() {
                   ))}
                 </select>
               </div>
-            </div>
 
-            {/* Clear Filters */}
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={() => {
-                  setGenreFilter('all');
-                  setYearFilter('all');
-                  setSortBy('popularity');
-                  setSearchQuery('');
-                }}
-                className="flex items-center space-x-2 text-slate-400 hover:text-white transition-colors"
-              >
-                <X className="h-4 w-4" />
-                <span>Clear Filters</span>
-              </button>
+              <div className="flex items-end">
+                <button
+                  onClick={() => {
+                    setGenreFilter('all');
+                    setYearFilter('all');
+                    setSortBy('popularity');
+                  }}
+                  className="w-full bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Clear Filters
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -444,53 +554,55 @@ export function Movies() {
       {/* Results Count */}
       <div className="flex items-center justify-between mb-6">
         <p className="text-slate-400">
-          Showing {filteredMovies.length} of {movies.length} movies
+          {activeTab === 'downloadable' 
+            ? `${filteredMovies.length} downloadable movies found`
+            : `${tmdbMovies.length} movies for discovery`
+          }
         </p>
-        {searchQuery && (
-          <button
-            onClick={() => {
-              setSearchQuery('');
-              loadMovies();
-            }}
-            className="text-purple-400 hover:text-purple-300 transition-colors"
-          >
-            Clear Search
-          </button>
-        )}
+        <button
+          onClick={loadMovies}
+          className="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+          title="Refresh"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
 
       {/* Movies Grid/List */}
-      {filteredMovies.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="text-6xl mb-4">🎬</div>
-          <h3 className="text-2xl font-bold mb-2">No movies found</h3>
-          <p className="text-slate-400 mb-6">
-            {searchQuery ? 'Try adjusting your search terms or filters' : 'Check back later for new releases'}
-          </p>
-          {searchQuery && (
+      {activeTab === 'downloadable' ? (
+        downloadableMovies.length > 0 ? (
+          <div className={`grid gap-4 md:gap-6 ${
+            viewMode === 'grid' 
+              ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6' 
+              : 'grid-cols-1'
+          }`}>
+            {filteredMovies.map(renderMovieCard)}
+          </div>
+        ) : (
+          <div className="text-center py-16 bg-slate-800/50 rounded-2xl">
+            <Download className="h-16 w-16 text-slate-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-400 mb-2">No Downloadable Movies</h3>
+            <p className="text-slate-500 mb-4">No movies with download links are currently available</p>
             <button
-              onClick={() => {
-                setSearchQuery('');
-                loadMovies();
-              }}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors"
+              onClick={() => setActiveTab('discovery')}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-colors"
             >
-              Browse All Movies
+              Browse TMDB Movies
             </button>
-          )}
-        </div>
+          </div>
+        )
       ) : (
-        <div className={`grid gap-6 ${
+        <div className={`grid gap-4 md:gap-6 ${
           viewMode === 'grid' 
             ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6' 
             : 'grid-cols-1'
         }`}>
-          {filteredMovies.map(renderMovieCard)}
+          {tmdbMovies.slice(0, 24).map(renderMovieCard)}
         </div>
       )}
 
       {/* Load More */}
-      {filteredMovies.length > 0 && (
+      {activeTab === 'discovery' && tmdbMovies.length > 24 && (
         <div className="text-center mt-12">
           <button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 hover:scale-105">
             Load More Movies
